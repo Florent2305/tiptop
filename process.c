@@ -94,19 +94,18 @@ void update_proc_list(struct process_list* list)
   /* remove dead threads */
   for(i=0; i < list->num_tids; ++i) {
     char name[50]; /* needs to fit the name /proc/xxxxx/task/xxxxx/status */
+    int  zz;
+
     sprintf(name, "/proc/%d/task/%d/status", p[i].pid, p[i].tid);
     if (access(name, F_OK) == -1) {
       p[i].tid = 0;  /* mark dead */
       p[i].pid = 0;  /* mark dead */
-      if (p[i].fd1 != -1)
-        close(p[i].fd1);
-      if (p[i].fd2 != -1)
-        close(p[i].fd2);
-      if (p[i].fd3 != -1)
-        close(p[i].fd3);
-      if (p[i].fd4 != -1)
-        close(p[i].fd4);
-      p[i].fd1 = p[i].fd2 = p[i].fd3 = p[i].fd4 = -1;
+      for(zz=0; zz < p[i].num_events; ++zz) {
+        if (p[i].fd[zz] != -1) {
+          close(p[i].fd[zz]);
+          p[i].fd[zz] = -1;
+        }
+      }
     }
   }
 
@@ -158,8 +157,9 @@ void update_proc_list(struct process_list* list)
     fclose(f);
 
     if (uid == my_uid) {  /* unless I am root?? */
-      int fd1, fd2, fd3, fd4;
+      int  fd;
       int  tid;
+      int  fail;
       DIR* thr_dir;
       struct dirent* thr_dirent;
       char task_name[50];
@@ -169,7 +169,7 @@ void update_proc_list(struct process_list* list)
 
       /* Iterate over all threads in the process */
       while ((thr_dirent = readdir(thr_dir))) {
-        int pos;
+        int pos, zz;
         tid = atoi(thr_dirent->d_name);
 
         if (tid == 0)
@@ -203,35 +203,34 @@ void update_proc_list(struct process_list* list)
 
 
           /* Read performance counters */
-          ptr->prev_val1 = ptr->val1;
-          ptr->prev_val2 = ptr->val2;
-          ptr->prev_val3 = ptr->val3;
-          ptr->prev_val4 = ptr->val4;
+          for(zz = 0; zz < ptr->num_events; zz++) {
+            ptr->prev_values[zz] = ptr->values[zz];
+          }
 
-          r1 = read(ptr->fd1, &cycles, sizeof(cycles));
-          r2 = read(ptr->fd2, &insns, sizeof(insns));
-          r3 = read(ptr->fd3, &misses, sizeof(misses));
-          r4 = read(ptr->fd4, &brmisses, sizeof(brmisses));
+          r1 = read(ptr->fd[0], &cycles, sizeof(cycles));
+          r2 = read(ptr->fd[1], &insns, sizeof(insns));
+          r3 = read(ptr->fd[2], &misses, sizeof(misses));
+          r4 = read(ptr->fd[3], &brmisses, sizeof(brmisses));
 
           if (r1 == sizeof(cycles))
-            ptr->val1 = cycles;
+            ptr->values[0] = cycles;
           else
-            ptr->val1 = 0;
+            ptr->values[0] = 0;
 
           if (r2 == sizeof(insns))
-            ptr->val2 = insns;
+            ptr->values[1] = insns;
           else
-            ptr->val2 = 0;
+            ptr->values[1] = 0;
 
           if (r3 == sizeof(misses))
-            ptr->val3 = misses;
+            ptr->values[2] = misses;
           else
-            ptr->val3 = 0;
+            ptr->values[2] = 0;
 
           if (r4 == sizeof(brmisses))
-            ptr->val4 = brmisses;
+            ptr->values[3] = brmisses;
           else
-            ptr->val4 = 0;
+            ptr->values[3] = 0;
 
           continue;
         }
@@ -252,44 +251,54 @@ void update_proc_list(struct process_list* list)
         p[list->num_tids].timestamp.tv_usec = 0;
         p[list->num_tids].prev_cpu_time = 0;
         p[list->num_tids].cpu_percent = 0.0;
-        p[list->num_tids].prev_val1 = 0;
-        p[list->num_tids].prev_val2 = 0;
-        p[list->num_tids].prev_val3 = 0;
-        p[list->num_tids].prev_val4 = 0;
+
+        p[list->num_tids].num_events = 4;
+        for(zz = 0; zz < p[list->num_tids].num_events; zz++) {
+          p[list->num_tids].prev_values[zz] = 0;
+        }
         p[list->num_tids].txt = malloc(TXT_LEN * sizeof(char));
+
+        fail = 0;
 
         /* First counter: cycles */
         events.type = PERF_TYPE_HARDWARE;
         events.config = PERF_COUNT_HW_CPU_CYCLES;
-        fd1 = sys_perf_counter_open(&events, tid, cpu, grp, flags);
-        p[list->num_tids].fd1 = fd1;
-        p[list->num_tids].val1 = 0;
+        fd = sys_perf_counter_open(&events, tid, cpu, grp, flags);
+        if (fd == -1)
+          fail++;
+        p[list->num_tids].fd[0] = fd;
+        p[list->num_tids].values[0] = 0;
 
         /* Second counter: instructions */
         events.type = PERF_TYPE_HARDWARE;
         events.config = PERF_COUNT_HW_INSTRUCTIONS;
-        fd2 = sys_perf_counter_open(&events, tid, cpu, grp, flags);
-        p[list->num_tids].fd2 = fd2;
-        p[list->num_tids].val2 = 0;
+        fd = sys_perf_counter_open(&events, tid, cpu, grp, flags);
+        if (fd == -1)
+          fail++;
+        p[list->num_tids].fd[1] = fd;
+        p[list->num_tids].values[1] = 0;
 
         /* Third counter: cache misses */
         events.type = PERF_TYPE_HARDWARE;
         events.config = PERF_COUNT_HW_CACHE_MISSES;
-        fd3 = sys_perf_counter_open(&events, tid, cpu, grp, flags);
-        p[list->num_tids].fd3 = fd3;
-        p[list->num_tids].val3 = 0;
+        fd = sys_perf_counter_open(&events, tid, cpu, grp, flags);
+        if (fd == -1)
+          fail++;
+        p[list->num_tids].fd[2] = fd;
+        p[list->num_tids].values[2] = 0;
 
         /* Fourth counter: page faults */
         events.type = PERF_TYPE_HARDWARE;
         events.config = PERF_COUNT_HW_BRANCH_MISSES;
-        fd4 = sys_perf_counter_open(&events, tid, cpu, grp, flags);
-        p[list->num_tids].fd4 = fd4;
-        p[list->num_tids].val4 = 0;
+        fd = sys_perf_counter_open(&events, tid, cpu, grp, flags);
+        if (fd == -1)
+          fail++;
+        p[list->num_tids].fd[3] = fd;
+        p[list->num_tids].values[3] = 0;
 
-        if ((fd1 != -1) && (fd2 != -1) && (fd3 != -1) && (fd4 != -1)) {
+        if (!fail) {
           list->num_tids++;
         }
-
       }
       closedir(thr_dir);
     }
@@ -305,8 +314,8 @@ void update_proc_list(struct process_list* list)
       fprintf(debug, "[%d] %5d-%5d %-15s  %d %d %d %d - %"PRIu64"  %"PRIu64"  %"PRIu64"  %"PRIu64" \n",
               i,
               p[i].pid, p[i].tid, p[i].name,
-              p[i].fd1, p[i].fd2, p[i].fd3, p[i].fd4,
-              p[i].val1, p[i].val2, p[i].val3, p[i].val4);
+              p[i].fd[0], p[i].fd[1], p[i].fd[2], p[i].fd[3],
+              p[i].values[0], p[i].values[1], p[i].values[2], p[i].values[3]);
     }
     fprintf(debug, "----------\n");
     fclose(debug);
@@ -321,7 +330,7 @@ void update_proc_list(struct process_list* list)
  */
 void accumulate_stats(struct process_list* list)
 {
-  int i;
+  int i, zz;
   struct process* p;
 
   p = list->processes;
@@ -334,10 +343,9 @@ void accumulate_stats(struct process_list* list)
 
       /* accumulate in owner process */
       p[pos].cpu_percent += p[i].cpu_percent;
-      p[pos].val1 += p[i].val1;
-      p[pos].val2 += p[i].val2;
-      p[pos].val3 += p[i].val3;
-      p[pos].val4 += p[i].val4;
+      for(zz = 0; zz < p[i].num_events; zz++) {
+        p[pos].values[zz] += p[i].values[zz];
+      }
     }
   }
 }
@@ -351,7 +359,7 @@ void accumulate_stats(struct process_list* list)
  */
 void reset_values(struct process_list* list)
 {
-  int i;
+  int i, zz;
   struct process* p;
 
   p = list->processes;
@@ -359,10 +367,9 @@ void reset_values(struct process_list* list)
     /* only consider 'main' processes (not threads) */
     if (p[i].pid == p[i].tid) {
       p[i].cpu_percent = 0;
-      p[i].val1 = 0;
-      p[i].val2 = 0;
-      p[i].val3 = 0;
-      p[i].val4 = 0;
+      for(zz = 0; zz < p[i].num_events; zz++) {
+        p[i].values[zz] = 0;
+      }
     }
   }
 }

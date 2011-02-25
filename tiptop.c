@@ -79,15 +79,15 @@ i, num_tids; struct process* p;
     if (p[i].tid == 0)  /* dead */
       continue;
 
-    cycles = p[i].val1;
-    insns = p[i].val2;
-    misses = p[i].val3;
-    brmisses = p[i].val4;
+    cycles = p[i].values[0];
+    insns = p[i].values[1];
+    misses = p[i].values[2];
+    brmisses = p[i].values[3];
 
-    prev_cycles = p[i].prev_val1;
-    prev_insns = p[i].prev_val2;
-    prev_misses = p[i].prev_val3;
-    prev_brmisses = p[i].prev_val4;
+    prev_cycles = p[i].prev_values[0];
+    prev_insns = p[i].prev_values[1];
+    prev_misses = p[i].prev_values[2];
+    prev_brmisses = p[i].prev_values[3];
 
     if (insns == prev_insns) {  /* no insn executed recently */
       if (cycles) {
@@ -175,7 +175,8 @@ static void batch_mode(struct process_list* proc_list)
       if (p[i].pid == 0)  /* dead */
         continue;
 
-      if (!idle && (p[i].val2 == p[i].prev_val2))  /* no insn executed, skip */
+      /* no insn executed, skip */
+      if (!idle && (p[i].values[1] == p[i].prev_values[1]))
         continue;
 
       /* In batch mode, if a process is being watched, only print this
@@ -340,7 +341,8 @@ static void live_mode(struct process_list* proc_list)
       if (p[i].pid == 0)  /* dead */
         continue;
 
-      if (!idle && (p[i].val2 == p[i].prev_val2))  /* no insn executed, skip */
+      /* no insn executed, skip */
+      if (!idle && (p[i].values[1] == p[i].prev_values[1]))
         continue;
 
       /* highlight watched process, if any */
@@ -357,9 +359,9 @@ static void live_mode(struct process_list* proc_list)
       if (with_colors)
         attroff(COLOR_PAIR(3));
       
-      if ((p[i].pid == p[i].tid) && (p[i].val1 != p[i].prev_val1)) {
+      if ((p[i].pid == p[i].tid) && (p[i].values[0] != p[i].prev_values[0])) {
         total_cpu += p[i].cpu_percent;
-        total_ipc += p[i].cpu_percent*(p[i].val2-p[i].prev_val2)/(p[i].val1-p[i].prev_val1);
+        total_ipc += p[i].cpu_percent*(p[i].values[1]-p[i].prev_values[1])/(p[i].values[0]-p[i].prev_values[0]);
       }
 
       if (printed >= LINES - 5)  /* stop printing at bottom of window */

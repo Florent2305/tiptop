@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <sys/time.h>
 
+#define MAX_EVENTS 16
 #define TXT_LEN 120
 
 /* Main structure describing a thread */
@@ -16,9 +17,10 @@ struct process {
   
   struct timeval timestamp;         /* timestamp of last update */
   unsigned long prev_cpu_time;
-  int       fd1, fd2, fd3, fd4;     /* file handles */
-  uint64_t  val1, val2, val3, val4; /* values read from counters */
-  uint64_t  prev_val1, prev_val2, prev_val3, prev_val4; /* previous iteration */
+  int       num_events;
+  int       fd[MAX_EVENTS];           /* file handles */
+  uint64_t  values[MAX_EVENTS];       /* values read from counters */
+  uint64_t  prev_values[MAX_EVENTS];  /* previous iteration */
   char* txt;
 };
 
