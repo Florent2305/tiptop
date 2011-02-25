@@ -209,7 +209,7 @@ static int handle_key() {
   else if (c == 'g')
     debug = 1 - debug;
 
-  else if (c == 'd') {
+  else if ((c == 'd') || (c == 's')) {
     move(2,0);
     printw("Change delay from %.2f to: ", delay);
     echo();
