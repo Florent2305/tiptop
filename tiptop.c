@@ -22,6 +22,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "requisite.h"
 #include "pmc.h"
 #include "process.h"
 
@@ -426,6 +427,8 @@ int main(int argc, char* argv[])
   int  batch = 1;
 #endif
 
+  /* Check OS to make sure we can run. */
+  check();
 
   /* Parse command line arguments. */
   for(i=1; i < argc; i++) {
