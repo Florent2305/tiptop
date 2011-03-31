@@ -11,8 +11,10 @@
 #include <curses.h>
 #endif
 
+#include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
+#include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,6 +39,9 @@ static char*  watch_name = NULL;
 static pid_t  watch_pid = 0;
 
 static struct timeval tv;
+
+static char* message = NULL;
+static char  tmp_message[100];
 
 
 const char* const header =
@@ -232,6 +237,38 @@ static int handle_key() {
   else if (c == 'i')
     idle = 1 - idle;
 
+  else if (c == 'k') {
+    char str[100];  /* buffer overflow? */
+    int  kill_pid, kill_sig, kill_res;
+    move(2,0);
+    printw("PID to kill: ");
+    echo();
+    nocbreak();
+    getstr(str);
+    if (!isdigit(str[0])) {
+      move(2,0);
+      message = "Not valid";
+    }
+    else {
+      kill_pid = atoi(str);
+      move(2,0);
+      printw("Kill PID %d with signal [15]: ", kill_pid);
+      getstr(str);
+      kill_sig = atoi(str);
+      if (kill_sig == 0)
+        kill_sig = 15;
+      kill_res = kill(kill_pid, kill_sig);
+      if (kill_res == -1) {
+        move(2,0);
+        sprintf(tmp_message, "Kill of PID '%d' with '%d' failed: %s",
+                kill_pid, kill_sig, strerror(errno));
+        message = tmp_message;
+      }
+    }
+    cbreak();
+    noecho();
+  }
+
   else if (c == 'w') {
     char str[100];  /* buffer overflow? */
     move(2,0);
@@ -262,7 +299,6 @@ static void live_mode(struct process_list* proc_list)
 {
   fd_set          fds;
   struct process* p;
-  char*           message = NULL;
   int             num_iter = 0;
   int             with_colors = 0;
 
