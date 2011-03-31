@@ -1,4 +1,5 @@
 CFLAGS=-O2 -Wall -DKERNEL31 -DHAS_CURSES
+CFLAGS+=$(XCFLAGS)
 
 all: tiptop
 
