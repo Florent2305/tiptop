@@ -154,6 +154,9 @@ static void batch_mode(struct process_list* proc_list)
   int  num_iter = 0;
   struct process* p;
 
+  tv.tv_sec = 0;
+  tv.tv_usec = 200000;  /* 200 ms for first iteration */
+
   for(num_iter=0; !max_iter || num_iter < max_iter; num_iter++) {
     int i;
 
@@ -167,10 +170,6 @@ static void batch_mode(struct process_list* proc_list)
 
     p = proc_list->processes;
 
-    /* prepare for select */
-    tv.tv_sec = delay;
-    tv.tv_usec = (delay - tv.tv_sec) * 1000000.0;
-    
     /* generate the text version of all rows */
     build_rows(proc_list);
 
@@ -198,6 +197,10 @@ static void batch_mode(struct process_list* proc_list)
     printf("\n");
     /* wait some delay */
     select(0, NULL, NULL, NULL, &tv);
+
+    /* prepare for next select */
+    tv.tv_sec = delay;
+    tv.tv_usec = (delay - tv.tv_sec) * 1000000.0;
   }
 }
 
@@ -318,6 +321,9 @@ static void live_mode(struct process_list* proc_list)
     attron(COLOR_PAIR(0));
   }
 
+  tv.tv_sec = 0;
+  tv.tv_usec = 200000; /* 200 ms for first iteration */
+
   for(num_iter=0; !max_iter || num_iter < max_iter; num_iter++) {
     double     total_cpu, total_ipc;
     int        i, zz, printed;
@@ -361,8 +367,6 @@ static void live_mode(struct process_list* proc_list)
     /* prepare for select */
     FD_ZERO(&fds);
     FD_SET(STDIN_FILENO, &fds);
-    tv.tv_sec = delay;
-    tv.tv_usec = (delay - tv.tv_sec) * 1000000.0;
 
     /* generate the text version of all rows */
     build_rows(proc_list);
@@ -447,6 +451,9 @@ static void live_mode(struct process_list* proc_list)
           message = "Show threads Off";
       }
     }
+
+    tv.tv_sec = delay;
+    tv.tv_usec = (delay - tv.tv_sec) * 1000000.0;
   }
   endwin();  /* start curses */
 }
