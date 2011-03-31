@@ -26,6 +26,7 @@ void check()
   pid = 0;   /* self */
   fd = sys_perf_counter_open(&events, pid, cpu, grp, flags);
   if (fd == -1) {
+    perror("syscall");
     fprintf(stderr, "Could not perform syscall.\n");
     uname(&os);
     if (strcmp(os.sysname, "Linux") != 0) {
@@ -35,6 +36,9 @@ void check()
     else if (strcmp(os.release, "2.6.31") < 0) {  /* lexicographic order */
       fprintf(stderr, "Linux 2.6.31+ is required, OS reports '%s'.\n",
               os.release);
+    }
+    else {
+      fprintf(stderr, "Don't know why...\n");
     }
     exit(EXIT_FAILURE);
   }
