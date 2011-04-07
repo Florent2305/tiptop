@@ -24,6 +24,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "conf.h"
 #include "requisite.h"
 #include "pmc.h"
 #include "process.h"
@@ -533,6 +534,8 @@ int main(int argc, char* argv[])
       }
     }
   }
+
+  read_config();
 
   /* initialize the list of processes, and then run */
   proc_list = init_proc_list();
