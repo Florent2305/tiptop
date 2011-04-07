@@ -1,14 +1,15 @@
-CFLAGS=-O2 -Wall -DKERNEL31 
+CFLAGS=-O2 -Wall -DKERNEL31 -DHAS_CURSES
 CFLAGS+=$(XCFLAGS)
 
+OBJS=tiptop.o pmc.o process.o requisite.o conf.o screen.o
 all: tiptop
 
-tiptop: tiptop.o pmc.o process.o requisite.o conf.o
-	$(CC) -O2 -o tiptop tiptop.o pmc.o process.o requisite.o conf.o -lcurses
+tiptop: $(OBJS)
+	$(CC) -O2 -o tiptop $(OBJS) -lcurses
 
 
 clean:
-	/bin/rm -f tiptop.o pmc.o process.o requisite.o conf.o tiptop
+	/bin/rm -f $(OBJS) tiptop
 
 
 depend:
@@ -16,6 +17,7 @@ depend:
 
 # DO NOT DELETE
 
+screen.o: screen.h
 conf.o: conf.h
 pmc.o: pmc.h
 process.o: pmc.h process.h
