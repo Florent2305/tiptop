@@ -52,17 +52,20 @@ int add_counter(screen_t* s, int32_t type, int64_t config)
 
 int add_column(screen_t* s)
 {
+  return 0;
 }
 
 
 screen_t* default_screen()
 {
-  screen_t s = new_screen("default");
+  screen_t* s = new_screen("default");
   add_counter(s, PERF_TYPE_HARDWARE, PERF_COUNT_HW_CPU_CYCLES);
   add_counter(s, PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS);
   add_counter(s, PERF_TYPE_HARDWARE, PERF_COUNT_HW_CACHE_MISSES);
   add_counter(s, PERF_TYPE_HARDWARE, PERF_COUNT_HW_BRANCH_MISSES);
   /* add columns */
+
+  return s;
 }
 
 
