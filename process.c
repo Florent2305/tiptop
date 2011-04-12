@@ -1,13 +1,6 @@
 #include <assert.h>
 #include <dirent.h>
 #include <inttypes.h>
-
-#ifdef KERNEL31
-#include <linux/perf_counter.h>
-#else
-#include <linux/perf_event.h>
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,6 +9,7 @@
 
 #include "pmc.h"
 #include "process.h"
+#include "screen.h"
 
 extern int debug;
 
@@ -75,7 +69,7 @@ static int pos_in_list(struct process_list* list, pid_t tid)
  * Update all processes in the list with newly collected statistics.
  *
  */
-void update_proc_list(struct process_list* list)
+void update_proc_list(struct process_list* list, const screen_t* const screen)
 {
   int i;
   struct dirent* pid_dirent;
@@ -86,6 +80,7 @@ void update_proc_list(struct process_list* list)
   struct process* p;
   struct STRUCT_NAME events = {0, };
 
+  assert(screen);
   assert(list && list->processes);
   p = list->processes;
 
@@ -177,8 +172,6 @@ void update_proc_list(struct process_list* list)
 
         pos = pos_in_list(list, tid);
         if (pos != -1) {  /* already known */
-          int       r1, r2, r3, r4;
-          uint64_t  insns, cycles, misses, brmisses;
           FILE*     fstat;
           char      task_name[100];
           double    elapsed;
@@ -202,35 +195,21 @@ void update_proc_list(struct process_list* list)
           ptr->prev_cpu_time = utime + stime;
 
 
-          /* Read performance counters */
+          /* Backup previous value of counters */
           for(zz = 0; zz < ptr->num_events; zz++) {
             ptr->prev_values[zz] = ptr->values[zz];
           }
 
-          r1 = read(ptr->fd[0], &cycles, sizeof(cycles));
-          r2 = read(ptr->fd[1], &insns, sizeof(insns));
-          r3 = read(ptr->fd[2], &misses, sizeof(misses));
-          r4 = read(ptr->fd[3], &brmisses, sizeof(brmisses));
-
-          if (r1 == sizeof(cycles))
-            ptr->values[0] = cycles;
-          else
-            ptr->values[0] = 0;
-
-          if (r2 == sizeof(insns))
-            ptr->values[1] = insns;
-          else
-            ptr->values[1] = 0;
-
-          if (r3 == sizeof(misses))
-            ptr->values[2] = misses;
-          else
-            ptr->values[2] = 0;
-
-          if (r4 == sizeof(brmisses))
-            ptr->values[3] = brmisses;
-          else
-            ptr->values[3] = 0;
+          /* Read performance counters */
+          for(zz = 0; zz < ptr->num_events; zz++) {
+            uint64_t value;
+            int r;
+            r = read(ptr->fd[zz], &value, sizeof(value));
+            if (r == sizeof(value))
+              ptr->values[zz] = value;
+            else
+              ptr->values[zz] = 0;
+          }
 
           continue;
         }
@@ -252,7 +231,9 @@ void update_proc_list(struct process_list* list)
         p[list->num_tids].prev_cpu_time = 0;
         p[list->num_tids].cpu_percent = 0.0;
 
-        p[list->num_tids].num_events = 4;
+        /* Get number of counters from screen */
+        p[list->num_tids].num_events = screen->num_counters;
+
         for(zz = 0; zz < p[list->num_tids].num_events; zz++) {
           p[list->num_tids].prev_values[zz] = 0;
         }
@@ -260,41 +241,15 @@ void update_proc_list(struct process_list* list)
 
         fail = 0;
 
-        /* First counter: cycles */
-        events.type = PERF_TYPE_HARDWARE;
-        events.config = PERF_COUNT_HW_CPU_CYCLES;
-        fd = sys_perf_counter_open(&events, tid, cpu, grp, flags);
-        if (fd == -1)
-          fail++;
-        p[list->num_tids].fd[0] = fd;
-        p[list->num_tids].values[0] = 0;
-
-        /* Second counter: instructions */
-        events.type = PERF_TYPE_HARDWARE;
-        events.config = PERF_COUNT_HW_INSTRUCTIONS;
-        fd = sys_perf_counter_open(&events, tid, cpu, grp, flags);
-        if (fd == -1)
-          fail++;
-        p[list->num_tids].fd[1] = fd;
-        p[list->num_tids].values[1] = 0;
-
-        /* Third counter: cache misses */
-        events.type = PERF_TYPE_HARDWARE;
-        events.config = PERF_COUNT_HW_CACHE_MISSES;
-        fd = sys_perf_counter_open(&events, tid, cpu, grp, flags);
-        if (fd == -1)
-          fail++;
-        p[list->num_tids].fd[2] = fd;
-        p[list->num_tids].values[2] = 0;
-
-        /* Fourth counter: page faults */
-        events.type = PERF_TYPE_HARDWARE;
-        events.config = PERF_COUNT_HW_BRANCH_MISSES;
-        fd = sys_perf_counter_open(&events, tid, cpu, grp, flags);
-        if (fd == -1)
-          fail++;
-        p[list->num_tids].fd[3] = fd;
-        p[list->num_tids].values[3] = 0;
+        for(zz = 0; zz < p[list->num_tids].num_events; zz++) {
+          events.type = screen->counters[zz].type;  /* eg PERF_TYPE_HARDWARE */
+          events.config = screen->counters[zz].config;
+          fd = sys_perf_counter_open(&events, tid, cpu, grp, flags);
+          if (fd == -1)
+            fail++;
+          p[list->num_tids].fd[zz] = fd;
+          p[list->num_tids].values[zz] = 0;
+        }
 
         if (!fail) {
           list->num_tids++;

@@ -2,7 +2,7 @@
  * tiptop
  *
  * Author: Erven Rohou
- * 
+ *
  * License: GNU General Public License version 2.
  *
  */
@@ -28,7 +28,7 @@
 #include "requisite.h"
 #include "pmc.h"
 #include "process.h"
-
+#include "screen.h"
 
 int    debug = 0;
 
@@ -45,9 +45,7 @@ static char* message = NULL;
 static char  tmp_message[100];
 
 
-const char* const header =
-  "  PID  %CPU   Minstr   Mcycles   IPC   ipc %MISS  %BMISS  COMMAND";
-
+static char* header = NULL;
 
 
 void usage(const char* name)
@@ -60,6 +58,7 @@ void usage(const char* name)
   fprintf(stderr, "\t-H           show threads\n");
   fprintf(stderr, "\t-i           also display idle processes\n");
   fprintf(stderr, "\t-n num       max number of refreshes\n");
+  fprintf(stderr, "\t-S num       screen number to display\n");
   fprintf(stderr, "\t-w pid|name  watch this process (highlighted)\n");
   return;
 }
@@ -68,67 +67,84 @@ void usage(const char* name)
 /* For each process/thread in the list, generate the text form, ready
  * to be printed.
  */
-void build_rows(struct process_list* proc_list) { int
-i, num_tids; struct process* p;
+void build_rows(struct process_list* proc_list, screen_t* s)
+{
+  int i, num_tids;
+  struct process* p;
+  char  row[200];  /* FIXME */
 
   num_tids = proc_list->num_tids;
   p = proc_list->processes;
 
   /* For all processes/threads */
   for(i=0; i < proc_list->num_tids; ++i) {
-    uint64_t  insns, cycles, misses, brmisses;
-    uint64_t  prev_insns, prev_cycles, prev_misses, prev_brmisses;
+    char substr[100];
+    int  col;
 
     /* display a '+' sign after processes made of multiple threads */
     char      thr = ((!show_threads) && (p[i].num_threads > 1)) ? '+' : ' ';
 
-
     if (p[i].tid == 0)  /* dead */
       continue;
 
-    cycles = p[i].values[0];
-    insns = p[i].values[1];
-    misses = p[i].values[2];
-    brmisses = p[i].values[3];
+    sprintf(row, "%5d%c%5.1f ", p[i].tid, thr, p[i].cpu_percent);
 
-    prev_cycles = p[i].prev_values[0];
-    prev_insns = p[i].prev_values[1];
-    prev_misses = p[i].prev_values[2];
-    prev_brmisses = p[i].prev_values[3];
+    for(col = 0; col < s->num_columns; col++) {
+      char* fmt = s->columns[col].format;
 
-    if (insns == prev_insns) {  /* no insn executed recently */
-      if (cycles) {
-        sprintf(p[i].txt,
-                "%5d%c%5.1f           %8.2f        %4.2f                %s\n",
-                p[i].tid,
-                thr,
-                p[i].cpu_percent,
-                (cycles-prev_cycles)/1e6,
-                1.0*insns/cycles,
-                p[i].name);
+      switch(s->columns[col].data.type) {
+      case COMPUT_RAW: {
+        int counter = s->columns[col].data.param1;
+        uint64_t delta = p[i].values[counter] - p[i].prev_values[counter];
+        sprintf(substr, fmt, delta);
       }
-      else {
-        sprintf(p[i].txt,
-                "%5d%c%5.1f                                               %s\n",
-                p[i].tid,
-                thr,
-                p[i].cpu_percent,
-                p[i].name);
+        break;
+
+      case COMPUT_RAW_M: {
+        int counter = s->columns[col].data.param1;
+        uint64_t delta = p[i].values[counter] - p[i].prev_values[counter];
+        sprintf(substr, fmt, delta / 1000000.0);
       }
+        break;
+
+      case COMPUT_RATIO: {
+        int counter1 = s->columns[col].data.param1;
+        int counter2 = s->columns[col].data.param2;
+        uint64_t delta1 = p[i].values[counter1] - p[i].prev_values[counter1];
+        uint64_t delta2 = p[i].values[counter2] - p[i].prev_values[counter2];
+        if (delta2 != 0)
+          sprintf(substr, fmt, 1.0*delta1/delta2);
+        else {
+          sprintf(substr, s->columns[col].empty_field);
+        }
+      }
+        break;
+
+      case COMPUT_PERCENT: {
+        int counter1 = s->columns[col].data.param1;
+        int counter2 = s->columns[col].data.param2;
+        uint64_t delta1 = p[i].values[counter1] - p[i].prev_values[counter1];
+        uint64_t delta2 = p[i].values[counter2] - p[i].prev_values[counter2];
+        if (delta2 != 0)
+          sprintf(substr, fmt, 100.0*delta1/delta2);
+        else {
+          sprintf(substr, s->columns[col].empty_field);
+        }
+      }
+        break;
+
+      default:
+        fprintf(stderr, "Internal error: unknown column type.\n");
+        exit(EXIT_FAILURE);
+      }
+
+      strcat(row, substr);
+      strcat(row, " ");
     }
-    else
-      sprintf(p[i].txt,
-              "%5d%c%5.1f %8.2f  %8.2f  %4.2f  %4.2f %5.2f  %6.2f  %s\n",
-              p[i].tid,
-              thr,
-              p[i].cpu_percent,
-              (insns-prev_insns)/1e6,
-              (cycles-prev_cycles)/1e6,
-              1.0*(insns-prev_insns)/(cycles-prev_cycles),
-              1.0*insns/cycles,
-              100.0*(misses-prev_misses)/(insns-prev_insns),
-              100.0*(brmisses-prev_brmisses)/(insns-prev_insns),
-              p[i].name);
+    sprintf(substr, "%s\n", p[i].name);
+    strcat(row, substr);
+
+    strcpy(p[i].txt, row);
   }
 }
 
@@ -150,7 +166,7 @@ static int cmp_cpu(const void* p1, const void* p2)
 /* Main execution loop in batch mode. Builds the list of processes,
  * collects statistics, and prints. Repeats after some delay.
  */
-static void batch_mode(struct process_list* proc_list)
+static void batch_mode(struct process_list* proc_list, screen_t* screen)
 {
   int  num_iter = 0;
   struct process* p;
@@ -158,21 +174,21 @@ static void batch_mode(struct process_list* proc_list)
   tv.tv_sec = 0;
   tv.tv_usec = 200000;  /* 200 ms for first iteration */
 
+  printf("%s\n", header);
+
   for(num_iter=0; !max_iter || num_iter < max_iter; num_iter++) {
     int i;
 
-    printf("%s\n", header);
-
     /* update the list of processes/threads and accumulate info if
        needed */
-    update_proc_list(proc_list);
+    update_proc_list(proc_list, screen);
     if (!show_threads)
       accumulate_stats(proc_list);
 
     p = proc_list->processes;
 
     /* generate the text version of all rows */
-    build_rows(proc_list);
+    build_rows(proc_list, screen);
 
     /* sort by %CPU */
     qsort(p, proc_list->num_tids, sizeof(struct process), cmp_cpu);
@@ -299,7 +315,7 @@ static int handle_key() {
  * collects statistics, and prints using curses. Repeats after some
  * delay, also catching key presses.
  */
-static void live_mode(struct process_list* proc_list)
+static void live_mode(struct process_list* proc_list, screen_t* screen)
 {
   fd_set          fds;
   struct process* p;
@@ -359,7 +375,7 @@ static void live_mode(struct process_list* proc_list)
 
     /* update the list of processes/threads and accumulate info if
        needed */
-    update_proc_list(proc_list);
+    update_proc_list(proc_list, screen);
     if (!show_threads)
       accumulate_stats(proc_list);
 
@@ -370,7 +386,7 @@ static void live_mode(struct process_list* proc_list)
     FD_SET(STDIN_FILENO, &fds);
 
     /* generate the text version of all rows */
-    build_rows(proc_list);
+    build_rows(proc_list, screen);
 
     /* sort by %CPU */
     qsort(p, proc_list->num_tids, sizeof(struct process), cmp_cpu);
@@ -400,7 +416,7 @@ static void live_mode(struct process_list* proc_list)
 
       if (with_colors)
         attroff(COLOR_PAIR(3));
-      
+
       if ((p[i].pid == p[i].tid) && (p[i].values[0] != p[i].prev_values[0])) {
         total_cpu += p[i].cpu_percent;
         total_ipc += p[i].cpu_percent*(p[i].values[1]-p[i].prev_values[1])/(p[i].values[0]-p[i].prev_values[0]);
@@ -410,6 +426,7 @@ static void live_mode(struct process_list* proc_list)
         break;
     }
 
+#if 0
     /* print the total IPC at the bottom */
     if (with_colors)
       attron(COLOR_PAIR(4));
@@ -419,10 +436,18 @@ static void live_mode(struct process_list* proc_list)
     }
     if (with_colors)
       attroff(COLOR_PAIR(4));
+#endif
 
     move(1, 0);
     printw("Tasks: %d total, %d running\n", proc_list->num_tids, printed);
-  
+
+    move(1, COLS - 9 - strlen(screen->name));  /* FIXME: if too long */
+    if (with_colors)
+      attron(COLOR_PAIR(4));
+    printw("screen: %s\n", screen->name);
+    if (with_colors)
+      attroff(COLOR_PAIR(4));
+
     /* print message if any */
     if (message) {
       move(2, 0);
@@ -465,6 +490,8 @@ int main(int argc, char* argv[])
 {
   int i;
   struct process_list* proc_list;
+  screen_t* screen = NULL;
+  int screen_num = 0;
 #if defined(HAS_CURSES)
   int  batch = 0;
 #else
@@ -521,6 +548,17 @@ int main(int argc, char* argv[])
       }
     }
 
+    if (strcmp(argv[i], "-S") == 0) {
+      if (i+1 < argc) {
+        screen_num = atoi(argv[i+1]);
+        i++;
+      }
+      else {
+        fprintf(stderr, "Missing screen number after -S.\n");
+        exit(EXIT_FAILURE);
+      }
+    }
+
     if (strcmp(argv[i], "-w") == 0) {
       if (i+1 < argc) {
         watch_pid = atoi(argv[i+1]);
@@ -536,14 +574,23 @@ int main(int argc, char* argv[])
   }
 
   read_config();
+  init_screen();
+
+  screen = get_screen(screen_num);
+  if (!screen) {
+    fprintf(stderr, "No such screen.\n");
+    exit(EXIT_FAILURE);
+  }
+
+  header = gen_header(screen);
 
   /* initialize the list of processes, and then run */
   proc_list = init_proc_list();
   if (batch)
-    batch_mode(proc_list);
+    batch_mode(proc_list, screen);
 #if defined(HAS_CURSES)
   else
-    live_mode(proc_list);
+    live_mode(proc_list, screen);
 #endif
 
 

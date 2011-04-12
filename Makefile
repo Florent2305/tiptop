@@ -1,7 +1,7 @@
 CFLAGS=-O2 -Wall -DKERNEL31 -DHAS_CURSES
 CFLAGS+=$(XCFLAGS)
 
-OBJS=tiptop.o pmc.o process.o requisite.o conf.o screen.o
+OBJS=tiptop.o pmc.o process.o requisite.o conf.o screen.o screens-intel.o
 all: tiptop
 
 tiptop: $(OBJS)
@@ -17,9 +17,11 @@ depend:
 
 # DO NOT DELETE
 
-screen.o: screen.h
 conf.o: conf.h
 pmc.o: pmc.h
-process.o: pmc.h process.h
+process.o: pmc.h process.h screen.h
 requisite.o: pmc.h
-tiptop.o: requisite.h pmc.h process.h conf.h
+screen.o: screen.h
+screens-intel.o: screen.h
+tiptop.o: conf.h requisite.h pmc.h process.h screen.h
+utils.o: utils.h

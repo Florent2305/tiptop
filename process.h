@@ -4,6 +4,9 @@
 #include <stdint.h>
 #include <sys/time.h>
 
+#include "screen.h"
+
+
 #define MAX_EVENTS 16
 #define TXT_LEN 120
 
@@ -35,7 +38,7 @@ struct process_list {
 
 struct process_list* init_proc_list();
 void done_proc_list(struct process_list*);
-void update_proc_list(struct process_list*);
+void update_proc_list(struct process_list*, const screen_t* const);
 void accumulate_stats(struct process_list*);
 void reset_values(struct process_list*);
 
