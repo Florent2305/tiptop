@@ -51,15 +51,16 @@ static char* header = NULL;
 void usage(const char* name)
 {
   fprintf(stderr, "Usage: %s flags\n", name);
-  fprintf(stderr, "\t-b           run in batch mode\n");
-  fprintf(stderr, "\t-d delay     delay in seconds between refreshes\n");
-  fprintf(stderr, "\t-g           debug\n");
-  fprintf(stderr, "\t-h           print this message\n");
-  fprintf(stderr, "\t-H           show threads\n");
-  fprintf(stderr, "\t-i           also display idle processes\n");
-  fprintf(stderr, "\t-n num       max number of refreshes\n");
-  fprintf(stderr, "\t-S num       screen number to display\n");
-  fprintf(stderr, "\t-w pid|name  watch this process (highlighted)\n");
+  fprintf(stderr, "\t-b             run in batch mode\n");
+  fprintf(stderr, "\t-d delay       delay in seconds between refreshes\n");
+  fprintf(stderr, "\t-g             debug\n");
+  fprintf(stderr, "\t-h             print this message\n");
+  fprintf(stderr, "\t-H             show threads\n");
+  fprintf(stderr, "\t-i             also display idle processes\n");
+  fprintf(stderr, "\t--list-screens display list of available screens\n");
+  fprintf(stderr, "\t-n num         max number of refreshes\n");
+  fprintf(stderr, "\t-S num         screen number to display\n");
+  fprintf(stderr, "\t-w pid|name    watch this process (highlighted)\n");
   return;
 }
 
@@ -489,6 +490,7 @@ static void live_mode(struct process_list* proc_list, screen_t* screen)
 int main(int argc, char* argv[])
 {
   int i;
+  int list_scr = 0;
   struct process_list* proc_list;
   screen_t* screen = NULL;
   int screen_num = 0;
@@ -537,6 +539,10 @@ int main(int argc, char* argv[])
       idle = 1;
     }
 
+    if (strcmp(argv[i], "--list-screens") == 0) {
+      list_scr = 1;
+    }
+
     if (strcmp(argv[i], "-n") == 0) {
       if (i+1 < argc) {
         max_iter = atoi(argv[i+1]);
@@ -575,6 +581,11 @@ int main(int argc, char* argv[])
 
   read_config();
   init_screen();
+
+  if (list_scr) {
+    list_screens();
+    exit(0);
+  }
 
   screen = get_screen(screen_num);
   if (!screen) {

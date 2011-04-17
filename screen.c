@@ -7,6 +7,7 @@
 #include <linux/perf_event.h>
 #endif
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -146,7 +147,10 @@ screen_t* default_screen()
 void init_screen()
 {
   default_screen();
-  my_screen();
+  nehalem_fp();
+  nehalem_mem();
+  nehalem_br();
+  nehalem_app();
 }
 
 
@@ -171,6 +175,16 @@ char* gen_header(screen_t* s)
   }
   strcat(hdr, " COMMAND");
   return strdup(hdr);
+}
+
+
+void list_screens()
+{
+  int i;
+  printf("Available screens:\n");
+  for(i=0; i < num_screens; i++) {
+    printf("%2d: %s\n", i, screens[i]->name);
+  }
 }
 
 
