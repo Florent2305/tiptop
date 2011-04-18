@@ -11,7 +11,7 @@
 
 /* Identify the CPU. Not the Intel recommended way (yet), but works for
  * recent CPUs. */
-void cpuid(int input, int* eax, int* ebx, int* ecx, int* edx)
+static void cpuid(int input, int* eax, int* ebx, int* ecx, int* edx)
 {
   int a, b, c, d;
   asm("mov %4, %%eax; " // a into eax
@@ -31,20 +31,38 @@ void cpuid(int input, int* eax, int* ebx, int* ecx, int* edx)
 }
 
 
+static int disp_family_model()
+{
+  int a;
+  int disp_model, disp_family;
+
+  asm("mov $1, %%eax; " // a into eax
+      "cpuid;"
+      "mov %%eax, %0;" // eax into a
+      :"=r"(a) /* output */
+      :
+      :"%eax","%ebx","%ecx","%edx" /* clobbered register */
+     );
+  disp_model = ((a >> 4) & 0xf) | (((a >> 16) & 0xf) << 4);
+  disp_family = ((a >> 8) & 0xf) | (((a >> 20) & 0xff) << 4);
+  return (disp_family << 8) | disp_model;
+}
+
+
 /* This is an Intel specific screen (Nehalem??) */
 screen_t* nehalem_fp()
 {
+  int family_model;
   int cycle, insn, x87, sp, dp, assist;
-  screen_t* s = new_screen("nehalem FP");
+  screen_t* s = NULL;
 
-#if 0
-  {
-    int a, b, c, d;
-    cpuid(1, &a, &b, &c, &d); 
-    printf("Family: %x  Model: %x  Stepping: %x\n", (a >> 8) & 0xf, (a >> 4) & 0xf, a & 0xf);
-    printf("Ext Family: %x  Ext Model: %x\n", (a >> 20) & 0xff, (a >> 16) & 0xf);
+  family_model = disp_family_model();
+  if ((family_model != 0x061a) && (family_model != 0x061e) &&
+      (family_model != 0x061f) && (family_model != 0x062e)) {
+    return NULL;
   }
-#endif
+
+  s = new_screen("nehalem FP");
 
   /* setup counters */
   cycle = add_counter(s, PERF_TYPE_HARDWARE, PERF_COUNT_HW_CPU_CYCLES);
@@ -69,8 +87,17 @@ screen_t* nehalem_fp()
 
 screen_t* nehalem_app()
 {
+  int family_model;
   int cycle, insn, ld, st, x87, br;
-  screen_t* s = new_screen("nehalem app properties");
+  screen_t* s;
+
+  family_model = disp_family_model();
+  if ((family_model != 0x061a) && (family_model != 0x061e) &&
+      (family_model != 0x061f) && (family_model != 0x062e)) {
+    return NULL;
+  }
+
+  s = new_screen("nehalem app properties");
 
   /* setup counters */
   cycle = add_counter(s, PERF_TYPE_HARDWARE, PERF_COUNT_HW_CPU_CYCLES);
@@ -96,14 +123,23 @@ screen_t* nehalem_app()
 
 screen_t* nehalem_mem()
 {
-  int insn, l1miss_i, l1wb, l2miss_d, l2miss_i, l3miss;
-  screen_t* s = new_screen("nehalem memory hierarchy");
+  int family_model;
+  int insn, l1miss_i, /* l1wb, */ l2miss_d, l2miss_i, l3miss;
+  screen_t* s;
+
+  family_model = disp_family_model();
+  if ((family_model != 0x061a) && (family_model != 0x061e) &&
+      (family_model != 0x061f) && (family_model != 0x062e)) {
+    return NULL;
+  }
+
+  s = new_screen("nehalem memory hierarchy");
 
   /* setup counters */
   insn =  add_counter(s, PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS);
 
   l1miss_i = add_counter(s, PERF_TYPE_RAW, 0x0280);  /* L1I.MISSES */
-/*  l1wb = add_counter(s, PERF_TYPE_RAW, 0x0128);  /* L1D_WB_L2.I_STATE */
+/*  l1wb = add_counter(s, PERF_TYPE_RAW, 0x0128);  * L1D_WB_L2.I_STATE */
   /* L2 loads */
   l2miss_d = add_counter(s, PERF_TYPE_RAW, 0x0224);  /* L2_RQSTS.LD_MISS */
   l2miss_i = add_counter(s, PERF_TYPE_RAW, 0x2024);  /* L2_RQSTS.IFETCH_MISS */
@@ -128,8 +164,17 @@ screen_t* nehalem_mem()
 
 screen_t* nehalem_br()
 {
+  int family_model;
   int insn, br, misp;
-  screen_t* s = new_screen("nehalem branches");
+  screen_t* s;
+
+  family_model = disp_family_model();
+  if ((family_model != 0x061a) && (family_model != 0x061e) &&
+      (family_model != 0x061f) && (family_model != 0x062e)) {
+    return NULL;
+  }
+
+  s = new_screen("nehalem branches");
 
   /* setup counters */
   insn =  add_counter(s, PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS);
@@ -138,7 +183,7 @@ screen_t* nehalem_br()
 
   /* add columns */
   add_column_percent(s, "%MISP", " %4.1f", misp, br);
-  add_column_percent(s, "MIS/I", " %4.1f", misp, insn);
+  add_column_percent(s, "%MIS/I", "  %4.1f", misp, insn);
 
   return s;
 }
