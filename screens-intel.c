@@ -1,3 +1,5 @@
+#if defined(TARGET_X86)
+
 #ifdef KERNEL31
 #include <linux/perf_counter.h>
 #else
@@ -140,3 +142,5 @@ screen_t* nehalem_br()
 
   return s;
 }
+
+#endif  /* TARGET_X86 */

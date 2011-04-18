@@ -1,4 +1,6 @@
-CFLAGS=-O2 -Wall -DKERNEL31 -DHAS_CURSES
+TARGET=TARGET_X86
+
+CFLAGS=-O2 -Wall -DKERNEL31 -DHAS_CURSES -D$(TARGET)
 CFLAGS+=$(XCFLAGS)
 
 OBJS=tiptop.o pmc.o process.o requisite.o conf.o screen.o screens-intel.o
