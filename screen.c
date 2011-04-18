@@ -147,10 +147,12 @@ screen_t* default_screen()
 void init_screen()
 {
   default_screen();
+#if defined(TARGET_X86)
   nehalem_fp();
   nehalem_mem();
   nehalem_br();
   nehalem_app();
+#endif
 }
 
 
