@@ -38,8 +38,14 @@ void done_proc_list(struct process_list* list)
   assert(list && list->processes);
   p = list->processes;
   for(i=0; i < list->num_tids; i++) {
+    int val_idx;
     free(p[i].name);
     free(p[i].txt);
+    for(val_idx=0; val_idx < p[i].num_events; val_idx++) {
+      if (p[i].fd[val_idx] != -1) {
+        close(p[i].fd[val_idx]);
+      }
+    }
   }
   free(p);
   free(list);
