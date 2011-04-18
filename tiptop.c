@@ -33,6 +33,7 @@
 int    debug = 0;
 
 static float  delay = 2;
+static int    help = 0;
 static int    idle = 0;
 static int    max_iter = 0;
 static int    show_threads = 0;
@@ -308,6 +309,11 @@ static int handle_key() {
     cbreak();
     noecho();
   }
+
+  else if (c == 'h') {
+    help = 1 - help;
+  }
+
   return c;
 }
 
@@ -316,8 +322,9 @@ static int handle_key() {
  * collects statistics, and prints using curses. Repeats after some
  * delay, also catching key presses.
  */
-static void live_mode(struct process_list* proc_list, screen_t* screen)
+static char live_mode(struct process_list* proc_list, screen_t* screen)
 {
+  WINDOW*         help_win;
   fd_set          fds;
   struct process* p;
   int             num_iter = 0;
@@ -327,6 +334,8 @@ static void live_mode(struct process_list* proc_list, screen_t* screen)
   initscr();
   cbreak();
   noecho();
+
+  help_win = newwin(10, 40, 10, 10);
 
   if (has_colors()) {
     /* initialize curses colors */
@@ -442,10 +451,10 @@ static void live_mode(struct process_list* proc_list, screen_t* screen)
     move(1, 0);
     printw("Tasks: %d total, %d running\n", proc_list->num_tids, printed);
 
-    move(1, COLS - 9 - strlen(screen->name));  /* FIXME: if too long */
+    move(1, COLS - 12 - strlen(screen->name));  /* FIXME: if too long */
     if (with_colors)
       attron(COLOR_PAIR(4));
-    printw("screen: %s\n", screen->name);
+    printw("screen %2d: %s\n", screen->id, screen->name);
     if (with_colors)
       attroff(COLOR_PAIR(4));
 
@@ -461,7 +470,14 @@ static void live_mode(struct process_list* proc_list, screen_t* screen)
     }
 
     refresh();  /* display everything */
-
+    if (help) {
+      box(help_win, 0, 0);
+      wmove(help_win, 0, 10);
+      wprintw(help_win, " Help ");
+      wmove(help_win, 1, 1);
+      wprintw(help_win, "h to close");
+      wrefresh(help_win);
+    }
 
     /* wait some delay, or until a key is pressed */
     num_fd = select(1 + STDIN_FILENO, &fds, NULL, NULL, &tv);
@@ -477,19 +493,23 @@ static void live_mode(struct process_list* proc_list, screen_t* screen)
         else
           message = "Show threads Off";
       }
+      if ((c == '+') || (c == '-')) {
+        return c;
+      }
     }
 
     tv.tv_sec = delay;
     tv.tv_usec = (delay - tv.tv_sec) * 1000000.0;
   }
   endwin();  /* start curses */
+  return 'q';
 }
 #endif
 
 
 int main(int argc, char* argv[])
 {
-  int i;
+  int i, key = 0;
   int list_scr = 0;
   struct process_list* proc_list;
   screen_t* screen = NULL;
@@ -587,23 +607,33 @@ int main(int argc, char* argv[])
     exit(0);
   }
 
-  screen = get_screen(screen_num);
-  if (!screen) {
-    fprintf(stderr, "No such screen.\n");
-    exit(EXIT_FAILURE);
-  }
+  do {
+    screen = get_screen(screen_num);
+    if (!screen) {
+      fprintf(stderr, "No such screen.\n");
+      exit(EXIT_FAILURE);
+    }
 
-  header = gen_header(screen);
+    header = gen_header(screen);
 
-  /* initialize the list of processes, and then run */
-  proc_list = init_proc_list();
-  if (batch)
-    batch_mode(proc_list, screen);
+    /* initialize the list of processes, and then run */
+    proc_list = init_proc_list();
+    if (batch)
+      batch_mode(proc_list, screen);
 #if defined(HAS_CURSES)
-  else
-    live_mode(proc_list, screen);
+    else {
+      key = live_mode(proc_list, screen);
+      if (key == '+') {
+        screen_num = (screen_num + 1) % get_num_screens();
+        done_proc_list(proc_list);
+      }
+      if (key == '-') {
+        screen_num = (screen_num + get_num_screens() - 1) % get_num_screens();
+        done_proc_list(proc_list);
+      }
+    }
 #endif
-
+  } while (key != 'q');
 
   /* done, free memory (makes valgrind happy) */
   done_proc_list(proc_list);

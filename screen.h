@@ -53,6 +53,8 @@ screen_t* default_screen();
 void init_screen();
 screen_t* get_screen(int);
 
+int get_num_screens();
+
 void list_screens();
 
 char* gen_header(screen_t* s);

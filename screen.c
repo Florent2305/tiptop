@@ -180,6 +180,11 @@ char* gen_header(screen_t* s)
 }
 
 
+int get_num_screens()
+{
+  return num_screens;
+}
+
 void list_screens()
 {
   int i;
