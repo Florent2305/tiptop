@@ -171,13 +171,16 @@ screen_t* get_screen(int num)
 }
 
 
-char* gen_header(screen_t* s)
+char* gen_header(screen_t* s, int show_user)
 {
   char hdr[200];  /* FIXME */
   int  num_cols, i;
 
   num_cols = s->num_columns;
-  strcpy(hdr, "  PID  %CPU");
+  if (show_user)
+    strcpy(hdr, "  PID user        %CPU");
+  else
+    strcpy(hdr, "  PID  %CPU");
   for(i=0; i < num_cols; i++) {
     strcat(hdr, " ");
     strcat(hdr, s->columns[i].header);

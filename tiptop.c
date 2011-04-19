@@ -37,6 +37,7 @@ static int    help = 0;
 static int    idle = 0;
 static int    max_iter = 0;
 static int    show_threads = 0;
+static int    show_user = 0;
 static char*  watch_name = NULL;
 static pid_t  watch_pid = 0;
 
@@ -61,6 +62,7 @@ static void usage(const char* name)
   fprintf(stderr, "\t--list-screens display list of available screens\n");
   fprintf(stderr, "\t-n num         max number of refreshes\n");
   fprintf(stderr, "\t-S num         screen number to display\n");
+  fprintf(stderr, "\t-u             show user name\n");
   fprintf(stderr, "\t-w pid|name    watch this process (highlighted)\n");
   return;
 }
@@ -89,7 +91,11 @@ static void build_rows(struct process_list* proc_list, screen_t* s)
     if (p[i].tid == 0)  /* dead */
       continue;
 
-    sprintf(row, "%5d%c%5.1f ", p[i].tid, thr, p[i].cpu_percent);
+    if (show_user)
+      sprintf(row, "%5d%c%-10s %5.1f ",
+              p[i].tid, thr, p[i].username, p[i].cpu_percent);
+    else
+      sprintf(row, "%5d%c%5.1f ", p[i].tid, thr, p[i].cpu_percent);
 
     for(col = 0; col < s->num_columns; col++) {
       char* fmt = s->columns[col].format;
@@ -319,6 +325,9 @@ static char handle_key()
     noecho();
   }
 
+  else if (c == 'u')
+    show_user = 1 - show_user;
+
   else if (c == 'w') {
     char str[100];  /* buffer overflow? */
     move(2,0);
@@ -521,6 +530,10 @@ static char live_mode(struct process_list* proc_list, screen_t* screen)
         else
           message = "Show threads Off";
       }
+      if (c == 'u') {
+        free(header);
+        header = gen_header(screen, show_user);
+      }
       if ((c == '+') || (c == '-')) {
         return c;
       }
@@ -613,6 +626,10 @@ int main(int argc, char* argv[])
       }
     }
 
+    if (strcmp(argv[i], "-u") == 0) {
+      show_user = 1;
+    }
+
     if (strcmp(argv[i], "-w") == 0) {
       if (i+1 < argc) {
         watch_pid = atoi(argv[i+1]);
@@ -642,7 +659,7 @@ int main(int argc, char* argv[])
       exit(EXIT_FAILURE);
     }
 
-    header = gen_header(screen);
+    header = gen_header(screen, show_user);
 
     /* initialize the list of processes, and then run */
     proc_list = init_proc_list();

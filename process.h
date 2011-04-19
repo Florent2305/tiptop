@@ -14,6 +14,7 @@
 struct process {
   pid_t    tid;          /* thread ID */
   pid_t    pid;          /* process ID. For owning process, tip == pid */
+  char*    username;
   int      num_threads;  /* number of threads in brotherhood */
   char*    name;         /* name of process */
   double   cpu_percent;  /* %CPU as displayed by top */

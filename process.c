@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <dirent.h>
 #include <inttypes.h>
+#include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -159,7 +160,7 @@ void update_proc_list(struct process_list* list, const screen_t* const screen)
 
     /* my process, or somebody else's process and I am root (skip
        root's processes because they are too many. */
-    if ((uid == my_uid) || ((my_uid == 0) && (uid != 0))) {
+    if (((my_uid != 0) && (uid == my_uid)) || ((my_uid == 0) && (uid != 0))) {
       int  fd;
       int  tid;
       int  fail;
@@ -173,8 +174,9 @@ void update_proc_list(struct process_list* list, const screen_t* const screen)
       /* Iterate over all threads in the process */
       while ((thr_dirent = readdir(thr_dir))) {
         int pos, zz;
-        tid = atoi(thr_dirent->d_name);
+        struct passwd* passwd;
 
+        tid = atoi(thr_dirent->d_name);
         if (tid == 0)
           continue;
 
@@ -244,6 +246,8 @@ void update_proc_list(struct process_list* list, const screen_t* const screen)
         p = list->processes;
         p[list->num_tids].tid = tid;
         p[list->num_tids].pid = pid;
+        passwd = getpwuid(uid);
+        p[list->num_tids].username = strdup(passwd->pw_name);
         p[list->num_tids].num_threads = num_threads;
         p[list->num_tids].name = strdup(proc_name);
         p[list->num_tids].timestamp.tv_sec = 0;
