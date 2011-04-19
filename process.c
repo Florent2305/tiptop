@@ -157,7 +157,9 @@ void update_proc_list(struct process_list* list, const screen_t* const screen)
     }
     fclose(f);
 
-    if (uid == my_uid) {  /* unless I am root?? */
+    /* my process, or somebody else's process and I am root (skip
+       root's processes because they are too many. */
+    if ((uid == my_uid) || ((my_uid == 0) && (uid != 0))) {
       int  fd;
       int  tid;
       int  fail;
