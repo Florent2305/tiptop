@@ -97,27 +97,47 @@ void build_rows(struct process_list* proc_list, screen_t* s)
       switch(s->columns[col].data.type) {
       case COMPUT_RAW: {
         int counter = s->columns[col].data.param1;
-        uint64_t delta = p[i].values[counter] - p[i].prev_values[counter];
-        sprintf(substr, fmt, delta);
+        uint64_t delta;
+        if (p[i].values[counter] == 0xffffffff) {
+          sprintf(substr, "%s",  s->columns[col].error_field);
+        }
+        else {
+          delta = p[i].values[counter] - p[i].prev_values[counter];
+          sprintf(substr, fmt, delta);
+        }
       }
         break;
 
       case COMPUT_RAW_M: {
         int counter = s->columns[col].data.param1;
-        uint64_t delta = p[i].values[counter] - p[i].prev_values[counter];
-        sprintf(substr, fmt, delta / 1000000.0);
+        uint64_t delta;
+        if (p[i].values[counter] == 0xffffffff) {
+          sprintf(substr, "%s",  s->columns[col].error_field);
+        }
+        else {
+          delta = p[i].values[counter] - p[i].prev_values[counter];
+          sprintf(substr, fmt, delta / 1000000.0);
+        }
       }
         break;
 
       case COMPUT_RATIO: {
         int counter1 = s->columns[col].data.param1;
         int counter2 = s->columns[col].data.param2;
-        uint64_t delta1 = p[i].values[counter1] - p[i].prev_values[counter1];
-        uint64_t delta2 = p[i].values[counter2] - p[i].prev_values[counter2];
-        if (delta2 != 0)
-          sprintf(substr, fmt, 1.0*delta1/delta2);
+        uint64_t delta1, delta2;
+
+        if ((p[i].values[counter1] == 0xffffffff) ||
+            (p[i].values[counter2] == 0xffffffff)) {
+          sprintf(substr, "%s",  s->columns[col].error_field);
+        }
         else {
-          sprintf(substr, "%s", s->columns[col].empty_field);
+          delta1 = p[i].values[counter1] - p[i].prev_values[counter1];
+          delta2 = p[i].values[counter2] - p[i].prev_values[counter2];
+          if (delta2 != 0)
+            sprintf(substr, fmt, 1.0*delta1/delta2);
+          else {
+            sprintf(substr, "%s", s->columns[col].empty_field);
+          }
         }
       }
         break;
@@ -125,12 +145,19 @@ void build_rows(struct process_list* proc_list, screen_t* s)
       case COMPUT_PERCENT: {
         int counter1 = s->columns[col].data.param1;
         int counter2 = s->columns[col].data.param2;
-        uint64_t delta1 = p[i].values[counter1] - p[i].prev_values[counter1];
-        uint64_t delta2 = p[i].values[counter2] - p[i].prev_values[counter2];
-        if (delta2 != 0)
-          sprintf(substr, fmt, 100.0*delta1/delta2);
+        uint64_t delta1, delta2;
+        if ((p[i].values[counter1] == 0xffffffff) ||
+            (p[i].values[counter2] == 0xffffffff)) {
+          sprintf(substr, "%s",  s->columns[col].error_field);
+        }
         else {
-          sprintf(substr, "%s", s->columns[col].empty_field);
+          delta1 = p[i].values[counter1] - p[i].prev_values[counter1];
+          delta2 = p[i].values[counter2] - p[i].prev_values[counter2];
+          if (delta2 != 0)
+            sprintf(substr, fmt, 100.0*delta1/delta2);
+          else {
+            sprintf(substr, "%s", s->columns[col].empty_field);
+          }
         }
       }
         break;

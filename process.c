@@ -210,13 +210,20 @@ void update_proc_list(struct process_list* list, const screen_t* const screen)
 
           /* Read performance counters */
           for(zz = 0; zz < ptr->num_events; zz++) {
-            uint64_t value;
+            uint64_t value = 0;
             int r;
-            r = read(ptr->fd[zz], &value, sizeof(value));
-            if (r == sizeof(value))
-              ptr->values[zz] = value;
-            else
-              ptr->values[zz] = 0;
+            /* When fd is -1, the syscall failed on that counter */
+            if (ptr->fd[zz] != -1) {
+              r = read(ptr->fd[zz], &value, sizeof(value));
+              if (r == sizeof(value))
+                ptr->values[zz] = value;
+              else
+                ptr->values[zz] = 0;
+            }
+            else {
+              /* no fd, use marker */
+              ptr->values[zz] = 0xffffffff;
+            }
           }
 
           continue;
@@ -259,7 +266,8 @@ void update_proc_list(struct process_list* list, const screen_t* const screen)
           p[list->num_tids].values[zz] = 0;
         }
 
-        if (!fail) {
+        if (fail != p[list->num_tids].num_events) {
+          /* at least one counter succeeded, insert the thread in list */
           list->num_tids++;
         }
       }
@@ -307,6 +315,11 @@ void accumulate_stats(struct process_list* list)
       /* accumulate in owner process */
       p[pos].cpu_percent += p[i].cpu_percent;
       for(zz = 0; zz < p[i].num_events; zz++) {
+        /* as soon as one thread has invalid value, skip entire process. */
+        if (p[i].values[zz] == 0xffffffff) {
+          p[pos].values[zz] = 0xffffffff;
+          break;
+        }
         p[pos].values[zz] += p[i].values[zz];
       }
     }

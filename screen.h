@@ -27,6 +27,7 @@ typedef struct {
   char* header;
   char* format;  /* as in printf */
   char* empty_field;
+  char* error_field;
   col_comput_t data;
 } column_t;
 

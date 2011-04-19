@@ -80,10 +80,17 @@ static int add_column_tmpl(screen_t* s, enum comput_type typ,
   s->columns[n].header = header;
   s->columns[n].format = format;
 
+  /* setup an empty field with proper width */
   col_width = strlen(header);
   s->columns[n].empty_field = malloc(col_width + 1);
   memset(s->columns[n].empty_field, ' ', col_width);
   s->columns[n].empty_field[col_width] = '\0';
+
+  /* setup an error field with proper width */
+  s->columns[n].error_field = malloc(col_width + 1);
+  memset(s->columns[n].error_field, ' ', col_width - 1);
+  s->columns[n].error_field[col_width - 1] = '?';
+  s->columns[n].error_field[col_width] = '\0';
 
   s->columns[n].data = data;
   s->num_columns++;
