@@ -16,6 +16,8 @@
 #define __NR_perf_counter_open	298
 #elif defined(__i386__)
 #define __NR_perf_counter_open	336
+#elif defined(TARGET_SPARC)
+#define __NR_perf_counter_open  327
 #endif
 
 #ifdef KERNEL31
