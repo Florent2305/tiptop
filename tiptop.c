@@ -117,7 +117,7 @@ void build_rows(struct process_list* proc_list, screen_t* s)
         if (delta2 != 0)
           sprintf(substr, fmt, 1.0*delta1/delta2);
         else {
-          sprintf(substr, s->columns[col].empty_field);
+          sprintf(substr, "%s", s->columns[col].empty_field);
         }
       }
         break;
@@ -130,7 +130,7 @@ void build_rows(struct process_list* proc_list, screen_t* s)
         if (delta2 != 0)
           sprintf(substr, fmt, 100.0*delta1/delta2);
         else {
-          sprintf(substr, s->columns[col].empty_field);
+          sprintf(substr, "%s", s->columns[col].empty_field);
         }
       }
         break;
