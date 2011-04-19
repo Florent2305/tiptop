@@ -49,7 +49,7 @@ static char  tmp_message[100];
 static char* header = NULL;
 
 
-void usage(const char* name)
+static void usage(const char* name)
 {
   fprintf(stderr, "Usage: %s flags\n", name);
   fprintf(stderr, "\t-b             run in batch mode\n");
@@ -69,7 +69,7 @@ void usage(const char* name)
 /* For each process/thread in the list, generate the text form, ready
  * to be printed.
  */
-void build_rows(struct process_list* proc_list, screen_t* s)
+static void build_rows(struct process_list* proc_list, screen_t* s)
 {
   int i, num_tids;
   struct process* p;
@@ -79,12 +79,12 @@ void build_rows(struct process_list* proc_list, screen_t* s)
   p = proc_list->processes;
 
   /* For all processes/threads */
-  for(i=0; i < proc_list->num_tids; ++i) {
+  for(i=0; i < num_tids; ++i) {
     char substr[100];
     int  col;
 
     /* display a '+' sign after processes made of multiple threads */
-    char      thr = ((!show_threads) && (p[i].num_threads > 1)) ? '+' : ' ';
+    int thr = ((!show_threads) && (p[i].num_threads > 1)) ? '+' : ' ';
 
     if (p[i].tid == 0)  /* dead */
       continue;
@@ -256,10 +256,11 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
  * ready to read (will block otherwise).
  * Return 1 if 'q' (quit).
  */
-static int handle_key() {
-  int c;
+static char handle_key()
+{
+  char c;
 
-  c = getch();
+  c = (char)getch();
   if (c == 'q')
     ; /* nothing */
   else if (c == 'g')
@@ -271,7 +272,7 @@ static int handle_key() {
     echo();
     nocbreak();
     scanw("%f", &delay);
-    if (delay == 0)
+    if (delay < 0.1)
       delay = 1.0;
     tv.tv_sec = delay;
     tv.tv_usec = (delay - tv.tv_sec)*1000000.0;
@@ -509,7 +510,7 @@ static char live_mode(struct process_list* proc_list, screen_t* screen)
     /* wait some delay, or until a key is pressed */
     num_fd = select(1 + STDIN_FILENO, &fds, NULL, NULL, &tv);
     if (num_fd > 0) {
-      int c = handle_key();
+      char c = handle_key();
       if (c == 'q')
         break;
       if (c == 'H') {
@@ -558,8 +559,8 @@ int main(int argc, char* argv[])
 
     if (strcmp(argv[i], "-d") == 0) {
       if (i+1 < argc) {
-        delay = atof(argv[i+1]);
-        if (delay == 0)
+        delay = (float)atof(argv[i+1]);
+        if (delay < 0.1)
           delay = 1;
         i++;
       }
@@ -655,7 +656,8 @@ int main(int argc, char* argv[])
         done_proc_list(proc_list);
       }
       if (key == '-') {
-        screen_num = (screen_num + get_num_screens() - 1) % get_num_screens();
+        int n = get_num_screens();
+        screen_num = (screen_num + n - 1) % n;
         done_proc_list(proc_list);
       }
     }

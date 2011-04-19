@@ -181,17 +181,22 @@ void update_proc_list(struct process_list* list, const screen_t* const screen)
         pos = pos_in_list(list, tid);
         if (pos != -1) {  /* already known */
           FILE*     fstat;
-          char      task_name[100];
+          char      sub_task_name[100];
           double    elapsed;
           unsigned long   utime = 0, stime = 0;
           struct timeval  now;
           struct process* ptr = &(list->processes[pos]);
 
           /* Compute %CPU */
-          sprintf(task_name, "/proc/%d/task/%d/stat", pid, tid);
-          fstat = fopen(task_name, "r");
+          sprintf(sub_task_name, "/proc/%d/task/%d/stat", pid, tid);
+          fstat = fopen(sub_task_name, "r");
           if (fstat) {
-            (void)fscanf(fstat, "%*d %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu %lu", &utime, &stime);
+            int n;
+            n = fscanf(fstat, "%*d %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu %lu", &utime, &stime);
+            if (n != 2) {
+              fprintf(stderr, "Cannot read from '%s'\n", sub_task_name);
+              exit(EXIT_FAILURE);
+            }
             fclose(fstat);
           }
           gettimeofday(&now, NULL);

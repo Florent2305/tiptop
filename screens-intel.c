@@ -7,8 +7,10 @@
 #endif
 
 #include "screen.h"
+#include "screens-intel.h"
 
 
+#if 0
 /* Identify the CPU. Not the Intel recommended way (yet), but works for
  * recent CPUs. */
 static void cpuid(int input, int* eax, int* ebx, int* ecx, int* edx)
@@ -29,6 +31,7 @@ static void cpuid(int input, int* eax, int* ebx, int* ecx, int* edx)
   *ecx = c;
   *edx = d;
 }
+#endif
 
 
 static int disp_family_model()
