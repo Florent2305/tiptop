@@ -247,7 +247,12 @@ void update_proc_list(struct process_list* list, const screen_t* const screen)
         p[list->num_tids].tid = tid;
         p[list->num_tids].pid = pid;
         passwd = getpwuid(uid);
-        p[list->num_tids].username = strdup(passwd->pw_name);
+        if (passwd) {
+          p[list->num_tids].username = strdup(passwd->pw_name);
+        }
+        else
+          p[list->num_tids].username = "?";
+
         p[list->num_tids].num_threads = num_threads;
         p[list->num_tids].name = strdup(proc_name);
         p[list->num_tids].timestamp.tv_sec = 0;
