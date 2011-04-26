@@ -262,11 +262,11 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
  * ready to read (will block otherwise).
  * Return 1 if 'q' (quit).
  */
-static char handle_key()
+static int handle_key()
 {
-  char c;
+  int c;
 
-  c = (char)getch();
+  c = getch();
   if (c == 'q')
     ; /* nothing */
   else if (c == 'g')
@@ -359,7 +359,7 @@ static char handle_key()
  * collects statistics, and prints using curses. Repeats after some
  * delay, also catching key presses.
  */
-static char live_mode(struct process_list* proc_list, screen_t* screen)
+static int live_mode(struct process_list* proc_list, screen_t* screen)
 {
   WINDOW*         help_win;
   fd_set          fds;
@@ -371,6 +371,7 @@ static char live_mode(struct process_list* proc_list, screen_t* screen)
   initscr();
   cbreak();
   noecho();
+  keypad(stdscr, TRUE);
 
   help_win = newwin(10, 40, 10, 10);
 
@@ -519,7 +520,7 @@ static char live_mode(struct process_list* proc_list, screen_t* screen)
     /* wait some delay, or until a key is pressed */
     num_fd = select(1 + STDIN_FILENO, &fds, NULL, NULL, &tv);
     if (num_fd > 0) {
-      char c = handle_key();
+      int c = handle_key();
       if (c == 'q')
         break;
       if (c == 'H') {
@@ -534,7 +535,7 @@ static char live_mode(struct process_list* proc_list, screen_t* screen)
         free(header);
         header = gen_header(screen, show_user);
       }
-      if ((c == '+') || (c == '-')) {
+      if ((c == '+') || (c == '-') || (c == KEY_LEFT) || (c == KEY_RIGHT)) {
         return c;
       }
     }
@@ -668,11 +669,11 @@ int main(int argc, char* argv[])
 #if defined(HAS_CURSES)
     else {
       key = live_mode(proc_list, screen);
-      if (key == '+') {
+      if ((key == '+')  || (key == KEY_RIGHT)) {
         screen_num = (screen_num + 1) % get_num_screens();
         done_proc_list(proc_list);
       }
-      if (key == '-') {
+      if ((key == '-') || (key == KEY_LEFT)) {
         int n = get_num_screens();
         screen_num = (screen_num + n - 1) % n;
         done_proc_list(proc_list);
