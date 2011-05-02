@@ -110,6 +110,12 @@ int add_column_raw_m(screen_t* s, char* header, char* format, int counter)
 }
 
 
+int add_column_abs(screen_t* s, char* header, char* format, int counter)
+{
+  return add_column_tmpl(s, COMPUT_ABS, header, format, counter, -1);
+}
+
+
 int add_column_ratio(screen_t* s,
 		     char* header, char* format,
 		     int counter1, int counter2)
@@ -159,6 +165,8 @@ void init_screen()
   nehalem_mem();
   nehalem_br();
   nehalem_app();
+
+  micro();
 #endif
 }
 

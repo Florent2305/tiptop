@@ -13,6 +13,7 @@ typedef struct {
 enum comput_type {
   COMPUT_RAW,
   COMPUT_RAW_M,  /* RAW, print in millions */
+  COMPUT_ABS,    /* absolute number, from the beginning */
   COMPUT_RATIO,
   COMPUT_PERCENT
 };
@@ -47,6 +48,7 @@ screen_t* new_screen(const char* name);
 int add_counter(screen_t* s, int32_t type, int64_t config);
 int add_column_raw(screen_t* s, char*, char*, int);
 int add_column_raw_m(screen_t* s, char*, char*, int);
+int add_column_abs(screen_t* s, char*, char*, int);
 int add_column_ratio(screen_t*, char*, char*, int, int);
 int add_column_percent(screen_t*, char*, char*, int, int);
 

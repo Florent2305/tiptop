@@ -127,6 +127,17 @@ static void build_rows(struct process_list* proc_list, screen_t* s)
       }
         break;
 
+      case COMPUT_ABS: {
+        int counter = s->columns[col].data.param1;
+        if (p[i].values[counter] == 0xffffffff) {
+          sprintf(substr, "%s",  s->columns[col].error_field);
+        }
+        else {
+          sprintf(substr, fmt, p[i].values[counter]);
+        }
+      }
+        break;
+
       case COMPUT_RATIO: {
         int counter1 = s->columns[col].data.param1;
         int counter2 = s->columns[col].data.param2;

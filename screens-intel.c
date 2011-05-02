@@ -191,4 +191,23 @@ screen_t* nehalem_br()
   return s;
 }
 
+
+screen_t* micro()
+{
+  int insn, cycle;
+  screen_t* s = new_screen("MICRO");
+
+  /* setup counters */
+  cycle = add_counter(s, PERF_TYPE_HARDWARE, PERF_COUNT_HW_CPU_CYCLES);
+  insn =  add_counter(s, PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS);
+
+  /* add columns */
+  add_column_raw_m(s, "  Mcycle", "%8.2f", cycle);
+  add_column_raw_m(s, "  Minstr", "%8.2f", insn);
+  add_column_abs(s, "     tot instr", "%14lld", insn);
+  add_column_ratio(s, " IPC", "%4.2f", insn, cycle);
+
+  return s;
+}
+
 #endif  /* TARGET_X86 */
