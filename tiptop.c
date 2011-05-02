@@ -92,15 +92,20 @@ static void build_rows(struct process_list* proc_list, screen_t* s)
       continue;
 
     if (show_user)
-      sprintf(row, "%5d%c%-10s %5.1f ",
-              p[i].tid, thr, p[i].username, p[i].cpu_percent);
+      sprintf(row, "%5d%c%-10s ",
+              p[i].tid, thr, p[i].username);
     else
-      sprintf(row, "%5d%c%5.1f ", p[i].tid, thr, p[i].cpu_percent);
+      sprintf(row, "%5d%c ", p[i].tid, thr);
 
     for(col = 0; col < s->num_columns; col++) {
       char* fmt = s->columns[col].format;
 
       switch(s->columns[col].data.type) {
+      case CPU_TOT: {
+        sprintf(substr, fmt, p[i].cpu_percent);
+        break;
+      }
+
       case COMPUT_RAW: {
         int counter = s->columns[col].data.param1;
         uint64_t delta;

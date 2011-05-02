@@ -11,6 +11,9 @@ typedef struct {
 
 
 enum comput_type {
+  CPU_TOT,       /* %cpu */
+  CPU_SYS,       /* %cpu spent in system */
+  CPU_USER,      /* %cpu spent in user land */
   COMPUT_RAW,
   COMPUT_RAW_M,  /* RAW, print in millions */
   COMPUT_ABS,    /* absolute number, from the beginning */
@@ -46,6 +49,7 @@ typedef struct {
 
 screen_t* new_screen(const char* name);
 int add_counter(screen_t* s, int32_t type, int64_t config);
+int add_column_cpu(screen_t* s, char*, char*);
 int add_column_raw(screen_t* s, char*, char*, int);
 int add_column_raw_m(screen_t* s, char*, char*, int);
 int add_column_abs(screen_t* s, char*, char*, int);
@@ -63,7 +67,6 @@ void list_screens();
 char* gen_header(screen_t* s, int show_user);
 
 void delete_screen(screen_t* s);
-
 
 
 #endif  /* _SCREEN_H */

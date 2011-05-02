@@ -98,6 +98,12 @@ static int add_column_tmpl(screen_t* s, enum comput_type typ,
 }
 
 
+int add_column_cpu(screen_t* s, char* header, char* format)
+{
+  return add_column_tmpl(s, CPU_TOT, header, format, -1, -1);
+}
+
+
 int add_column_raw(screen_t* s, char* header, char* format, int counter)
 {
   return add_column_tmpl(s, COMPUT_RAW, header, format, counter, -1);
@@ -147,6 +153,7 @@ screen_t* default_screen()
   bus =   add_counter(s, PERF_TYPE_HARDWARE, PERF_COUNT_HW_BUS_CYCLES);
 
   /* add columns */
+  add_column_cpu(s, " %CPU", "%5.1f");
   add_column_raw_m(s, "  Mcycle", "%8.2f", cycle);
   add_column_raw_m(s, "  Minstr", "%8.2f", insn);
   add_column_ratio(s, " IPC", "%4.2f", insn, cycle);
@@ -186,9 +193,9 @@ char* gen_header(screen_t* s, int show_user)
 
   num_cols = s->num_columns;
   if (show_user)
-    strcpy(hdr, "  PID user        %CPU");
+    strcpy(hdr, "  PID user      ");
   else
-    strcpy(hdr, "  PID  %CPU");
+    strcpy(hdr, "  PID ");
   for(i=0; i < num_cols; i++) {
     strcat(hdr, " ");
     strcat(hdr, s->columns[i].header);

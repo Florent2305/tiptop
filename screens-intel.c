@@ -76,6 +76,7 @@ screen_t* nehalem_fp()
   assist =  add_counter(s, PERF_TYPE_RAW, 0x01f7);  /* FP_ASSIST */
 
   /* add columns */
+  add_column_cpu(s, " %CPU", "%5.1f");
   add_column_raw_m(s, "  Mcycle", "%8.2f", cycle);
   add_column_raw_m(s, "  Minstr", "%8.2f", insn);
   add_column_ratio(s, " IPC", "%4.2f", insn, cycle);
@@ -112,6 +113,7 @@ screen_t* nehalem_app()
 
 
   /* add columns */
+  add_column_cpu(s, " %CPU", "%5.1f");
   add_column_raw_m(s, "  Mcycle", "%8.2f", cycle);
   add_column_raw_m(s, "  Minstr", "%8.2f", insn);
   add_column_ratio(s, " IPC", "%4.2f", insn, cycle);
@@ -149,6 +151,7 @@ screen_t* nehalem_mem()
   l3miss = add_counter(s, PERF_TYPE_RAW, 0x412e);  /* L3_LAT_CACHE.MISS */
 
   /* add columns */
+  add_column_cpu(s, " %CPU", "%5.1f");
   add_column_raw(s, " miss L1I", "%9d", l1miss_i);
   add_column_percent(s, " L1I", "%4.1f", l1miss_i, insn);
 
@@ -185,6 +188,7 @@ screen_t* nehalem_br()
   misp = add_counter(s, PERF_TYPE_RAW, 0x7f89);  /* BR_MISP_EXEC_ANY */
 
   /* add columns */
+  add_column_cpu(s, " %CPU", "%5.1f");
   add_column_percent(s, "%MISP", " %4.1f", misp, br);
   add_column_percent(s, "%MIS/I", "  %4.1f", misp, insn);
 
@@ -202,6 +206,7 @@ screen_t* micro()
   insn =  add_counter(s, PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS);
 
   /* add columns */
+  add_column_cpu(s, " %CPU", "%5.1f");
   add_column_raw_m(s, "  Mcycle", "%8.2f", cycle);
   add_column_raw_m(s, "  Minstr", "%8.2f", insn);
   add_column_abs(s, "     tot instr", "%14lld", insn);
