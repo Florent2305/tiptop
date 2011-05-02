@@ -106,6 +106,16 @@ static void build_rows(struct process_list* proc_list, screen_t* s)
         break;
       }
 
+      case CPU_SYS: {
+        sprintf(substr, fmt, p[i].cpu_percent_s);
+        break;
+      }
+
+      case CPU_USER: {
+        sprintf(substr, fmt, p[i].cpu_percent_u);
+        break;
+      }
+
       case COMPUT_RAW: {
         int counter = s->columns[col].data.param1;
         uint64_t delta;

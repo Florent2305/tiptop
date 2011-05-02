@@ -186,6 +186,7 @@ void update_proc_list(struct process_list* list, const screen_t* const screen)
           char      sub_task_name[100];
           double    elapsed;
           unsigned long   utime = 0, stime = 0;
+          unsigned long   prev_cpu_time, curr_cpu_time;
           struct timeval  now;
           struct process* ptr = &(list->processes[pos]);
 
@@ -203,12 +204,19 @@ void update_proc_list(struct process_list* list, const screen_t* const screen)
           }
           gettimeofday(&now, NULL);
           elapsed = (now.tv_sec - ptr->timestamp.tv_sec) +
-                    (now.tv_usec - ptr->timestamp.tv_usec)/1000000.0; 
+                    (now.tv_usec - ptr->timestamp.tv_usec)/1000000.0;
+          elapsed *= clk_tck;
 
           ptr->timestamp = now;
-          ptr->cpu_percent = 100.0*(utime + stime - ptr->prev_cpu_time)/clk_tck/elapsed;
-          ptr->prev_cpu_time = utime + stime;
 
+          prev_cpu_time = ptr->prev_cpu_time_s + ptr->prev_cpu_time_u;
+          curr_cpu_time = stime + utime;
+          ptr->cpu_percent = 100.0*(curr_cpu_time - prev_cpu_time)/elapsed;
+          ptr->cpu_percent_s = 100.0*(stime - ptr->prev_cpu_time_s)/elapsed;
+          ptr->cpu_percent_u = 100.0*(utime - ptr->prev_cpu_time_u)/elapsed;
+
+          ptr->prev_cpu_time_s = stime;
+          ptr->prev_cpu_time_u = utime;
 
           /* Backup previous value of counters */
           for(zz = 0; zz < ptr->num_events; zz++) {
@@ -257,8 +265,11 @@ void update_proc_list(struct process_list* list, const screen_t* const screen)
         p[list->num_tids].name = strdup(proc_name);
         p[list->num_tids].timestamp.tv_sec = 0;
         p[list->num_tids].timestamp.tv_usec = 0;
-        p[list->num_tids].prev_cpu_time = 0;
+        p[list->num_tids].prev_cpu_time_s = 0;
+        p[list->num_tids].prev_cpu_time_u = 0;
         p[list->num_tids].cpu_percent = 0.0;
+        p[list->num_tids].cpu_percent_s = 0.0;
+        p[list->num_tids].cpu_percent_u = 0.0;
 
         /* Get number of counters from screen */
         p[list->num_tids].num_events = screen->num_counters;

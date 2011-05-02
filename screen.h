@@ -50,6 +50,8 @@ typedef struct {
 screen_t* new_screen(const char* name);
 int add_counter(screen_t* s, int32_t type, int64_t config);
 int add_column_cpu(screen_t* s, char*, char*);
+int add_column_cpu_s(screen_t* s, char*, char*);
+int add_column_cpu_u(screen_t* s, char*, char*);
 int add_column_raw(screen_t* s, char*, char*, int);
 int add_column_raw_m(screen_t* s, char*, char*, int);
 int add_column_abs(screen_t* s, char*, char*, int);

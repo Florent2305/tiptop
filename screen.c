@@ -104,6 +104,18 @@ int add_column_cpu(screen_t* s, char* header, char* format)
 }
 
 
+int add_column_cpu_s(screen_t* s, char* header, char* format)
+{
+  return add_column_tmpl(s, CPU_SYS, header, format, -1, -1);
+}
+
+
+int add_column_cpu_u(screen_t* s, char* header, char* format)
+{
+  return add_column_tmpl(s, CPU_USER, header, format, -1, -1);
+}
+
+
 int add_column_raw(screen_t* s, char* header, char* format, int counter)
 {
   return add_column_tmpl(s, COMPUT_RAW, header, format, counter, -1);
@@ -154,6 +166,7 @@ screen_t* default_screen()
 
   /* add columns */
   add_column_cpu(s, " %CPU", "%5.1f");
+  add_column_cpu_s(s, " %SYS", "%5.1f");
   add_column_raw_m(s, "  Mcycle", "%8.2f", cycle);
   add_column_raw_m(s, "  Minstr", "%8.2f", insn);
   add_column_ratio(s, " IPC", "%4.2f", insn, cycle);

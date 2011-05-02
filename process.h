@@ -12,15 +12,18 @@
 
 /* Main structure describing a thread */
 struct process {
-  pid_t    tid;          /* thread ID */
-  pid_t    pid;          /* process ID. For owning process, tip == pid */
+  pid_t    tid;           /* thread ID */
+  pid_t    pid;           /* process ID. For owning process, tip == pid */
   char*    username;
-  int      num_threads;  /* number of threads in brotherhood */
-  char*    name;         /* name of process */
-  double   cpu_percent;  /* %CPU as displayed by top */
+  int      num_threads;   /* number of threads in brotherhood */
+  char*    name;          /* name of process */
+  double   cpu_percent;   /* %CPU as displayed by top */
+  double   cpu_percent_s; /* %CPU system */
+  double   cpu_percent_u; /* %CPU user */
   
   struct timeval timestamp;         /* timestamp of last update */
-  unsigned long prev_cpu_time;
+  unsigned long prev_cpu_time_s;    /* system */
+  unsigned long prev_cpu_time_u;    /* user */
   int       num_events;
   int       fd[MAX_EVENTS];           /* file handles */
   uint64_t  values[MAX_EVENTS];       /* values read from counters */
