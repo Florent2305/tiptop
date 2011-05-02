@@ -62,7 +62,7 @@ static void usage(const char* name)
   fprintf(stderr, "\t--list-screens display list of available screens\n");
   fprintf(stderr, "\t-n num         max number of refreshes\n");
   fprintf(stderr, "\t-S num         screen number to display\n");
-  fprintf(stderr, "\t-u             show user name\n");
+  fprintf(stderr, "\t-U             show user name\n");
   fprintf(stderr, "\t-w pid|name    watch this process (highlighted)\n");
   return;
 }
@@ -336,7 +336,7 @@ static int handle_key()
     noecho();
   }
 
-  else if (c == 'u')
+  else if (c == 'U')
     show_user = 1 - show_user;
 
   else if (c == 'w') {
@@ -542,7 +542,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
         else
           message = "Show threads Off";
       }
-      if (c == 'u') {
+      if (c == 'U') {
         free(header);
         header = gen_header(screen, show_user);
       }
