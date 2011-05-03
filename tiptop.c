@@ -14,6 +14,7 @@
 #include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
+#include <pwd.h>
 #include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -44,6 +45,7 @@ static int    show_threads = 0;
 static int    show_user = 0;
 static char*  watch_name = NULL;
 static pid_t  watch_pid = 0;
+static int    watch_uid = -1;
 
 static struct timeval tv;
 
@@ -66,6 +68,7 @@ static void usage(const char* name)
   fprintf(stderr, "\t--list-screens display list of available screens\n");
   fprintf(stderr, "\t-n num         max number of refreshes\n");
   fprintf(stderr, "\t-S num         screen number to display\n");
+  fprintf(stderr, "\t-u userid      only show user's processes\n");
   fprintf(stderr, "\t-U             show user name\n");
   fprintf(stderr, "\t-w pid|name    watch this process (highlighted)\n");
   return;
@@ -246,7 +249,7 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
 
     /* update the list of processes/threads and accumulate info if
        needed */
-    update_proc_list(proc_list, screen);
+    update_proc_list(proc_list, screen, watch_uid);
     if (!show_threads)
       accumulate_stats(proc_list);
 
@@ -358,6 +361,33 @@ static int handle_key()
   else if (c == 'U')
     show_user = 1 - show_user;
 
+  else if (c == 'u') {
+    char  str[100];  /* buffer overflow? */
+    move(2,0);
+    printw("Which user (blank for all): ");
+    echo();
+    nocbreak();
+    getstr(str);
+    cbreak();
+    noecho();
+    if (str[0] == '\0') {  /* blank */
+      watch_uid = -1;
+    }
+    else if (isdigit(str[0])) {
+      watch_uid = atoi(str);
+    }
+    else {
+      struct passwd*  passwd;
+      passwd = getpwnam(str);
+      if (passwd) {
+        watch_uid = passwd->pw_uid;
+      }
+      else {
+        message = "User name does not exist.";
+      }
+    }
+  }
+
   else if (c == 'w') {
     char str[100];  /* buffer overflow? */
     move(2,0);
@@ -452,7 +482,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
 
     /* update the list of processes/threads and accumulate info if
        needed */
-    update_proc_list(proc_list, screen);
+    update_proc_list(proc_list, screen, watch_uid);
     if (!show_threads)
       accumulate_stats(proc_list);
 
@@ -498,7 +528,9 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
     }
 
     move(1, 0);
-    printw("Tasks: %d total, %d running\n", proc_list->num_tids, printed);
+    printw("Tasks: %3d total, %3d running    Watching uid: %d\n",
+           proc_list->num_tids, printed,
+           watch_uid);
 
     move(1, COLS - 12 - strlen(screen->name));  /* FIXME: if too long */
     if (with_colors)
@@ -549,6 +581,8 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
       if ((c == '+') || (c == '-') || (c == KEY_LEFT) || (c == KEY_RIGHT)) {
         return c;
       }
+      if (c == 'u')  /* change user, need to rebuild list of processes */
+        return c;
     }
 
     tv.tv_sec = delay;
@@ -638,8 +672,29 @@ int main(int argc, char* argv[])
       }
     }
 
-    if (strcmp(argv[i], "-u") == 0) {
+    if (strcmp(argv[i], "-U") == 0) {
       show_user = 1;
+    }
+
+    if (strcmp(argv[i], "-u") == 0) {
+      if (i+1 < argc) {
+        if (isdigit(argv[i+1][0])) {
+          watch_uid = atoi(argv[i+1]);
+        }
+        else {
+          struct passwd* passwd = getpwnam(argv[i+1]);
+          if (!passwd) {
+            fprintf(stderr, "User name '%s' does not exist.\n", argv[i+1]);
+            exit(EXIT_FAILURE);
+          }
+          watch_uid = passwd->pw_uid;
+        }
+        i++;
+      }
+      else {
+        fprintf(stderr, "Missing user name after -u.\n");
+        exit(EXIT_FAILURE);
+      }
     }
 
     if (strcmp(argv[i], "-w") == 0) {
@@ -687,6 +742,9 @@ int main(int argc, char* argv[])
       if ((key == '-') || (key == KEY_LEFT)) {
         int n = get_num_screens();
         screen_num = (screen_num + n - 1) % n;
+        done_proc_list(proc_list);
+      }
+      if (key == 'u') {
         done_proc_list(proc_list);
       }
     }

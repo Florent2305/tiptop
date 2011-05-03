@@ -101,7 +101,9 @@ static int pos_in_list(struct process_list* list, pid_t tid)
  * Update all processes in the list with newly collected statistics.
  *
  */
-void update_proc_list(struct process_list* list, const screen_t* const screen)
+void update_proc_list(struct process_list* list,
+                      const screen_t* const screen,
+                      int watch_uid)
 {
   int i;
   struct dirent* pid_dirent;
@@ -185,8 +187,10 @@ void update_proc_list(struct process_list* list, const screen_t* const screen)
 
     /* my process, or somebody else's process and I am root (skip
        root's processes because they are too many. */
-    if (((my_uid != 0) && (uid == my_uid)) ||
-        ((my_uid == 0) && (uid != 0))) {
+    if (((watch_uid != -1) && (uid == watch_uid)) ||
+        ((watch_uid == -1) &&
+        (((my_uid != 0) && (uid == my_uid)) ||
+         ((my_uid == 0) && (uid != 0))))) {
       int  fd;
       int  tid;
       int  fail;
