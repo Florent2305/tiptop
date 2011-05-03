@@ -29,6 +29,8 @@ struct process {
   uint64_t  values[MAX_EVENTS];       /* values read from counters */
   uint64_t  prev_values[MAX_EVENTS];  /* previous iteration */
   char* txt;
+
+  int   attention;
 };
 
 

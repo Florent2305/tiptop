@@ -14,16 +14,40 @@
 
 extern int debug;
 
+int num_files = 0;
+int num_files_limit = 0;
 
 /*
  * Build the (empty) list of processes/threads.
  */
 struct process_list* init_proc_list()
 {
+  char  name[100];  /* needs to fit the name /proc/xxxx/limits */
+  char  line[100];
+  FILE* f;
+
   struct process_list* l = malloc(sizeof(struct process_list));
   l->num_alloc = 20;
   l->processes = malloc(l->num_alloc*sizeof(struct process));
   l->num_tids = 0;
+
+  num_files_limit = 0;
+  sprintf(name, "/proc/%d/limits", getpid());
+  f = fopen(name, "r");
+  if (f) {
+    while (fgets(line, 100, f)) {
+      int n;
+      n = sscanf(line, "Max open files %d", &num_files_limit);
+      if (n)
+        break;
+    }
+    fclose(f);
+  }
+
+  num_files_limit -= 10; /* keep some slack */
+  if (num_files_limit == 0)  /* something went wrong */
+    num_files_limit = 200;  /* reasonable default? */
+  num_files = 0;
   return l;
 }
 
@@ -45,6 +69,7 @@ void done_proc_list(struct process_list* list)
     for(val_idx=0; val_idx < p[i].num_events; val_idx++) {
       if (p[i].fd[val_idx] != -1) {
         close(p[i].fd[val_idx]);
+        num_files--;
       }
     }
   }
@@ -160,7 +185,8 @@ void update_proc_list(struct process_list* list, const screen_t* const screen)
 
     /* my process, or somebody else's process and I am root (skip
        root's processes because they are too many. */
-    if (((my_uid != 0) && (uid == my_uid)) || ((my_uid == 0) && (uid != 0))) {
+    if (((my_uid != 0) && (uid == my_uid)) ||
+        ((my_uid == 0) && (uid != 0))) {
       int  fd;
       int  tid;
       int  fail;
@@ -254,6 +280,8 @@ void update_proc_list(struct process_list* list, const screen_t* const screen)
         p = list->processes;
         p[list->num_tids].tid = tid;
         p[list->num_tids].pid = pid;
+        p[list->num_tids].attention = 0;
+
         passwd = getpwuid(uid);
         if (passwd) {
           p[list->num_tids].username = strdup(passwd->pw_name);
@@ -284,17 +312,32 @@ void update_proc_list(struct process_list* list, const screen_t* const screen)
         for(zz = 0; zz < p[list->num_tids].num_events; zz++) {
           events.type = screen->counters[zz].type;  /* eg PERF_TYPE_HARDWARE */
           events.config = screen->counters[zz].config;
-          fd = sys_perf_counter_open(&events, tid, cpu, grp, flags);
+
+          if (num_files < num_files_limit)
+            fd = sys_perf_counter_open(&events, tid, cpu, grp, flags);
+          else
+            fd = -1;
+
           if (fd == -1)
             fail++;
+          else
+            num_files++;
           p[list->num_tids].fd[zz] = fd;
           p[list->num_tids].values[zz] = 0;
         }
 
+        if (fail) {
+          /* at least one counter failed, mark it */
+          p[list->num_tids].attention = 1;
+        }
+
+#if 0
         if (fail != p[list->num_tids].num_events) {
           /* at least one counter succeeded, insert the thread in list */
           list->num_tids++;
         }
+#endif
+        list->num_tids++;  /* insert in any case */
       }
       closedir(thr_dir);
     }

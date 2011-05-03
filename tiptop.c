@@ -30,6 +30,10 @@
 #include "process.h"
 #include "screen.h"
 
+/* CPU activity below which a thread is considered inactive */
+const double cpu_threshold = 0.00001;
+
+
 int    debug = 0;
 
 static float  delay = 2;
@@ -416,7 +420,6 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
   tv.tv_usec = 200000; /* 200 ms for first iteration */
 
   for(num_iter=0; !max_iter || num_iter < max_iter; num_iter++) {
-    double     total_cpu, total_ipc;
     int        i, zz, printed;
     int        num_fd;
     FILE*      f_uptime;
@@ -466,22 +469,21 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
     qsort(p, proc_list->num_tids, sizeof(struct process), cmp_cpu);
 
     printed = 0;
-    total_cpu = 0.0;
-    total_ipc = 0.0;
     /* Iterate over all threads */
     for(i=0; i < proc_list->num_tids; i++) {
       if (p[i].pid == 0)  /* dead */
         continue;
 
-      /* no insn executed, skip */
-      if (!idle && (p[i].values[1] == p[i].prev_values[1]))
+      /* not active, skip */
+      if (!idle && (p[i].cpu_percent < cpu_threshold))
         continue;
 
       /* highlight watched process, if any */
-      if ((p[i].tid == watch_pid) ||
-          (watch_name && strstr(p[i].name, watch_name)))
-        if (with_colors)
+      if (with_colors) {
+        if ((p[i].tid == watch_pid) ||
+            (watch_name && strstr(p[i].name, watch_name)))
           attron(COLOR_PAIR(3));
+      }
 
       if (show_threads || (p[i].pid == p[i].tid)) {
         printw(p[i].txt);
@@ -491,26 +493,9 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
       if (with_colors)
         attroff(COLOR_PAIR(3));
 
-      if ((p[i].pid == p[i].tid) && (p[i].values[0] != p[i].prev_values[0])) {
-        total_cpu += p[i].cpu_percent;
-        total_ipc += p[i].cpu_percent*(p[i].values[1]-p[i].prev_values[1])/(p[i].values[0]-p[i].prev_values[0]);
-      }
-
       if (printed >= LINES - 5)  /* stop printing at bottom of window */
         break;
     }
-
-#if 0
-    /* print the total IPC at the bottom */
-    if (with_colors)
-      attron(COLOR_PAIR(4));
-    if (total_cpu != 0.0) {
-      printw("total %5.1f                     %4.2f\n",
-             total_cpu, total_ipc/total_cpu);
-    }
-    if (with_colors)
-      attroff(COLOR_PAIR(4));
-#endif
 
     move(1, 0);
     printw("Tasks: %d total, %d running\n", proc_list->num_tids, printed);
