@@ -4,7 +4,7 @@ CFLAGS=-O2 -Wall -DKERNEL31 -DHAS_CURSES -D$(TARGET)
 CFLAGS+=$(XCFLAGS)
 
 OBJS=tiptop.o pmc.o process.o requisite.o conf.o screen.o screens-intel.o \
-     utils.o
+     utils.o debug.o
 
 all: tiptop
 
@@ -25,6 +25,6 @@ conf.o: conf.h
 pmc.o: pmc.h
 process.o: pmc.h process.h screen.h
 requisite.o: pmc.h requisite.h
-screen.o: screen.h screens-intel.h utils.h
+screen.o: debug.h screen.h screens-intel.h utils.h
 tiptop.o: conf.h requisite.h pmc.h process.h screen.h utils.h
-utils.o: utils.h
+utils.o: debug.h utils.h

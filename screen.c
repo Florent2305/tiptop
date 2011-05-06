@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "debug.h"
 #include "screen.h"
 #include "screens-intel.h"
 #include "utils.h"
@@ -226,6 +227,7 @@ int get_num_screens()
   return num_screens;
 }
 
+
 void list_screens()
 {
   int i;
@@ -236,11 +238,29 @@ void list_screens()
 }
 
 
+/* Delete one screen. */
 void delete_screen(screen_t* s)
 {
+  int i;
+
   assert(s);
   free(s->name);
   free(s->counters);
+  for(i=0; i < s->num_columns; i++) {
+    free(s->columns[i].error_field);
+    free(s->columns[i].empty_field);
+  }
   free(s->columns);
   free(s);
+}
+
+
+/* Delete all screens. */
+void delete_screens()
+{
+  int i;
+  for(i=0; i < num_screens; i++) {
+    delete_screen(screens[i]);
+  }
+  free(screens);
 }

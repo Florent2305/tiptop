@@ -30,12 +30,13 @@
 #include "pmc.h"
 #include "process.h"
 #include "screen.h"
+#include "utils.h"
 
 /* CPU activity below which a thread is considered inactive */
 const double cpu_threshold = 0.00001;
 
 
-int    debug = 0;
+extern int debug;
 
 static float  delay = 2;
 static int    help = 0;
@@ -82,7 +83,9 @@ static void build_rows(struct process_list* proc_list, screen_t* s)
 {
   int i, num_tids;
   struct process* p;
-  char  row[200];  /* FIXME */
+  char*  row;
+  int    row_alloc;
+  char   tmp[100];
 
   num_tids = proc_list->num_tids;
   p = proc_list->processes;
@@ -99,10 +102,10 @@ static void build_rows(struct process_list* proc_list, screen_t* s)
       continue;
 
     if (show_user)
-      sprintf(row, "%5d%c%-10s ",
-              p[i].tid, thr, p[i].username);
+      sprintf(tmp, "%5d%c%-10s ", p[i].tid, thr, p[i].username);
     else
-      sprintf(row, "%5d%c ", p[i].tid, thr);
+      sprintf(tmp, "%5d%c ", p[i].tid, thr);
+    row = str_init(tmp, &row_alloc);
 
     for(col = 0; col < s->num_columns; col++) {
       char* fmt = s->columns[col].format;
@@ -206,13 +209,14 @@ static void build_rows(struct process_list* proc_list, screen_t* s)
         exit(EXIT_FAILURE);
       }
 
-      strcat(row, substr);
-      strcat(row, " ");
+      row = str_append(row, &row_alloc, substr);
+      row = str_append(row, &row_alloc, " ");
     }
     sprintf(substr, "%s\n", p[i].name);
-    strcat(row, substr);
+    row = str_append(row, &row_alloc, substr);
 
     strcpy(p[i].txt, row);
+    free(row);
   }
 }
 
@@ -528,14 +532,27 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
     }
 
     move(1, 0);
-    printw("Tasks: %3d total, %3d running    Watching uid: %d\n",
-           proc_list->num_tids, printed,
-           watch_uid);
+    printw("Tasks: %3d total, %3d running", proc_list->num_tids, printed);
+    if (watch_uid != -1) {
+      move(1, 35);
+      printw("Watching uid: %5d\n", watch_uid);
+    }
 
-    move(1, COLS - 12 - strlen(screen->name));  /* FIXME: if too long */
+    /* print the screen name, make sure it fits, or truncate */
     if (with_colors)
       attron(COLOR_PAIR(4));
-    printw("screen %2d: %s\n", screen->id, screen->name);
+    if (35 + 20 + 11 + strlen(screen->name) < COLS) {
+      move(1, COLS - 11 - strlen(screen->name));
+      printw("screen %2d: %s\n", screen->id, screen->name);
+    }
+    else {
+      char screen_str[50];
+      move(1, 35 + 20);
+      printw("screen %2d: ", screen->id);
+      sprintf(screen_str, "%s\n", screen->name);
+      screen_str[COLS - 35 - 20 - 11] = '\0';
+      printw("%s", screen_str);
+    }
     if (with_colors)
       attroff(COLOR_PAIR(4));
 
@@ -730,8 +747,10 @@ int main(int argc, char* argv[])
 
     /* initialize the list of processes, and then run */
     proc_list = init_proc_list();
-    if (batch)
+    if (batch) {
       batch_mode(proc_list, screen);
+      key = 'q';
+    }
 #if defined(HAS_CURSES)
     else {
       key = live_mode(proc_list, screen);
@@ -752,6 +771,8 @@ int main(int argc, char* argv[])
   } while (key != 'q');
 
   /* done, free memory (makes valgrind happy) */
+  free(header);
+  delete_screens();
   done_proc_list(proc_list);
   if (watch_name)
     free(watch_name);

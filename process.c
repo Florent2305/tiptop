@@ -66,6 +66,9 @@ void done_proc_list(struct process_list* list)
     int val_idx;
     free(p[i].name);
     free(p[i].txt);
+    if (p[i].username)
+      free(p[i].username);
+
     for(val_idx=0; val_idx < p[i].num_events; val_idx++) {
       if (p[i].fd[val_idx] != -1) {
         close(p[i].fd[val_idx]);
@@ -291,7 +294,7 @@ void update_proc_list(struct process_list* list,
           p[list->num_tids].username = strdup(passwd->pw_name);
         }
         else
-          p[list->num_tids].username = "?";
+          p[list->num_tids].username = NULL;
 
         p[list->num_tids].num_threads = num_threads;
         p[list->num_tids].name = strdup(proc_name);
@@ -348,7 +351,7 @@ void update_proc_list(struct process_list* list,
   }
   closedir(pid_dir);
 
-
+#if 0
   if (debug) {
     FILE* debug = fopen("debug", "w");
     p = list->processes;
@@ -363,6 +366,7 @@ void update_proc_list(struct process_list* list,
     fprintf(debug, "----------\n");
     fclose(debug);
   }
+#endif
 }
 
 
