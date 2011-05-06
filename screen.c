@@ -187,9 +187,8 @@ void init_screen()
   nehalem_mem();
   nehalem_br();
   nehalem_app();
-
-  micro();
 #endif
+  micro();
 }
 
 

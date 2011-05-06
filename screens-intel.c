@@ -1,5 +1,3 @@
-#if defined(TARGET_X86)
-
 #ifdef KERNEL31
 #include <linux/perf_counter.h>
 #else
@@ -8,6 +6,9 @@
 
 #include "screen.h"
 #include "screens-intel.h"
+
+
+#if defined(TARGET_X86)
 
 
 #if 0
@@ -196,6 +197,8 @@ screen_t* nehalem_br()
 }
 
 
+#endif  /* TARGET_X86 */
+
 screen_t* micro()
 {
   int insn, cycle;
@@ -214,5 +217,3 @@ screen_t* micro()
 
   return s;
 }
-
-#endif  /* TARGET_X86 */
