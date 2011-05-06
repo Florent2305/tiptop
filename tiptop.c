@@ -605,7 +605,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
     tv.tv_sec = delay;
     tv.tv_usec = (delay - tv.tv_sec) * 1000000.0;
   }
-  endwin();  /* start curses */
+  endwin();  /* stop curses */
   return 'q';
 }
 #endif
