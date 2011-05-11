@@ -624,6 +624,9 @@ int main(int argc, char* argv[])
   int  batch = 1;
 #endif
 
+  /* If we are set-uid, take advantage of it. If it fails, never mind. */
+  setuid(0);
+
   /* Check OS to make sure we can run. */
   check();
 
