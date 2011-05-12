@@ -61,8 +61,15 @@ screen_t* nehalem_fp()
   screen_t* s = NULL;
 
   family_model = disp_family_model();
-  if ((family_model != 0x061a) && (family_model != 0x061e) &&
-      (family_model != 0x061f) && (family_model != 0x062e)) {
+  if (
+      /* Nehalem */
+      (family_model != 0x061a) && (family_model != 0x061e) &&
+      (family_model != 0x061f) && (family_model != 0x062e) &&
+      /* Gulftown/Westmere-EP */
+      (family_model != 0x062c) &&
+      /* Core */
+      (family_model != 0x060f))
+  {
     return NULL;
   }
 
@@ -97,8 +104,15 @@ screen_t* nehalem_app()
   screen_t* s;
 
   family_model = disp_family_model();
-  if ((family_model != 0x061a) && (family_model != 0x061e) &&
-      (family_model != 0x061f) && (family_model != 0x062e)) {
+  if (
+      /* Nehalem */
+      (family_model != 0x061a) && (family_model != 0x061e) &&
+      (family_model != 0x061f) && (family_model != 0x062e) &&
+      /* Gulftown/Westmere-EP */
+      (family_model != 0x062c) &&
+      /* Core */
+      (family_model != 0x060f))
+  {
     return NULL;
   }
 
@@ -134,8 +148,15 @@ screen_t* nehalem_mem()
   screen_t* s;
 
   family_model = disp_family_model();
-  if ((family_model != 0x061a) && (family_model != 0x061e) &&
-      (family_model != 0x061f) && (family_model != 0x062e)) {
+  if (
+      /* Nehalem */
+      (family_model != 0x061a) && (family_model != 0x061e) &&
+      (family_model != 0x061f) && (family_model != 0x062e) &&
+      /* Gulftown/Westmere-EP */
+      (family_model != 0x062c) &&
+      /* Core */
+      (family_model != 0x060f))
+  {
     return NULL;
   }
 
@@ -176,8 +197,15 @@ screen_t* nehalem_br()
   screen_t* s;
 
   family_model = disp_family_model();
-  if ((family_model != 0x061a) && (family_model != 0x061e) &&
-      (family_model != 0x061f) && (family_model != 0x062e)) {
+  if (
+      /* Nehalem */
+      (family_model != 0x061a) && (family_model != 0x061e) &&
+      (family_model != 0x061f) && (family_model != 0x062e) &&
+      /* Gulftown/Westmere-EP */
+      (family_model != 0x062c) &&
+      /* Core */
+      (family_model != 0x060f))
+  {
     return NULL;
   }
 
