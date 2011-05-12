@@ -59,6 +59,8 @@ int add_column_ratio(screen_t*, char*, char*, int, int);
 int add_column_percent(screen_t*, char*, char*, int, int);
 
 screen_t* default_screen();
+screen_t* micro();
+
 void init_screen();
 screen_t* get_screen(int);
 
