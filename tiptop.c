@@ -252,6 +252,8 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
   printf("tiptop -");
   fflush(stdout);
   system("uptime");
+  system("date");
+  system("uname -a");
   printf("delay: %.2f  idle: %d  threads: %d\n", delay, idle, show_threads);
   if (watch_pid) {
     printf("watching pid %d\n", watch_pid);
