@@ -7,6 +7,8 @@
  *
  */
 
+#include <assert.h>
+
 #if defined(HAS_CURSES)
 #include <curses.h>
 #endif
@@ -240,13 +242,30 @@ static int cmp_cpu(const void* p1, const void* p2)
  */
 static void batch_mode(struct process_list* proc_list, screen_t* screen)
 {
-  int  num_iter = 0;
+  int   num_iter = 0;
   struct process* p;
 
   tv.tv_sec = 0;
   tv.tv_usec = 200000;  /* 200 ms for first iteration */
 
-  printf("%s\n", header);
+  /* Print various information about this run */
+  printf("tiptop -");
+  fflush(stdout);
+  system("uptime");
+  printf("delay: %.2f  idle: %d  threads: %d\n", delay, idle, show_threads);
+  if (watch_pid) {
+    printf("watching pid %d\n", watch_pid);
+  }
+  else if (watch_name) {
+    printf("watching pid '%s'\n", watch_name);
+  }
+  if (watch_uid != -1) {
+    struct passwd* passwd = getpwuid(watch_uid);
+    assert(passwd);
+    printf("watching uid %d '%s'\n", watch_uid, passwd->pw_name);
+  }
+
+  printf("\n%s\n", header);
 
   for(num_iter=0; !max_iter || num_iter < max_iter; num_iter++) {
     int i;
