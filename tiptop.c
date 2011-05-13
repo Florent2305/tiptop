@@ -102,7 +102,7 @@ static void build_rows(struct process_list* proc_list, screen_t* s)
       continue;
 
     if (show_user)
-      sprintf(tmp, "%5d%c%-10s ", p[i].tid, thr, p[i].username);
+      sprintf(tmp, "%5d%c %-10s ", p[i].tid, thr, p[i].username);
     else
       sprintf(tmp, "%5d%c ", p[i].tid, thr);
     row = str_init(tmp, &row_alloc);

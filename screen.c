@@ -229,7 +229,7 @@ char* gen_header(screen_t* s, int show_user)
 
   num_cols = s->num_columns;
   if (show_user)
-    hdr = str_init("  PID user      ", &cur_alloc);
+    hdr = str_init("  PID  user      ", &cur_alloc);
   else
     hdr = str_init( "  PID ", &cur_alloc);
 
