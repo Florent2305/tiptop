@@ -68,7 +68,7 @@ int get_num_screens();
 
 void list_screens();
 
-char* gen_header(screen_t* s, int show_user);
+char* gen_header(screen_t* s, int show_user, int timestamp);
 
 void delete_screen(screen_t* s);
 void delete_screens();

@@ -221,18 +221,23 @@ screen_t* get_screen(int num)
 }
 
 
-char* gen_header(screen_t* s, int show_user)
+char* gen_header(screen_t* s, int show_user, int timestamp)
 {
   char* hdr;
   int   num_cols, i;
   int   cur_alloc;
 
-  num_cols = s->num_columns;
-  if (show_user)
-    hdr = str_init("  PID  user      ", &cur_alloc);
+  if (timestamp)
+    hdr = str_init("timest ", &cur_alloc);
   else
-    hdr = str_init( "  PID ", &cur_alloc);
+    hdr = str_init("", &cur_alloc);
 
+  if (show_user)
+    hdr = str_append(hdr, &cur_alloc, "  PID  user      ");
+  else
+    hdr = str_append(hdr, &cur_alloc, "  PID ");
+
+  num_cols = s->num_columns;
   for(i=0; i < num_cols; i++) {
     hdr = str_append(hdr, &cur_alloc, " ");
     hdr = str_append(hdr, &cur_alloc, s->columns[i].header);

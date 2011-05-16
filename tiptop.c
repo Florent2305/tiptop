@@ -43,6 +43,7 @@ static int    idle = 0;
 static int    max_iter = 0;
 static int    show_threads = 0;
 static int    show_user = 0;
+static int    timestamp = 0;
 static char*  watch_name = NULL;
 static pid_t  watch_pid = 0;
 static int    watch_uid = -1;
@@ -73,6 +74,7 @@ static void usage(const char* name)
   fprintf(stderr, "\t--list-screens display list of available screens\n");
   fprintf(stderr, "\t-n num         max number of refreshes\n");
   fprintf(stderr, "\t-S num         screen number to display\n");
+  fprintf(stderr, "\t--timestamp    add timestamp at beginning of each line\n");
   fprintf(stderr, "\t-u userid      only show user's processes\n");
   fprintf(stderr, "\t-U             show user name\n");
   fprintf(stderr, "\t-w pid|name    watch this process (highlighted)\n");
@@ -302,11 +304,15 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
           (watch_name && !strstr(p[i].name, watch_name)))
         continue;
 
-      if (show_threads || (p[i].pid == p[i].tid))
+      if (show_threads || (p[i].pid == p[i].tid)) {
+        if (timestamp)
+          printf("%6d ", num_iter);
         printf("%s", p[i].txt);
+      }
     }
 
     printf("\n");
+    fflush(stdout);
     /* wait some delay */
     select(0, NULL, NULL, NULL, &tv);
 
@@ -616,7 +622,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
       }
       if (c == 'U') {
         free(header);
-        header = gen_header(screen, show_user);
+        header = gen_header(screen, show_user, timestamp);
       }
       if ((c == '+') || (c == '-') || (c == KEY_LEFT) || (c == KEY_RIGHT)) {
         return c;
@@ -726,6 +732,10 @@ int main(int argc, char* argv[])
       }
     }
 
+    if (strcmp(argv[i], "--timestamp") == 0) {
+      timestamp = 1;
+    }
+
     if (strcmp(argv[i], "-U") == 0) {
       show_user = 1;
     }
@@ -780,7 +790,7 @@ int main(int argc, char* argv[])
       exit(EXIT_FAILURE);
     }
 
-    header = gen_header(screen, show_user);
+    header = gen_header(screen, show_user, timestamp && batch);
 
     /* initialize the list of processes, and then run */
     proc_list = init_proc_list();
