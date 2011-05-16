@@ -34,9 +34,6 @@
 #include "screen.h"
 #include "utils.h"
 
-/* CPU activity below which a thread is considered inactive */
-const double cpu_threshold = 0.00001;
-
 
 extern int debug;
 
@@ -49,6 +46,10 @@ static int    show_user = 0;
 static char*  watch_name = NULL;
 static pid_t  watch_pid = 0;
 static int    watch_uid = -1;
+
+/* CPU activity below which a thread is considered inactive */
+static float  cpu_threshold = 0.00001;
+
 
 static struct timeval tv;
 
@@ -63,6 +64,7 @@ static void usage(const char* name)
 {
   fprintf(stderr, "Usage: %s flags\n", name);
   fprintf(stderr, "\t-b             run in batch mode\n");
+  fprintf(stderr, "\t--cpu-min m    minimum %%CPU to display a process\n");
   fprintf(stderr, "\t-d delay       delay in seconds between refreshes\n");
   fprintf(stderr, "\t-g             debug\n");
   fprintf(stderr, "\t-h             print this message\n");
@@ -290,8 +292,8 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
       if (p[i].pid == 0)  /* dead */
         continue;
 
-      /* no insn executed, skip */
-      if (!idle && (p[i].values[1] == p[i].prev_values[1]))
+      /* not active, skip */
+      if (!idle && (p[i].cpu_percent < cpu_threshold))
         continue;
 
       /* In batch mode, if a process is being watched, only print this
@@ -655,6 +657,17 @@ int main(int argc, char* argv[])
   for(i=1; i < argc; i++) {
     if (strcmp(argv[i], "-b") == 0) {
       batch = 1;
+    }
+
+    if (strcmp(argv[i], "--cpu-min") == 0) {
+      if (i+1 < argc) {
+        cpu_threshold = (float)atof(argv[i+1]);
+        i++;
+      }
+      else {
+        fprintf(stderr, "Missing value after --cpu-min.\n");
+        exit(EXIT_FAILURE);
+      }
     }
 
     if (strcmp(argv[i], "-d") == 0) {
