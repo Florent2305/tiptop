@@ -143,7 +143,7 @@ void update_proc_list(struct process_list* list,
 
 
   /* update statistics, and add newly created processes/threads */
-  my_uid = getuid();
+  my_uid = geteuid();
   cpu = -1;  /* CPU to monitor, -1 = per thread */
   grp = -1;
   flags = 0;
@@ -192,8 +192,9 @@ void update_proc_list(struct process_list* list,
        root's processes because they are too many. */
     if (((watch_uid != -1) && (uid == watch_uid)) ||
         ((watch_uid == -1) &&
-        (((my_uid != 0) && (uid == my_uid)) ||
-         ((my_uid == 0) && (uid != 0))))) {
+         (((my_uid != 0) && (uid == my_uid)) ||  /* not root, monitor mine */
+          ((my_uid == 0) && (uid != 0)))))  /* I am root, monitor all others */
+    { 
       int  fd;
       int  tid;
       int  fail;
