@@ -247,6 +247,7 @@ static int cmp_cpu(const void* p1, const void* p2)
 static void batch_mode(struct process_list* proc_list, screen_t* screen)
 {
   int   num_iter = 0;
+  int   num_printed;
   struct process* p;
 
   tv.tv_sec = 0;
@@ -290,6 +291,7 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
     /* sort by %CPU */
     qsort(p, proc_list->num_tids, sizeof(struct process), cmp_cpu);
 
+    num_printed = 0;
     for(i=0; i < proc_list->num_tids; i++) {
       if (p[i].pid == 0)  /* dead */
         continue;
@@ -308,10 +310,12 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
         if (timestamp)
           printf("%6d ", num_iter);
         printf("%s", p[i].txt);
+        num_printed++;
       }
     }
 
-    printf("\n");
+    if (num_printed)
+      printf("\n");
     fflush(stdout);
     /* wait some delay */
     select(0, NULL, NULL, NULL, &tv);
