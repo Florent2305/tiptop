@@ -64,6 +64,8 @@ void done_proc_list(struct process_list* list)
   p = list->processes;
   for(i=0; i < list->num_tids; i++) {
     int val_idx;
+    if (p[i].cmdline)
+      free(p[i].cmdline);
     free(p[i].name);
     free(p[i].txt);
     if (p[i].username)
@@ -125,7 +127,7 @@ void update_proc_list(struct process_list* list,
 
   /* remove dead threads */
   for(i=0; i < list->num_tids; ++i) {
-    char name[50]; /* needs to fit the name /proc/xxxxx/task/xxxxx/status */
+    char name[50]; /* needs to fit the name /proc/xxxxx/task/yyyyy/status */
     int  zz;
 
     sprintf(name, "/proc/%d/task/%d/status", p[i].pid, p[i].tid);
@@ -135,6 +137,7 @@ void update_proc_list(struct process_list* list,
       for(zz=0; zz < p[i].num_events; ++zz) {
         if (p[i].fd[zz] != -1) {
           close(p[i].fd[zz]);
+          num_files--;
           p[i].fd[zz] = -1;
         }
       }
@@ -155,8 +158,9 @@ void update_proc_list(struct process_list* list,
   /* check all directories of /proc */
   pid_dir = opendir("/proc");
   while ((pid_dirent = readdir(pid_dir))) {
-    char  name[50]; /* needs to fit the name /proc/xxxx/status */
+    char  name[50]; /* needs to fit the name /proc/xxxx/{status,cmdline} */
     char  proc_name[1000];
+    char* cmdline;
     char  line[100]; /* line of /proc/xxxx/status */
     int   uid;
     int   pid;
@@ -188,6 +192,18 @@ void update_proc_list(struct process_list* list,
     }
     fclose(f);
 
+    /* get process' command line */
+    sprintf(name, "/proc/%d/cmdline", pid);
+    f = fopen(name, "r");
+    if (!f) {
+      cmdline = NULL;
+    }
+    else {
+      fgets(line, sizeof(line), f);
+      cmdline = line;
+      fclose(f);
+    }
+
     /* my process, or somebody else's process and I am root (skip
        root's processes because they are too many. */
     if (((watch_uid != -1) && (uid == watch_uid)) ||
@@ -201,9 +217,14 @@ void update_proc_list(struct process_list* list,
       DIR* thr_dir;
       struct dirent* thr_dirent;
       char task_name[50];
-      /* printf("PID %d has %d threads\n", pid, num_threads); */
+
       sprintf(task_name, "/proc/%d/task", pid);
       thr_dir = opendir(task_name);
+      if (!thr_dir) {
+        perror("opendir");
+        fprintf(stderr, "Cannot open '%s': '%s'\n", task_name, proc_name);
+        goto skip;
+      }
 
       /* Iterate over all threads in the process */
       while ((thr_dirent = readdir(thr_dir))) {
@@ -229,7 +250,9 @@ void update_proc_list(struct process_list* list,
           fstat = fopen(sub_task_name, "r");
           if (fstat) {
             int n;
-            n = fscanf(fstat, "%*d %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu %lu", &utime, &stime);
+            n = fscanf(fstat,
+                 "%*d %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu %lu",
+                       &utime, &stime);
             if (n != 2) {
               fprintf(stderr, "Cannot read from '%s'\n", sub_task_name);
               exit(EXIT_FAILURE);
@@ -298,6 +321,7 @@ void update_proc_list(struct process_list* list,
           p[list->num_tids].username = NULL;
 
         p[list->num_tids].num_threads = num_threads;
+        p[list->num_tids].cmdline = strdup(cmdline);
         p[list->num_tids].name = strdup(proc_name);
         p[list->num_tids].timestamp.tv_sec = 0;
         p[list->num_tids].timestamp.tv_usec = 0;
@@ -348,6 +372,7 @@ void update_proc_list(struct process_list* list,
         list->num_tids++;  /* insert in any case */
       }
       closedir(thr_dir);
+    skip: ;
     }
   }
   closedir(pid_dir);

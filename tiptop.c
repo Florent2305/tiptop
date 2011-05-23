@@ -41,6 +41,7 @@ static float  delay = 2;
 static int    help = 0;
 static int    idle = 0;
 static int    max_iter = 0;
+static int    show_cmdline = 0;
 static int    show_threads = 0;
 static int    show_user = 0;
 static int    timestamp = 0;
@@ -65,6 +66,7 @@ static void usage(const char* name)
 {
   fprintf(stderr, "Usage: %s flags\n", name);
   fprintf(stderr, "\t-b             run in batch mode\n");
+  fprintf(stderr, "\t-c             display command line instead of process name\n");
   fprintf(stderr, "\t--cpu-min m    minimum %%CPU to display a process\n");
   fprintf(stderr, "\t-d delay       delay in seconds between refreshes\n");
   fprintf(stderr, "\t-g             debug\n");
@@ -85,9 +87,9 @@ static void usage(const char* name)
 /* For each process/thread in the list, generate the text form, ready
  * to be printed.
  */
-static void build_rows(struct process_list* proc_list, screen_t* s)
+static void build_rows(struct process_list* proc_list, screen_t* s, int width)
 {
-  int i, num_tids;
+  int i, num_tids, len;
   struct process* p;
   char*  row;
   int    row_alloc;
@@ -218,10 +220,18 @@ static void build_rows(struct process_list* proc_list, screen_t* s)
       row = str_append(row, &row_alloc, substr);
       row = str_append(row, &row_alloc, " ");
     }
-    sprintf(substr, "%s\n", p[i].name);
-    row = str_append(row, &row_alloc, substr);
 
-    strcpy(p[i].txt, row);
+    if (show_cmdline)
+      row = str_append(row, &row_alloc, p[i].cmdline);
+    else
+      row = str_append(row, &row_alloc, p[i].name);
+
+    row = str_append(row, &row_alloc, "\n");
+    len = TXT_LEN - 1;
+    if ((width != -1) && (width < len))
+      len = width;
+    strncpy(p[i].txt, row, len);
+    p[i].txt[len] = '\0';
     free(row);
   }
 }
@@ -272,6 +282,7 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
     printf("watching uid %d '%s'\n", watch_uid, passwd->pw_name);
   }
 
+  printf("Screen %d: %s\n", screen->id, screen->name);
   printf("\n%s\n", header);
 
   for(num_iter=0; !max_iter || num_iter < max_iter; num_iter++) {
@@ -286,7 +297,7 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
     p = proc_list->processes;
 
     /* generate the text version of all rows */
-    build_rows(proc_list, screen);
+    build_rows(proc_list, screen, -1);
 
     /* sort by %CPU */
     qsort(p, proc_list->num_tids, sizeof(struct process), cmp_cpu);
@@ -341,6 +352,9 @@ static int handle_key()
     ; /* nothing */
   else if (c == 'g')
     debug = 1 - debug;
+
+  else if (c == 'c')
+    show_cmdline = 1 - show_cmdline;
 
   else if ((c == 'd') || (c == 's')) {
     move(2,0);
@@ -530,7 +544,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
     FD_SET(STDIN_FILENO, &fds);
 
     /* generate the text version of all rows */
-    build_rows(proc_list, screen);
+    build_rows(proc_list, screen, COLS);
 
     /* sort by %CPU */
     qsort(p, proc_list->num_tids, sizeof(struct process), cmp_cpu);
@@ -664,6 +678,10 @@ int main(int argc, char* argv[])
   for(i=1; i < argc; i++) {
     if (strcmp(argv[i], "-b") == 0) {
       batch = 1;
+    }
+
+    if (strcmp(argv[i], "-c") == 0) {
+      show_cmdline = 1;
     }
 
     if (strcmp(argv[i], "--cpu-min") == 0) {
