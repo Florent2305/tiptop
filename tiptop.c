@@ -104,7 +104,13 @@ static void build_rows(struct process_list* proc_list, screen_t* s, int width)
     int  col;
 
     /* display a '+' sign after processes made of multiple threads */
-    int thr = ((!show_threads) && (p[i].num_threads > 1)) ? '+' : ' ';
+    int thr = ' ';
+    if (p[i].num_threads > 1) {
+      if (p[i].tid == p[i].pid)
+        thr = '+';
+      else
+        thr = '*';
+    }
 
     if (p[i].tid == 0)  /* dead */
       continue;
