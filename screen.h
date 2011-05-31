@@ -47,16 +47,16 @@ typedef struct {
   column_t*  columns;
 } screen_t;
 
-screen_t* new_screen(const char* name);
-int add_counter(screen_t* s, int32_t type, int64_t config);
-int add_column_cpu(screen_t* s, char*, char*);
-int add_column_cpu_s(screen_t* s, char*, char*);
-int add_column_cpu_u(screen_t* s, char*, char*);
-int add_column_raw(screen_t* s, char*, char*, int);
-int add_column_raw_m(screen_t* s, char*, char*, int);
-int add_column_abs(screen_t* s, char*, char*, int);
-int add_column_ratio(screen_t*, char*, char*, int, int);
-int add_column_percent(screen_t*, char*, char*, int, int);
+screen_t* new_screen(const char* const);
+int add_counter(screen_t* const, int32_t type, int64_t config);
+int add_column_cpu(screen_t* const, char*, char*);
+int add_column_cpu_s(screen_t* const, char*, char*);
+int add_column_cpu_u(screen_t* const, char*, char*);
+int add_column_raw(screen_t* const, char*, char*, int);
+int add_column_raw_m(screen_t* const, char*, char*, int);
+int add_column_abs(screen_t* const, char*, char*, int);
+int add_column_ratio(screen_t* const, char*, char*, int, int);
+int add_column_percent(screen_t* const, char*, char*, int, int);
 
 screen_t* default_screen();
 screen_t* micro();
@@ -68,7 +68,8 @@ int get_num_screens();
 
 void list_screens();
 
-char* gen_header(screen_t* s, int show_user, int timestamp, int epoch);
+char* gen_header(const screen_t* const s, int show_user,
+                 int timestamp, int epoch);
 
 void delete_screen(screen_t* s);
 void delete_screens();

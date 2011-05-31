@@ -23,7 +23,7 @@ static int num_alloc_screens = 0;
 static screen_t** screens = NULL;
 
 
-screen_t* new_screen(const char* name)
+screen_t* new_screen(const char* const name)
 {
   screen_t* the_screen = malloc(sizeof(screen_t));
   the_screen->id = num_screens;
@@ -47,7 +47,7 @@ screen_t* new_screen(const char* name)
 
 
 /* return position of counter */
-int add_counter(screen_t* s, int32_t type, int64_t config)
+int add_counter(screen_t* const s, int32_t type, int64_t config)
 {
   int n = s->num_counters;
   /* check max available hw counter */
@@ -64,7 +64,7 @@ int add_counter(screen_t* s, int32_t type, int64_t config)
 }
 
 
-static int add_column_tmpl(screen_t* s, enum comput_type typ,
+static int add_column_tmpl(screen_t* const s, enum comput_type typ,
                            char* header, char* format,
                            int counter1, int counter2)
 {
@@ -100,43 +100,43 @@ static int add_column_tmpl(screen_t* s, enum comput_type typ,
 }
 
 
-int add_column_cpu(screen_t* s, char* header, char* format)
+int add_column_cpu(screen_t* const s, char* header, char* format)
 {
   return add_column_tmpl(s, CPU_TOT, header, format, -1, -1);
 }
 
 
-int add_column_cpu_s(screen_t* s, char* header, char* format)
+int add_column_cpu_s(screen_t* const s, char* header, char* format)
 {
   return add_column_tmpl(s, CPU_SYS, header, format, -1, -1);
 }
 
 
-int add_column_cpu_u(screen_t* s, char* header, char* format)
+int add_column_cpu_u(screen_t* const s, char* header, char* format)
 {
   return add_column_tmpl(s, CPU_USER, header, format, -1, -1);
 }
 
 
-int add_column_raw(screen_t* s, char* header, char* format, int counter)
+int add_column_raw(screen_t* const s, char* header, char* format, int counter)
 {
   return add_column_tmpl(s, COMPUT_RAW, header, format, counter, -1);
 }
 
 
-int add_column_raw_m(screen_t* s, char* header, char* format, int counter)
+int add_column_raw_m(screen_t* const s, char* header, char* format, int counter)
 {
   return add_column_tmpl(s, COMPUT_RAW_M, header, format, counter, -1);
 }
 
 
-int add_column_abs(screen_t* s, char* header, char* format, int counter)
+int add_column_abs(screen_t* const s, char* header, char* format, int counter)
 {
   return add_column_tmpl(s, COMPUT_ABS, header, format, counter, -1);
 }
 
 
-int add_column_ratio(screen_t* s,
+int add_column_ratio(screen_t* const s,
 		     char* header, char* format,
 		     int counter1, int counter2)
 {
@@ -144,7 +144,7 @@ int add_column_ratio(screen_t* s,
 }
 
 
-int add_column_percent(screen_t* s,
+int add_column_percent(screen_t* const s,
 		       char* header, char* format,
 		       int counter1, int counter2)
 {
@@ -221,7 +221,8 @@ screen_t* get_screen(int num)
 }
 
 
-char* gen_header(screen_t* s, int show_user, int timestamp, int epoch)
+char* gen_header(const screen_t* const s, int show_user,
+                 int timestamp, int epoch)
 {
   char* hdr;
   int   num_cols, i;

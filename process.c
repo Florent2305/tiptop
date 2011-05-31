@@ -53,7 +53,7 @@ struct process_list* init_proc_list()
 
 
 /* Free memory for all fields of the process. */
-static void done_proc(struct process* p)
+static void done_proc(struct process* const p)
 {
   int val_idx;
   
@@ -95,7 +95,7 @@ void done_proc_list(struct process_list* list)
  * Return the index in the list of the thread 'tid'.
  * -1 if not present.
  */
-static int pos_in_list(struct process_list* list, pid_t tid)
+static int pos_in_list(const struct process_list* const list, pid_t tid)
 {
   int i;
   struct process* p;
@@ -114,7 +114,7 @@ static int pos_in_list(struct process_list* list, pid_t tid)
  * Update all processes in the list with newly collected statistics.
  * Return 1 if processes have died.
  */
-int update_proc_list(struct process_list* list,
+int update_proc_list(struct process_list* const list,
                      const screen_t* const screen,
                      int watch_uid)
 {
@@ -411,7 +411,7 @@ int update_proc_list(struct process_list* list,
 
 /* Scan list of processes and deallocates the dead ones, compacting
    the list. */
-void compact_proc_list(struct process_list* list)
+void compact_proc_list(struct process_list* const list)
 {
   int dst, src, num_tids, num_dead;
   struct process* p;
@@ -439,7 +439,7 @@ void compact_proc_list(struct process_list* list)
  * per-thread statistics in the parent process (which is also a
  * thread).
  */
-void accumulate_stats(struct process_list* list)
+void accumulate_stats(const struct process_list* const list)
 {
   int i, zz;
   struct process* p;
@@ -473,7 +473,7 @@ void accumulate_stats(struct process_list* list)
  * accumulated values, much higher than per-thread value. Failing to
  * do so results in transient erratic displayed values.
  */
-void reset_values(struct process_list* list)
+void reset_values(const struct process_list* const list)
 {
   int i, zz;
   struct process* p;
