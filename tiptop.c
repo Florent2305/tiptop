@@ -304,7 +304,9 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
     if (show_epoch)
       epoch = time(NULL);
 
-    update_proc_list(proc_list, screen, watch_uid);
+    if (update_proc_list(proc_list, screen, watch_uid)) {
+      compact_proc_list(proc_list);
+    }
     if (!show_threads)
       accumulate_stats(proc_list);
 
@@ -549,7 +551,9 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
 
     /* update the list of processes/threads and accumulate info if
        needed */
-    update_proc_list(proc_list, screen, watch_uid);
+    if (update_proc_list(proc_list, screen, watch_uid)) {
+      compact_proc_list(proc_list);
+    }
     if (!show_threads)
       accumulate_stats(proc_list);
 

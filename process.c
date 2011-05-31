@@ -52,6 +52,27 @@ struct process_list* init_proc_list()
 }
 
 
+/* Free memory for all fields of the process. */
+static void done_proc(struct process* p)
+{
+  int val_idx;
+  
+  if (p->cmdline)
+    free(p->cmdline);
+  free(p->name);
+  free(p->txt);
+  if (p->username)
+    free(p->username);
+
+  for(val_idx=0; val_idx < p->num_events; val_idx++) {
+    if (p->fd[val_idx] != -1) {
+      close(p->fd[val_idx]);
+      num_files--;
+    }
+  }
+}
+
+
 /*
  * Deletes the list of processes. Free memory.
  */
@@ -63,20 +84,7 @@ void done_proc_list(struct process_list* list)
   assert(list && list->processes);
   p = list->processes;
   for(i=0; i < list->num_tids; i++) {
-    int val_idx;
-    if (p[i].cmdline)
-      free(p[i].cmdline);
-    free(p[i].name);
-    free(p[i].txt);
-    if (p[i].username)
-      free(p[i].username);
-
-    for(val_idx=0; val_idx < p[i].num_events; val_idx++) {
-      if (p[i].fd[val_idx] != -1) {
-        close(p[i].fd[val_idx]);
-        num_files--;
-      }
-    }
+    done_proc(&p[i]);
   }
   free(p);
   free(list);
@@ -104,11 +112,11 @@ static int pos_in_list(struct process_list* list, pid_t tid)
 
 /*
  * Update all processes in the list with newly collected statistics.
- *
+ * Return 1 if processes have died.
  */
-void update_proc_list(struct process_list* list,
-                      const screen_t* const screen,
-                      int watch_uid)
+int update_proc_list(struct process_list* list,
+                     const screen_t* const screen,
+                     int watch_uid)
 {
   int i;
   struct dirent* pid_dirent;
@@ -118,6 +126,7 @@ void update_proc_list(struct process_list* list,
   int    clk_tck;
   struct process* p;
   struct STRUCT_NAME events = {0, };
+  int    ret_val = 0;
 
   assert(screen);
   assert(list && list->processes);
@@ -132,6 +141,7 @@ void update_proc_list(struct process_list* list,
 
     sprintf(name, "/proc/%d/task/%d/status", p[i].pid, p[i].tid);
     if (access(name, F_OK) == -1) {
+      ret_val = 1;
       p[i].tid = 0;  /* mark dead */
       p[i].pid = 0;  /* mark dead */
       for(zz=0; zz < p[i].num_events; ++zz) {
@@ -375,6 +385,7 @@ void update_proc_list(struct process_list* list,
     skip: ;
     }
   }
+
   closedir(pid_dir);
 
 #if 0
@@ -393,6 +404,33 @@ void update_proc_list(struct process_list* list,
     fclose(debug);
   }
 #endif
+
+  return ret_val;
+}
+
+
+/* Scan list of processes and deallocates the dead ones, compacting
+   the list. */
+void compact_proc_list(struct process_list* list)
+{
+  int dst, src, num_tids, num_dead;
+  struct process* p;
+
+  p = list->processes;
+  num_tids = list->num_tids;
+  dst = 0;
+  num_dead = 0;
+  for(src=0; src < num_tids; src++, dst++) {
+    while ((src < num_tids) && (p[src].pid == 0)) {
+      done_proc(&p[src]);
+      src++;
+      num_dead++;
+    }
+    if ((src != dst) && (src < num_tids)) {
+      p[dst] = p[src];
+    }
+  }
+  list->num_tids -= num_dead;
 }
 
 
