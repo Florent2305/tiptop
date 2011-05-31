@@ -172,8 +172,8 @@ screen_t* default_screen()
   add_column_raw_m(s, "  Mcycle", "%8.2f", cycle);
   add_column_raw_m(s, "  Minstr", "%8.2f", insn);
   add_column_ratio(s, " IPC", "%4.2f", insn, cycle);
-  add_column_percent(s, "%MISS", "%5.1f", miss, insn);
-  add_column_percent(s, "%BMIS", "%5.1f", br, insn);
+  add_column_percent(s, " %MISS", "%6.2f", miss, insn);
+  add_column_percent(s, " %BMIS", "%6.2f", br, insn);
   add_column_ratio(s, " %BUS", "%5.1f", bus, insn);
   return s;
 }
