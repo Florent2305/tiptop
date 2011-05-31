@@ -34,6 +34,7 @@
 #include "process.h"
 #include "screen.h"
 #include "utils.h"
+#include "version.h"
 
 
 extern int debug;
@@ -83,6 +84,7 @@ static void usage(const char* name)
   fprintf(stderr, "\t--timestamp    add timestamp at beginning of each line\n");
   fprintf(stderr, "\t-u userid      only show user's processes\n");
   fprintf(stderr, "\t-U             show user name\n");
+  fprintf(stderr, "\t-v             show version and exits\n");
   fprintf(stderr, "\t-w pid|name    watch this process (highlighted)\n");
   return;
 }
@@ -802,6 +804,11 @@ int main(int argc, char* argv[])
         fprintf(stderr, "Missing user name after -u.\n");
         exit(EXIT_FAILURE);
       }
+    }
+
+    if (strcmp(argv[i], "-v") == 0) {
+      print_version();
+      exit(0);
     }
 
     if (strcmp(argv[i], "-w") == 0) {
