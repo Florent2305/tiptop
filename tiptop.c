@@ -25,6 +25,7 @@
 #include <sys/ioctl.h>
 #include <sys/select.h>
 #include <sys/types.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "conf.h"
@@ -44,7 +45,8 @@ static int    max_iter = 0;
 static int    show_cmdline = 0;
 static int    show_threads = 0;
 static int    show_user = 0;
-static int    timestamp = 0;
+static int    show_timestamp = 0;
+static int    show_epoch = 0;
 static char*  watch_name = NULL;
 static pid_t  watch_pid = 0;
 static int    watch_uid = -1;
@@ -69,6 +71,7 @@ static void usage(const char* name)
   fprintf(stderr, "\t-c             display command line instead of process name\n");
   fprintf(stderr, "\t--cpu-min m    minimum %%CPU to display a process\n");
   fprintf(stderr, "\t-d delay       delay in seconds between refreshes\n");
+  fprintf(stderr, "\t--epoch        add epoch at beginning of each line\n");
   fprintf(stderr, "\t-g             debug\n");
   fprintf(stderr, "\t-h             print this message\n");
   fprintf(stderr, "\t-H             show threads\n");
@@ -292,10 +295,14 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
   printf("\n%s\n", header);
 
   for(num_iter=0; !max_iter || num_iter < max_iter; num_iter++) {
+    unsigned int epoch;
     int i;
 
     /* update the list of processes/threads and accumulate info if
        needed */
+    if (show_epoch)
+      epoch = time(NULL);
+
     update_proc_list(proc_list, screen, watch_uid);
     if (!show_threads)
       accumulate_stats(proc_list);
@@ -324,8 +331,10 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
         continue;
 
       if (show_threads || (p[i].pid == p[i].tid)) {
-        if (timestamp)
+        if (show_timestamp)
           printf("%6d ", num_iter);
+        if (show_epoch)
+          printf("%10u ", epoch);
         printf("%s", p[i].txt);
         num_printed++;
       }
@@ -646,7 +655,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
       }
       if (c == 'U') {
         free(header);
-        header = gen_header(screen, show_user, timestamp);
+        header = gen_header(screen, show_user, show_timestamp, show_epoch);
       }
       if ((c == '+') || (c == '-') || (c == KEY_LEFT) || (c == KEY_RIGHT)) {
         return c;
@@ -714,6 +723,10 @@ int main(int argc, char* argv[])
       }
     }
 
+    if (strcmp(argv[i], "--epoch") == 0) {
+      show_epoch = 1;
+    }
+
     if (strcmp(argv[i], "-g") == 0) {
       debug = 1;
     }
@@ -758,7 +771,7 @@ int main(int argc, char* argv[])
     }
 
     if (strcmp(argv[i], "--timestamp") == 0) {
-      timestamp = 1;
+      show_timestamp = 1;
     }
 
     if (strcmp(argv[i], "-U") == 0) {
@@ -815,7 +828,8 @@ int main(int argc, char* argv[])
       exit(EXIT_FAILURE);
     }
 
-    header = gen_header(screen, show_user, timestamp && batch);
+    header = gen_header(screen, show_user,
+                        show_timestamp && batch, show_epoch && batch);
 
     /* initialize the list of processes, and then run */
     proc_list = init_proc_list();

@@ -221,7 +221,7 @@ screen_t* get_screen(int num)
 }
 
 
-char* gen_header(screen_t* s, int show_user, int timestamp)
+char* gen_header(screen_t* s, int show_user, int timestamp, int epoch)
 {
   char* hdr;
   int   num_cols, i;
@@ -231,6 +231,10 @@ char* gen_header(screen_t* s, int show_user, int timestamp)
     hdr = str_init("timest ", &cur_alloc);
   else
     hdr = str_init("", &cur_alloc);
+
+  if (epoch) {
+    hdr = str_append(hdr, &cur_alloc, "     epoch");
+  }
 
   if (show_user)
     hdr = str_append(hdr, &cur_alloc, "  PID  user      ");
