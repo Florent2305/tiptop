@@ -38,6 +38,7 @@
 
 extern int debug;
 
+/* state */
 static float  delay = 2;
 static int    help = 0;
 static int    idle = 0;
@@ -295,7 +296,7 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
   printf("\n%s\n", header);
 
   for(num_iter=0; !max_iter || num_iter < max_iter; num_iter++) {
-    unsigned int epoch;
+    unsigned int epoch = 0;
     int i;
 
     /* update the list of processes/threads and accumulate info if
