@@ -234,7 +234,7 @@ char* gen_header(const screen_t* const s, int show_user,
     hdr = str_init("", &cur_alloc);
 
   if (epoch) {
-    hdr = str_append(hdr, &cur_alloc, "     epoch");
+    hdr = str_append(hdr, &cur_alloc, "     epoch ");
   }
 
   if (show_user)
