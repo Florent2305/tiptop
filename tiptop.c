@@ -332,7 +332,7 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
       /* In batch mode, if a process is being watched, only print this
          one. */
       if ((watch_pid && (p[i].tid != watch_pid)) ||
-          (watch_name && !strstr(p[i].name, watch_name)))
+          (watch_name && !strstr(p[i].cmdline, watch_name)))
         continue;
 
       if (show_threads || (p[i].pid == p[i].tid)) {
@@ -584,7 +584,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
       /* highlight watched process, if any */
       if (with_colors) {
         if ((p[i].tid == watch_pid) ||
-            (watch_name && strstr(p[i].name, watch_name)))
+            (watch_name && strstr(p[i].cmdline, watch_name)))
           attron(COLOR_PAIR(3));
       }
 
