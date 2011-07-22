@@ -67,7 +67,9 @@ screen_t* nehalem_fp()
       /* Gulftown/Westmere-EP */
       (family_model != 0x062c) &&
       /* Core */
-      (family_model != 0x060f))
+      (family_model != 0x060f) &&
+      /* Penryn */
+      (family_model != 0x0617))
   {
     return NULL;
   }
@@ -110,7 +112,9 @@ screen_t* nehalem_app()
       /* Gulftown/Westmere-EP */
       (family_model != 0x062c) &&
       /* Core */
-      (family_model != 0x060f))
+      (family_model != 0x060f) &&
+      /* Penryn */
+      (family_model != 0x0617))
   {
     return NULL;
   }
@@ -154,7 +158,9 @@ screen_t* nehalem_mem()
       /* Gulftown/Westmere-EP */
       (family_model != 0x062c) &&
       /* Core */
-      (family_model != 0x060f))
+      (family_model != 0x060f) &&
+      /* Penryn */
+      (family_model != 0x0617))
   {
     return NULL;
   }
@@ -203,7 +209,9 @@ screen_t* nehalem_br()
       /* Gulftown/Westmere-EP */
       (family_model != 0x062c) &&
       /* Core */
-      (family_model != 0x060f))
+      (family_model != 0x060f) &&
+      /* Penryn */
+      (family_model != 0x0617))
   {
     return NULL;
   }
