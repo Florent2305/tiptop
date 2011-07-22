@@ -252,6 +252,7 @@ int update_proc_list(struct process_list* const list,
           double    elapsed;
           unsigned long   utime = 0, stime = 0;
           unsigned long   prev_cpu_time, curr_cpu_time;
+          int             proc_id;
           struct timeval  now;
           struct process* ptr = &(list->processes[pos]);
 
@@ -267,6 +268,13 @@ int update_proc_list(struct process_list* const list,
               fprintf(stderr, "Cannot read from '%s'\n", sub_task_name);
               exit(EXIT_FAILURE);
             }
+            /* get processor ID */
+            n = fscanf(fstat,
+                       "%*d %*d %*d %*d %*d %*d %*d %*u %*d %*u %*u %*u %*u "
+                       "%*u %*u %*u %*u %*u %*u %*u %*u %*u %*d %d",
+                       &proc_id);
+            if (n != 1)
+              proc_id = -1;
             fclose(fstat);
           }
           gettimeofday(&now, NULL);
@@ -285,6 +293,7 @@ int update_proc_list(struct process_list* const list,
           ptr->prev_cpu_time_s = stime;
           ptr->prev_cpu_time_u = utime;
 
+          ptr->proc_id = proc_id;
           /* Backup previous value of counters */
           for(zz = 0; zz < ptr->num_events; zz++) {
             ptr->prev_values[zz] = ptr->values[zz];
@@ -321,6 +330,7 @@ int update_proc_list(struct process_list* const list,
         p = list->processes;
         p[list->num_tids].tid = tid;
         p[list->num_tids].pid = pid;
+        p[list->num_tids].proc_id = -1;
         p[list->num_tids].attention = 0;
 
         passwd = getpwuid(uid);

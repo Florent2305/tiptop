@@ -146,6 +146,14 @@ static void build_rows(struct process_list* proc_list, screen_t* s, int width)
         break;
       }
 
+      case PROC_ID: {
+        if (p[i].proc_id != -1)
+          sprintf(substr, fmt, p[i].proc_id);
+        else
+          sprintf(substr, "%s", "?");
+        break;
+      }
+
       case COMPUT_RAW: {
         int counter = s->columns[col].data.param1;
         uint64_t delta;

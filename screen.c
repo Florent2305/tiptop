@@ -118,6 +118,12 @@ int add_column_cpu_u(screen_t* const s, char* header, char* format)
 }
 
 
+int add_column_proc_id(screen_t* const s, char* header, char* format)
+{
+  return add_column_tmpl(s, PROC_ID, header, format, -1, -1);
+}
+
+
 int add_column_raw(screen_t* const s, char* header, char* format, int counter)
 {
   return add_column_tmpl(s, COMPUT_RAW, header, format, counter, -1);
@@ -167,6 +173,7 @@ screen_t* default_screen()
   bus =   add_counter(s, PERF_TYPE_HARDWARE, PERF_COUNT_HW_BUS_CYCLES);
 
   /* add columns */
+  add_column_proc_id(s, " P", "%2d");
   add_column_cpu(s, " %CPU", "%5.1f");
   add_column_cpu_s(s, " %SYS", "%5.1f");
   add_column_raw_m(s, "  Mcycle", "%8.2f", cycle);

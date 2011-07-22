@@ -14,6 +14,7 @@ enum comput_type {
   CPU_TOT,       /* %cpu */
   CPU_SYS,       /* %cpu spent in system */
   CPU_USER,      /* %cpu spent in user land */
+  PROC_ID,       /* the processor ID on which this thread was last seen */
   COMPUT_RAW,
   COMPUT_RAW_M,  /* RAW, print in millions */
   COMPUT_ABS,    /* absolute number, from the beginning */
@@ -52,6 +53,7 @@ int add_counter(screen_t* const, int32_t type, int64_t config);
 int add_column_cpu(screen_t* const, char*, char*);
 int add_column_cpu_s(screen_t* const, char*, char*);
 int add_column_cpu_u(screen_t* const, char*, char*);
+int add_column_proc_id(screen_t* const, char*, char*);
 int add_column_raw(screen_t* const, char*, char*, int);
 int add_column_raw_m(screen_t* const, char*, char*, int);
 int add_column_abs(screen_t* const, char*, char*, int);
