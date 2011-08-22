@@ -74,7 +74,7 @@ screen_t* nehalem_fp()
     return NULL;
   }
 
-  s = new_screen("nehalem FP");
+  s = new_screen("Nehalem FP");
 
   /* setup counters */
   cycle = add_counter(s, PERF_TYPE_HARDWARE, PERF_COUNT_HW_CPU_CYCLES);
@@ -86,13 +86,18 @@ screen_t* nehalem_fp()
 
   /* add columns */
   add_column_cpu(s, " %CPU", "%5.1f");
-  add_column_raw_m(s, "  Mcycle", "%8.2f", cycle);
-  add_column_raw_m(s, "  Minstr", "%8.2f", insn);
-  add_column_ratio(s, " IPC", "%4.2f", insn, cycle);
-  add_column_percent(s, " %x87", "%5.1f", x87, insn);
-  add_column_percent(s, "%SSES", "%5.1f", sp, insn);
-  add_column_percent(s, "%SSED", "%5.1f", dp, insn);
-  add_column_percent(s, "%assist", "  %5.1f", assist, insn);
+  add_column_raw_m(s, "  Mcycle", "%8.2f", cycle, "Cycles (millions)");
+  add_column_raw_m(s, "  Minstr", "%8.2f", insn,  "Instructions (millions)");
+  add_column_ratio(s, " IPC", "%4.2f", insn, cycle,
+                   "Executed instructions per cycle");
+  add_column_percent(s, " %x87", "%5.1f", x87, insn,
+                     "FP computational uops (FP_COMP_OPS_EXE.X87) per insn");
+  add_column_percent(s, "%SSES", "%5.1f", sp, insn,
+                     "SSE* FP single precision uops per insn");
+  add_column_percent(s, "%SSED", "%5.1f", dp, insn,
+                     "SSE* FP double precision uops per insn");
+  add_column_percent(s, "%assist", "  %5.1f", assist, insn,
+                     "FP op that required micro-code assist per instruction");
 
   return s;
 }
@@ -119,7 +124,7 @@ screen_t* nehalem_app()
     return NULL;
   }
 
-  s = new_screen("nehalem app properties");
+  s = new_screen("Nehalem application properties");
 
   /* setup counters */
   cycle = add_counter(s, PERF_TYPE_HARDWARE, PERF_COUNT_HW_CPU_CYCLES);
@@ -132,13 +137,15 @@ screen_t* nehalem_app()
 
   /* add columns */
   add_column_cpu(s, " %CPU", "%5.1f");
-  add_column_raw_m(s, "  Mcycle", "%8.2f", cycle);
-  add_column_raw_m(s, "  Minstr", "%8.2f", insn);
-  add_column_ratio(s, " IPC", "%4.2f", insn, cycle);
-  add_column_percent(s, "%LD/I", " %4.1f", ld, insn);
-  add_column_percent(s, "%ST/I", " %4.1f", st, insn);
-  add_column_percent(s, "%FP/I", " %4.1f", x87, insn);
-  add_column_percent(s, "%BR/I", " %4.1f", br, insn);
+  add_column_raw_m(s, "  Mcycle", "%8.2f", cycle, "Cycles (millions)");
+  add_column_raw_m(s, "  Minstr", "%8.2f", insn, "Instructions (millions)");
+  add_column_ratio(s, " IPC", "%4.2f", insn, cycle, 
+                   "Executed instructions per cycle");
+  add_column_percent(s, "%LD/I", " %4.1f", ld, insn, "Fraction of loads");
+  add_column_percent(s, "%ST/I", " %4.1f", st, insn, "Fraction of stores");
+  add_column_percent(s, "%FP/I", " %4.1f", x87, insn, "Fraction of x87");
+  add_column_percent(s, "%BR/I", " %4.1f", br, insn,
+                     "Fraction of branch instructions");
 
   return s;
 }
@@ -165,13 +172,14 @@ screen_t* nehalem_mem()
     return NULL;
   }
 
-  s = new_screen("nehalem memory hierarchy");
+  s = new_screen("Nehalem memory hierarchy");
 
   /* setup counters */
   insn =  add_counter(s, PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS);
 
   l1miss_i = add_counter(s, PERF_TYPE_RAW, 0x0280);  /* L1I.MISSES */
-/*  l1wb = add_counter(s, PERF_TYPE_RAW, 0x0128);  * L1D_WB_L2.I_STATE */
+  /* l1wb = add_counter(s, PERF_TYPE_RAW, 0x0128);  * L1D_WB_L2.I_STATE */
+
   /* L2 loads */
   l2miss_d = add_counter(s, PERF_TYPE_RAW, 0x0224);  /* L2_RQSTS.LD_MISS */
   l2miss_i = add_counter(s, PERF_TYPE_RAW, 0x2024);  /* L2_RQSTS.IFETCH_MISS */
@@ -179,17 +187,31 @@ screen_t* nehalem_mem()
 
   /* add columns */
   add_column_cpu(s, " %CPU", "%5.1f");
-  add_column_raw(s, " miss L1I", "%9d", l1miss_i);
-  add_column_percent(s, " L1I", "%4.1f", l1miss_i, insn);
+  add_column_raw(s, " miss L1I", "%9d", l1miss_i,
+                 "Instruction fetches that miss in L1I (L1I.MISSES)");
+  add_column_percent(s, " L1I", "%4.1f", l1miss_i, insn,
+                     "   same, per instruction");
 
-  add_column_raw(s, " miss L2I", "%9d", l2miss_i);
-  add_column_percent(s, " L2I", "%4.1f", l2miss_i, insn);
- /* add_column_raw(s, "      L1D", "%9d", l1wb); */
-  add_column_raw(s, " miss L2D", "%9d", l2miss_d);
-/*  add_column_percent(s, " L1D", "%4.1f", l1wb, insn); */
-  add_column_percent(s, " L2D", "%4.1f", l2miss_d, insn);
-  add_column_raw(s, "  miss L3", "%9d", l3miss);
-  add_column_percent(s, "  L3", "%4.1f", l3miss, insn);
+  add_column_raw(s, " miss L2I", "%9d", l2miss_i,
+                 "Insn fetches that miss L2 cache (L2_RQSTS.IFETCH_MISS)");
+  add_column_percent(s, " L2I", "%4.1f", l2miss_i, insn,
+                     "   same, per instruction");
+
+  /* add_column_raw(s, "      L1D", "%9d", l1wb); */
+
+  add_column_raw(s, " miss L2D", "%9d", l2miss_d,
+                 "Loads that miss L2 cache (L2_RQSTS.LD_MISS)");
+
+
+  add_column_percent(s, " L2D", "%4.1f", l2miss_d, insn,
+                     "   same, per instruction");
+
+  /*  add_column_percent(s, " L1D", "%4.1f", l1wb, insn); */
+
+  add_column_raw(s, "  miss L3", "%9d", l3miss,
+                 "Cache miss conditions for ref to LLC (L3_LAT_CACHE.MISS)");
+  add_column_percent(s, "  L3", "%4.1f", l3miss, insn,
+                     "   same, per instruction");
 
   return s;
 }
@@ -216,17 +238,19 @@ screen_t* nehalem_br()
     return NULL;
   }
 
-  s = new_screen("nehalem branches");
+  s = new_screen("Nehalem branch instructions");
 
   /* setup counters */
-  insn =  add_counter(s, PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS);
+  insn = add_counter(s, PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS);
   br = add_counter(s, PERF_TYPE_RAW,  0x00c4);  /* BR_INST_RETIRED.ALL_BRANCHES */
   misp = add_counter(s, PERF_TYPE_RAW, 0x7f89);  /* BR_MISP_EXEC_ANY */
 
   /* add columns */
   add_column_cpu(s, " %CPU", "%5.1f");
-  add_column_percent(s, "%MISP", " %4.1f", misp, br);
-  add_column_percent(s, "%MIS/I", "  %4.1f", misp, insn);
+  add_column_percent(s, "%MISP", " %4.1f", misp, br,
+                     "Mispredictions per branch");
+  add_column_percent(s, "%MIS/I", "  %4.1f", misp, insn,
+                     "Mispredictions per instruction");
 
   return s;
 }

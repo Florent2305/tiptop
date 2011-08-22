@@ -511,7 +511,8 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
   noecho();
   keypad(stdscr, TRUE);
 
-  help_win = newwin(10, 40, 10, 10);
+  /* Prepare help window */
+  help_win = newwin(screen->num_columns+2, 70, 10, 5);
 
   if (has_colors()) {
     /* initialize curses colors */
@@ -645,11 +646,32 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
 
     refresh();  /* display everything */
     if (help) {
+      int  i, header_width = 0;
+      char fmt[20];
+      int  n = screen->num_columns;
+
       box(help_win, 0, 0);
       wmove(help_win, 0, 10);
-      wprintw(help_win, " Help ");
-      wmove(help_win, 1, 1);
-      wprintw(help_win, "h to close");
+      wprintw(help_win, " Help (h to close)");
+      /* max size of column headers */
+      for(i = 0; i < n; i++) {
+        /* strip leading spaces */
+        char* ptr = screen->columns[i].header;
+        while (*ptr == ' ')
+          ptr++;
+        if (strlen(ptr) > header_width)
+          header_width = strlen(ptr);
+      }
+      /* generate sprintf format for headers */
+      sprintf(fmt, "%%-%ds: %%s", header_width);
+      for(i = 0; i < n; i++) {
+        /* strip leading spaces */
+        char* ptr = screen->columns[i].header;
+        while (*ptr == ' ')
+          ptr++;
+        wmove(help_win, i+1, 1);
+        wprintw(help_win, fmt, ptr, screen->columns[i].description);
+      }
       wrefresh(help_win);
     }
 

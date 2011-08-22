@@ -66,7 +66,8 @@ int add_counter(screen_t* const s, int32_t type, int64_t config)
 
 static int add_column_tmpl(screen_t* const s, enum comput_type typ,
                            char* header, char* format,
-                           int counter1, int counter2)
+                           int counter1, int counter2,
+                           char* desc)
 {
   col_comput_t data;
   int col_width;
@@ -95,6 +96,11 @@ static int add_column_tmpl(screen_t* const s, enum comput_type typ,
   s->columns[n].error_field[col_width] = '\0';
 
   s->columns[n].data = data;
+  if (desc)
+    s->columns[n].description = desc;
+  else
+    s->columns[n].description = "(unknown)";
+
   s->num_columns++;
   return n;
 }
@@ -102,59 +108,71 @@ static int add_column_tmpl(screen_t* const s, enum comput_type typ,
 
 int add_column_cpu(screen_t* const s, char* header, char* format)
 {
-  return add_column_tmpl(s, CPU_TOT, header, format, -1, -1);
+  return add_column_tmpl(s, CPU_TOT, header, format, -1, -1,
+                         "Fraction of time spent executing process");
 }
 
 
 int add_column_cpu_s(screen_t* const s, char* header, char* format)
 {
-  return add_column_tmpl(s, CPU_SYS, header, format, -1, -1);
+  return add_column_tmpl(s, CPU_SYS, header, format, -1, -1,
+                         "Fraction of time spent in kernel mode");
 }
 
 
 int add_column_cpu_u(screen_t* const s, char* header, char* format)
 {
-  return add_column_tmpl(s, CPU_USER, header, format, -1, -1);
+  return add_column_tmpl(s, CPU_USER, header, format, -1, -1,
+                         "Fraction of time spent in user mode");
 }
 
 
 int add_column_proc_id(screen_t* const s, char* header, char* format)
 {
-  return add_column_tmpl(s, PROC_ID, header, format, -1, -1);
+  return add_column_tmpl(s, PROC_ID, header, format, -1, -1,
+                         "Processor on which process was last run");
 }
 
 
-int add_column_raw(screen_t* const s, char* header, char* format, int counter)
+int add_column_raw(screen_t* const s, char* header, char* format, int counter,
+                   char* desc)
 {
-  return add_column_tmpl(s, COMPUT_RAW, header, format, counter, -1);
+  return add_column_tmpl(s, COMPUT_RAW, header, format, counter, -1, desc);
 }
 
 
-int add_column_raw_m(screen_t* const s, char* header, char* format, int counter)
+int add_column_raw_m(screen_t* const s, char* header, char* format, int counter,
+                     char* desc)
 {
-  return add_column_tmpl(s, COMPUT_RAW_M, header, format, counter, -1);
+  return add_column_tmpl(s, COMPUT_RAW_M, header, format, counter, -1, desc);
 }
 
 
-int add_column_abs(screen_t* const s, char* header, char* format, int counter)
+int add_column_abs(screen_t* const s, char* header, char* format, int counter,
+                   char* desc)
 {
-  return add_column_tmpl(s, COMPUT_ABS, header, format, counter, -1);
+  return add_column_tmpl(s, COMPUT_ABS, header, format, counter, -1,
+                         desc);
 }
 
 
 int add_column_ratio(screen_t* const s,
 		     char* header, char* format,
-		     int counter1, int counter2)
+		     int counter1, int counter2,
+                     char* desc)
 {
-  return add_column_tmpl(s, COMPUT_RATIO, header, format, counter1, counter2);
+  return add_column_tmpl(s, COMPUT_RATIO, header, format, counter1, counter2,
+                         desc);
 }
 
 
 int add_column_percent(screen_t* const s,
 		       char* header, char* format,
-		       int counter1, int counter2)
+		       int counter1, int counter2,
+                       char* desc)
 {
-  return add_column_tmpl(s, COMPUT_PERCENT, header, format, counter1, counter2);
+  return add_column_tmpl(s, COMPUT_PERCENT, header, format, counter1, counter2,
+                         desc);
 }
 
 
@@ -176,12 +194,16 @@ screen_t* default_screen()
   add_column_proc_id(s, " P", "%2d");
   add_column_cpu(s, " %CPU", "%5.1f");
   add_column_cpu_s(s, " %SYS", "%5.1f");
-  add_column_raw_m(s, "  Mcycle", "%8.2f", cycle);
-  add_column_raw_m(s, "  Minstr", "%8.2f", insn);
-  add_column_ratio(s, " IPC", "%4.2f", insn, cycle);
-  add_column_percent(s, " %MISS", "%6.2f", miss, insn);
-  add_column_percent(s, " %BMIS", "%6.2f", br, insn);
-  add_column_ratio(s, " %BUS", "%5.1f", bus, insn);
+  add_column_raw_m(s, "  Mcycle", "%8.2f", cycle, "Cycles (millions)");
+  add_column_raw_m(s, "  Minstr", "%8.2f", insn, "Instructions (millions)");
+  add_column_ratio(s, " IPC", "%4.2f", insn, cycle,
+                   "Executed instructions per cycle");
+  add_column_percent(s, " %MISS", "%6.2f", miss, insn,
+                     "Cache miss per instruction");
+  add_column_percent(s, " %BMIS", "%6.2f", br, insn,
+                     "Branch misprediction per instruction");
+  add_column_ratio(s, " %BUS", "%5.1f", bus, insn,
+                   "Bus cycles per executed instruction");
   return s;
 }
 

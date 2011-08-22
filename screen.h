@@ -34,6 +34,7 @@ typedef struct {
   char* empty_field;
   char* error_field;
   col_comput_t data;
+  char* description;
 } column_t;
 
 
@@ -54,11 +55,11 @@ int add_column_cpu(screen_t* const, char*, char*);
 int add_column_cpu_s(screen_t* const, char*, char*);
 int add_column_cpu_u(screen_t* const, char*, char*);
 int add_column_proc_id(screen_t* const, char*, char*);
-int add_column_raw(screen_t* const, char*, char*, int);
-int add_column_raw_m(screen_t* const, char*, char*, int);
-int add_column_abs(screen_t* const, char*, char*, int);
-int add_column_ratio(screen_t* const, char*, char*, int, int);
-int add_column_percent(screen_t* const, char*, char*, int, int);
+int add_column_raw(screen_t* const, char*, char*, int, char*);
+int add_column_raw_m(screen_t* const, char*, char*, int, char*);
+int add_column_abs(screen_t* const, char*, char*, int, char*);
+int add_column_ratio(screen_t* const, char*, char*, int, int, char*);
+int add_column_percent(screen_t* const, char*, char*, int, int, char*);
 
 screen_t* default_screen();
 screen_t* micro();
