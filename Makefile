@@ -21,15 +21,16 @@ clean:
 
 
 depend:
-	makedepend -Y *.c
+	makedepend -Y -DTARGET_X86 *.c
 
 # DO NOT DELETE
 
 conf.o: conf.h
 pmc.o: pmc.h
-process.o: pmc.h process.h screen.h
+process.o: pmc.h process.h screen.h utils.h
 requisite.o: pmc.h requisite.h
 screen.o: debug.h screen.h screens-intel.h utils.h
+screens-intel.o: screen.h screens-intel.h
 tiptop.o: conf.h requisite.h pmc.h process.h screen.h utils.h version.h
 utils.o: debug.h utils.h
 version.o: version.h
