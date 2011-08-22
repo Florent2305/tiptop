@@ -246,7 +246,6 @@ static void build_rows(struct process_list* proc_list, screen_t* s, int width)
     else
       row = str_append(row, &row_alloc, p[i].name);
 
-    row = str_append(row, &row_alloc, "\n");
     len = TXT_LEN - 1;
     if ((width != -1) && (width < len))
       len = width;
@@ -348,7 +347,7 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
           printf("%6d ", num_iter);
         if (show_epoch)
           printf("%10u ", epoch);
-        printf("%s", p[i].txt);
+        printf("%s\n", p[i].txt);
         num_printed++;
       }
     }
@@ -574,7 +573,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
     FD_SET(STDIN_FILENO, &fds);
 
     /* generate the text version of all rows */
-    build_rows(proc_list, screen, COLS);
+    build_rows(proc_list, screen, COLS - 1);
 
     /* sort by %CPU */
     qsort(p, proc_list->num_tids, sizeof(struct process), cmp_cpu);
@@ -597,7 +596,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
       }
 
       if (show_threads || (p[i].pid == p[i].tid)) {
-        printw(p[i].txt);
+        printw("%s\n", p[i].txt);
         printed++;
       }
 

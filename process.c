@@ -11,6 +11,7 @@
 #include "pmc.h"
 #include "process.h"
 #include "screen.h"
+#include "utils.h"
 
 extern int debug;
 
@@ -170,7 +171,7 @@ int update_proc_list(struct process_list* const list,
   while ((pid_dirent = readdir(pid_dir))) {
     char  name[50]; /* needs to fit the name /proc/xxxx/{status,cmdline} */
     char  proc_name[1000];
-    char* cmdline;
+    char* cmdline = NULL;
     char  line[100]; /* line of /proc/xxxx/status */
     int   uid;
     int   pid;
@@ -201,18 +202,6 @@ int update_proc_list(struct process_list* const list,
       }
     }
     fclose(f);
-
-    /* get process' command line */
-    sprintf(name, "/proc/%d/cmdline", pid);
-    f = fopen(name, "r");
-    if (!f) {
-      cmdline = NULL;
-    }
-    else {
-      fgets(line, sizeof(line), f);
-      cmdline = line;
-      fclose(f);
-    }
 
     /* my process, or somebody else's process and I am root (skip
        root's processes because they are too many. */
@@ -341,7 +330,35 @@ int update_proc_list(struct process_list* const list,
           p[list->num_tids].username = NULL;
 
         p[list->num_tids].num_threads = num_threads;
-        p[list->num_tids].cmdline = strdup(cmdline);
+
+        /* get process' command line */
+        sprintf(name, "/proc/%d/cmdline", pid);
+        f = fopen(name, "r");
+        if (f) {
+          char  buffer[100];
+          char* res;
+
+          memset(buffer, 0, sizeof(buffer));
+          res = fgets(buffer, sizeof(buffer), f);
+          if (res && res[0]) {
+            int i;
+            for(i=0; i < sizeof(buffer)-1; i++) {
+              if (buffer[i] == '\0') {
+                if (buffer[i+1] == '\0')  /* two zeroes in a row, stop */
+                  break;
+                else
+                  buffer[i] = ' '; /* only one, a separator, it becomes ' ' */
+              }
+            }
+            
+            cmdline = strdup(res);
+          }
+          fclose(f);
+        }
+        if (!cmdline)
+          cmdline = strdup("[null]");
+
+        p[list->num_tids].cmdline = cmdline;
         p[list->num_tids].name = strdup(proc_name);
         p[list->num_tids].timestamp.tv_sec = 0;
         p[list->num_tids].timestamp.tv_usec = 0;
