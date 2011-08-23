@@ -1,10 +1,10 @@
 TARGET=TARGET_X86
 
-CFLAGS=-O2 -Wall -DKERNEL31 -DHAS_CURSES -D$(TARGET)
+CFLAGS=-Os -lto -Wall -DKERNEL31 -DHAS_CURSES -D$(TARGET)
 CFLAGS+=$(XCFLAGS)
 
 OBJS=tiptop.o pmc.o process.o requisite.o conf.o screen.o screens-intel.o \
-     utils.o debug.o version.o
+     utils.o debug.o version.o helpwin.o
 
 all: tiptop
 
@@ -31,6 +31,7 @@ process.o: pmc.h process.h screen.h utils.h
 requisite.o: pmc.h requisite.h
 screen.o: debug.h screen.h screens-intel.h utils.h
 screens-intel.o: screen.h screens-intel.h
-tiptop.o: conf.h requisite.h pmc.h process.h screen.h utils.h version.h
+tiptop.o: conf.h helpwin.h screen.h requisite.h pmc.h process.h utils.h
+tiptop.o: version.h
 utils.o: debug.h utils.h
 version.o: version.h
