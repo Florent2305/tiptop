@@ -1,7 +1,10 @@
 TARGET=TARGET_X86
 
-CFLAGS=-Os -lto -Wall -DKERNEL31 -DHAS_CURSES -D$(TARGET)
+CFLAGS=-Os -Wall -DKERNEL31 -DHAS_CURSES -D$(TARGET)
+LDFLAGS=-Os
+
 CFLAGS+=$(XCFLAGS)
+LDFLAGS+=$(XLDFLAGS)
 
 OBJS=tiptop.o pmc.o process.o requisite.o conf.o screen.o screens-intel.o \
      utils.o debug.o version.o helpwin.o
@@ -9,7 +12,7 @@ OBJS=tiptop.o pmc.o process.o requisite.o conf.o screen.o screens-intel.o \
 all: tiptop
 
 tiptop: $(OBJS)
-	$(CC) -O2 -o tiptop $(OBJS) -lcurses
+	$(CC) $(LDFLAGS) -o tiptop $(OBJS) -lcurses
 
 version.o: version.c
 	$(CC) $(CFLAGS) -DCOMPILE_HOST="\""`hostname`"\"" \
@@ -21,11 +24,12 @@ clean:
 
 
 depend:
-	makedepend -Y -DTARGET_X86 *.c
+	makedepend -Y -DTARGET_X86 -DHAS_CURSES *.c
 
 # DO NOT DELETE
 
 conf.o: conf.h
+helpwin.o: screen.h
 pmc.o: pmc.h
 process.o: pmc.h process.h screen.h utils.h
 requisite.o: pmc.h requisite.h
