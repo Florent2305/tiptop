@@ -143,8 +143,7 @@ int update_proc_list(struct process_list* const list,
     sprintf(name, "/proc/%d/task/%d/status", p[i].pid, p[i].tid);
     if (access(name, F_OK) == -1) {
       ret_val = 1;
-      p[i].tid = 0;  /* mark dead */
-      p[i].pid = 0;  /* mark dead */
+      p[i].dead = 1;  /* mark dead */
       for(zz=0; zz < p[i].num_events; ++zz) {
         if (p[i].fd[zz] != -1) {
           close(p[i].fd[zz]);
@@ -320,6 +319,7 @@ int update_proc_list(struct process_list* const list,
         p[list->num_tids].tid = tid;
         p[list->num_tids].pid = pid;
         p[list->num_tids].proc_id = -1;
+        p[list->num_tids].dead = 0;
         p[list->num_tids].attention = 0;
 
         passwd = getpwuid(uid);
@@ -448,7 +448,7 @@ void compact_proc_list(struct process_list* const list)
   dst = 0;
   num_dead = 0;
   for(src=0; src < num_tids; src++, dst++) {
-    while ((src < num_tids) && (p[src].pid == 0)) {
+    while ((src < num_tids) && (p[src].dead == 1)) {
       done_proc(&p[src]);
       src++;
       num_dead++;
@@ -475,6 +475,10 @@ void accumulate_stats(const struct process_list* const list)
   for(i=0; i < list->num_tids; ++i) {
     if (p[i].pid != p[i].tid) {
       int pos;
+
+      if (p[i].dead)
+        continue;
+
       /* find the owner */
       pos = pos_in_list(list, p[i].pid);
       assert(pos != -1);
@@ -507,6 +511,8 @@ void reset_values(const struct process_list* const list)
 
   p = list->processes;
   for(i=0; i < list->num_tids; ++i) {
+    if (p[i].dead)
+      continue;
     /* only consider 'main' processes (not threads) */
     if (p[i].pid == p[i].tid) {
       p[i].cpu_percent = 0;

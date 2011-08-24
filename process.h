@@ -14,7 +14,8 @@
 struct process {
   pid_t    tid;           /* thread ID */
   pid_t    pid;           /* process ID. For owning process, tip == pid */
-  int      proc_id;
+  int      dead;          /* is the process dead? */
+  int      proc_id;       /* processor ID on which process was last seen */
   char*    username;
   int      num_threads;   /* number of threads in brotherhood */
   char*    cmdline;       /* command line */

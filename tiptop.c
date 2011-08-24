@@ -50,6 +50,7 @@ static int    show_threads = 0;
 static int    show_user = 0;
 static int    show_timestamp = 0;
 static int    show_epoch = 0;
+static int    sticky = 0;
 static char*  watch_name = NULL;
 static pid_t  watch_pid = 0;
 static int    watch_uid = -1;
@@ -82,6 +83,7 @@ static void usage(const char* name)
   fprintf(stderr, "\t--list-screens display list of available screens\n");
   fprintf(stderr, "\t-n num         max number of refreshes\n");
   fprintf(stderr, "\t-S num         screen number to display\n");
+  fprintf(stderr, "\t--sticky       keep final status of dead processes\n");
   fprintf(stderr, "\t--timestamp    add timestamp at beginning of each line\n");
   fprintf(stderr, "\t-u userid      only show user's processes\n");
   fprintf(stderr, "\t-U             show user name\n");
@@ -120,7 +122,7 @@ static void build_rows(struct process_list* proc_list, screen_t* s, int width)
         thr = '*';
     }
 
-    if (p[i].tid == 0)  /* dead */
+    if ((p[i].dead == 1) && (!sticky)) /* dead */
       continue;
 
     if (show_user)
@@ -315,7 +317,7 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
     if (show_epoch)
       epoch = time(NULL);
 
-    if (update_proc_list(proc_list, screen, watch_uid)) {
+    if (update_proc_list(proc_list, screen, watch_uid) && (!sticky)) {
       compact_proc_list(proc_list);
     }
     if (!show_threads)
@@ -331,8 +333,6 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
 
     num_printed = 0;
     for(i=0; i < proc_list->num_tids; i++) {
-      if (p[i].pid == 0)  /* dead */
-        continue;
 
       /* not active, skip */
       if (!idle && (p[i].cpu_percent < cpu_threshold))
@@ -349,7 +349,7 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
           printf("%6d ", num_iter);
         if (show_epoch)
           printf("%10u ", epoch);
-        printf("%s\n", p[i].txt);
+        printf("%s%s\n", p[i].txt, p[i].dead ? " DEAD" : "");
         num_printed++;
       }
     }
@@ -524,6 +524,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
     init_pair(2, COLOR_WHITE, COLOR_BLACK);
     init_pair(3, COLOR_GREEN, COLOR_BLACK);
     init_pair(4, COLOR_YELLOW, COLOR_BLACK);
+    init_pair(5, COLOR_RED, COLOR_BLACK);
     attron(COLOR_PAIR(0));
   }
 
@@ -563,7 +564,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
 
     /* update the list of processes/threads and accumulate info if
        needed */
-    if (update_proc_list(proc_list, screen, watch_uid)) {
+    if (update_proc_list(proc_list, screen, watch_uid) && (!sticky)) {
       compact_proc_list(proc_list);
     }
     if (!show_threads)
@@ -584,8 +585,6 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
     printed = 0;
     /* Iterate over all threads */
     for(i=0; i < proc_list->num_tids; i++) {
-      if (p[i].pid == 0)  /* dead */
-        continue;
 
       /* not active, skip */
       if (!idle && (p[i].cpu_percent < cpu_threshold))
@@ -593,7 +592,10 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
 
       /* highlight watched process, if any */
       if (with_colors) {
-        if ((p[i].tid == watch_pid) ||
+        if (p[i].dead == 1) {
+          attron(COLOR_PAIR(5));
+        }
+        else if ((p[i].tid == watch_pid) ||
             (watch_name && strstr(p[i].cmdline, watch_name)))
           attron(COLOR_PAIR(3));
       }
@@ -780,6 +782,10 @@ int main(int argc, char* argv[])
         fprintf(stderr, "Missing screen number after -S.\n");
         exit(EXIT_FAILURE);
       }
+    }
+
+    if (strcmp(argv[i], "--sticky") == 0) {
+      sticky = 1;
     }
 
     if (strcmp(argv[i], "--timestamp") == 0) {
