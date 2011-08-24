@@ -20,9 +20,6 @@ int read_config()
     f = fopen(config_file, "r");
   }
   if (!f) {
-    f = fopen("", "r");
-  }
-  if (!f) {
     char* home = getenv("HOME");
     if (home) {
       char* path;
@@ -35,6 +32,9 @@ int read_config()
 
   if (f) {
     /* read config file */
+
+
+
     fclose(f);
   }
   return 0;
