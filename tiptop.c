@@ -30,30 +30,13 @@
 
 #include "conf.h"
 #include "helpwin.h"
-#include "requisite.h"
+#include "options.h"
 #include "pmc.h"
 #include "process.h"
+#include "requisite.h"
 #include "screen.h"
 #include "utils.h"
-#include "version.h"
 
-
-extern int debug;
-
-/* state */
-static float  delay = 2;
-static int    help = 0;
-static int    idle = 0;
-static int    max_iter = 0;
-static int    show_cmdline = 0;
-static int    show_threads = 0;
-static int    show_user = 0;
-static int    show_timestamp = 0;
-static int    show_epoch = 0;
-static int    sticky = 0;
-static char*  watch_name = NULL;
-static pid_t  watch_pid = 0;
-static int    watch_uid = -1;
 
 /* CPU activity below which a thread is considered inactive */
 static float  cpu_threshold = 0.00001;
@@ -66,32 +49,6 @@ static char  tmp_message[100];
 
 
 static char* header = NULL;
-
-
-static void usage(const char* name)
-{
-  fprintf(stderr, "Usage: %s flags\n", name);
-  fprintf(stderr, "\t-b             run in batch mode\n");
-  fprintf(stderr, "\t-c             display command line instead of process name\n");
-  fprintf(stderr, "\t--cpu-min m    minimum %%CPU to display a process\n");
-  fprintf(stderr, "\t-d delay       delay in seconds between refreshes\n");
-  fprintf(stderr, "\t--epoch        add epoch at beginning of each line\n");
-  fprintf(stderr, "\t-g             debug\n");
-  fprintf(stderr, "\t-h --help      print this message\n");
-  fprintf(stderr, "\t-H             show threads\n");
-  fprintf(stderr, "\t-i             also display idle processes\n");
-  fprintf(stderr, "\t--list-screens display list of available screens\n");
-  fprintf(stderr, "\t-n num         max number of refreshes\n");
-  fprintf(stderr, "\t-S num         screen number to display\n");
-  fprintf(stderr, "\t--sticky       keep final status of dead processes\n");
-  fprintf(stderr, "\t--timestamp    add timestamp at beginning of each line\n");
-  fprintf(stderr, "\t-u userid      only show user's processes\n");
-  fprintf(stderr, "\t-U             show user name\n");
-  fprintf(stderr, "\t-v             print version and exit\n");
-  fprintf(stderr, "\t--version      print legalese and exit\n");
-  fprintf(stderr, "\t-w pid|name    watch this process (highlighted)\n");
-  return;
-}
 
 
 /* For each process/thread in the list, generate the text form, ready
@@ -122,10 +79,10 @@ static void build_rows(struct process_list* proc_list, screen_t* s, int width)
         thr = '*';
     }
 
-    if ((p[i].dead == 1) && (!sticky)) /* dead */
+    if ((p[i].dead == 1) && (!options.sticky)) /* dead */
       continue;
 
-    if (show_user)
+    if (options.show_user)
       sprintf(tmp, "%5d%c %-10s ", p[i].tid, thr, p[i].username);
     else
       sprintf(tmp, "%5d%c ", p[i].tid, thr);
@@ -245,7 +202,7 @@ static void build_rows(struct process_list* proc_list, screen_t* s, int width)
       row = str_append(row, &row_alloc, " ");
     }
 
-    if (show_cmdline)
+    if (options.show_cmdline)
       row = str_append(row, &row_alloc, p[i].cmdline);
     else
       row = str_append(row, &row_alloc, p[i].name);
@@ -292,35 +249,37 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
   system("uptime");
   system("date");
   system("uname -a");
-  printf("delay: %.2f  idle: %d  threads: %d\n", delay, idle, show_threads);
-  if (watch_pid) {
-    printf("watching pid %d\n", watch_pid);
+  printf("delay: %.2f  idle: %d  threads: %d\n",
+         options.delay, options.idle, options.show_threads);
+  if (options.watch_pid) {
+    printf("watching pid %d\n", options.watch_pid);
   }
-  else if (watch_name) {
-    printf("watching pid '%s'\n", watch_name);
+  else if (options.watch_name) {
+    printf("watching pid '%s'\n", options.watch_name);
   }
-  if (watch_uid != -1) {
-    struct passwd* passwd = getpwuid(watch_uid);
+  if (options.watch_uid != -1) {
+    struct passwd* passwd = getpwuid(options.watch_uid);
     assert(passwd);
-    printf("watching uid %d '%s'\n", watch_uid, passwd->pw_name);
+    printf("watching uid %d '%s'\n", options.watch_uid, passwd->pw_name);
   }
 
   printf("Screen %d: %s\n", screen->id, screen->name);
   printf("\n%s\n", header);
 
-  for(num_iter=0; !max_iter || num_iter < max_iter; num_iter++) {
+  for(num_iter=0; !options.max_iter || num_iter<options.max_iter; num_iter++) {
     unsigned int epoch = 0;
     int i;
 
     /* update the list of processes/threads and accumulate info if
        needed */
-    if (show_epoch)
+    if (options.show_epoch)
       epoch = time(NULL);
 
-    if (update_proc_list(proc_list, screen, watch_uid) && (!sticky)) {
+    if (update_proc_list(proc_list, screen, options.watch_uid) &&
+        (!options.sticky)) {
       compact_proc_list(proc_list);
     }
-    if (!show_threads)
+    if (!options.show_threads)
       accumulate_stats(proc_list);
 
     p = proc_list->processes;
@@ -335,19 +294,19 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
     for(i=0; i < proc_list->num_tids; i++) {
 
       /* not active, skip */
-      if (!idle && (p[i].cpu_percent < cpu_threshold))
+      if (!options.idle && (p[i].cpu_percent < cpu_threshold))
         continue;
 
       /* In batch mode, if a process is being watched, only print this
          one. */
-      if ((watch_pid && (p[i].tid != watch_pid)) ||
-          (watch_name && !strstr(p[i].cmdline, watch_name)))
+      if ((options.watch_pid && (p[i].tid != options.watch_pid)) ||
+          (options.watch_name && !strstr(p[i].cmdline, options.watch_name)))
         continue;
 
-      if (show_threads || (p[i].pid == p[i].tid)) {
-        if (show_timestamp)
+      if (options.show_threads || (p[i].pid == p[i].tid)) {
+        if (options.show_timestamp)
           printf("%6d ", num_iter);
-        if (show_epoch)
+        if (options.show_epoch)
           printf("%10u ", epoch);
         printf("%s%s\n", p[i].txt, p[i].dead ? " DEAD" : "");
         num_printed++;
@@ -361,8 +320,8 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
     select(0, NULL, NULL, NULL, &tv);
 
     /* prepare for next select */
-    tv.tv_sec = delay;
-    tv.tv_usec = (delay - tv.tv_sec) * 1000000.0;
+    tv.tv_sec = options.delay;
+    tv.tv_usec = (options.delay - tv.tv_sec) * 1000000.0;
   }
 }
 
@@ -380,31 +339,31 @@ static int handle_key()
   if (c == 'q')
     ; /* nothing */
   else if (c == 'g')
-    debug = 1 - debug;
+    options.debug = 1 - options.debug;
 
   else if (c == 'c')
-    show_cmdline = 1 - show_cmdline;
+    options.show_cmdline = 1 - options.show_cmdline;
 
   else if ((c == 'd') || (c == 's')) {
     move(2,0);
-    printw("Change delay from %.2f to: ", delay);
+    printw("Change delay from %.2f to: ", options.delay);
     echo();
     nocbreak();
-    scanw("%f", &delay);
-    if (delay < 0.1)
-      delay = 1.0;
-    tv.tv_sec = delay;
-    tv.tv_usec = (delay - tv.tv_sec)*1000000.0;
+    scanw("%f", &options.delay);
+    if (options.delay < 0.1)
+      options.delay = 1.0;
+    tv.tv_sec = options.delay;
+    tv.tv_usec = (options.delay - tv.tv_sec)*1000000.0;
     cbreak();
     noecho();
   }
 
   else if (c == 'H') {
-    show_threads = 1 - show_threads;
+    options.show_threads = 1 - options.show_threads;
   }
 
   else if (c == 'i')
-    idle = 1 - idle;
+    options.idle = 1 - options.idle;
 
   else if (c == 'k') {
     char str[100];  /* buffer overflow? */
@@ -439,7 +398,7 @@ static int handle_key()
   }
 
   else if (c == 'U')
-    show_user = 1 - show_user;
+    options.show_user = 1 - options.show_user;
 
   else if (c == 'u') {
     char  str[100];  /* buffer overflow? */
@@ -451,16 +410,16 @@ static int handle_key()
     cbreak();
     noecho();
     if (str[0] == '\0') {  /* blank */
-      watch_uid = -1;
+      options.watch_uid = -1;
     }
     else if (isdigit(str[0])) {
-      watch_uid = atoi(str);
+      options.watch_uid = atoi(str);
     }
     else {
       struct passwd*  passwd;
       passwd = getpwnam(str);
       if (passwd) {
-        watch_uid = passwd->pw_uid;
+        options.watch_uid = passwd->pw_uid;
       }
       else {
         message = "User name does not exist.";
@@ -475,20 +434,20 @@ static int handle_key()
     echo();
     nocbreak();
     getstr(str);
-    watch_pid = atoi(str);
-    if (watch_name) {
-      free(watch_name);
-      watch_name = NULL;
+    options.watch_pid = atoi(str);
+    if (options.watch_name) {
+      free(options.watch_name);
+      options.watch_name = NULL;
     }
-    if (!watch_pid && strcmp(str, "")) {
-      watch_name = strdup(str);
+    if (!options.watch_pid && strcmp(str, "")) {
+      options.watch_name = strdup(str);
     }
     cbreak();
     noecho();
   }
 
   else if (c == 'h') {
-    help = 1 - help;
+    options.help = 1 - options.help;
   }
 
   return c;
@@ -531,7 +490,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
   tv.tv_sec = 0;
   tv.tv_usec = 200000; /* 200 ms for first iteration */
 
-  for(num_iter=0; !max_iter || num_iter < max_iter; num_iter++) {
+  for(num_iter=0; !options.max_iter || num_iter<options.max_iter; num_iter++) {
     int        i, zz, printed;
     int        num_fd;
     FILE*      f_uptime;
@@ -546,7 +505,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
       printw(buffer);
     fclose(f_uptime);
 
-    if (debug) {
+    if (options.debug) {
       move(0, COLS-8);
       printw(" [debug]");
     }
@@ -564,10 +523,11 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
 
     /* update the list of processes/threads and accumulate info if
        needed */
-    if (update_proc_list(proc_list, screen, watch_uid) && (!sticky)) {
+    if (update_proc_list(proc_list, screen, options.watch_uid) &&
+        (!options.sticky)) {
       compact_proc_list(proc_list);
     }
-    if (!show_threads)
+    if (!options.show_threads)
       accumulate_stats(proc_list);
 
     p = proc_list->processes;
@@ -587,7 +547,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
     for(i=0; i < proc_list->num_tids; i++) {
 
       /* not active, skip */
-      if (!idle && (p[i].cpu_percent < cpu_threshold))
+      if (!options.idle && (p[i].cpu_percent < cpu_threshold))
         continue;
 
       /* highlight watched process, if any */
@@ -595,12 +555,12 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
         if (p[i].dead == 1) {
           attron(COLOR_PAIR(5));
         }
-        else if ((p[i].tid == watch_pid) ||
-            (watch_name && strstr(p[i].cmdline, watch_name)))
+        else if ((p[i].tid == options.watch_pid) ||
+            (options.watch_name && strstr(p[i].cmdline, options.watch_name)))
           attron(COLOR_PAIR(3));
       }
 
-      if (show_threads || (p[i].pid == p[i].tid)) {
+      if (options.show_threads || (p[i].pid == p[i].tid)) {
         printw("%s\n", p[i].txt);
         printed++;
       }
@@ -614,9 +574,9 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
 
     move(1, 0);
     printw("Tasks: %3d total, %3d running", proc_list->num_tids, printed);
-    if (watch_uid != -1) {
+    if (options.watch_uid != -1) {
       move(1, 35);
-      printw("Watching uid: %5d\n", watch_uid);
+      printw("Watching uid: %5d\n", options.watch_uid);
     }
 
     /* print the screen name, make sure it fits, or truncate */
@@ -649,7 +609,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
     }
 
     refresh();  /* display everything */
-    if (help) {
+    if (options.help) {
       show_help_win(help_win, screen);
     }
 
@@ -660,7 +620,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
       if (c == 'q')
         break;
       if (c == 'H') {
-        if (show_threads) {
+        if (options.show_threads) {
           reset_values(proc_list);
           message = "Show threads On";
         }
@@ -669,7 +629,8 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
       }
       if (c == 'U') {
         free(header);
-        header = gen_header(screen, show_user, show_timestamp, show_epoch);
+        header = gen_header(screen, options.show_user, options.show_timestamp,
+                                                       options.show_epoch);
       }
       if ((c == '+') || (c == '-') || (c == KEY_LEFT) || (c == KEY_RIGHT)) {
         return c;
@@ -678,8 +639,8 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
         return c;
     }
 
-    tv.tv_sec = delay;
-    tv.tv_usec = (delay - tv.tv_sec) * 1000000.0;
+    tv.tv_sec = options.delay;
+    tv.tv_usec = (options.delay - tv.tv_sec) * 1000000.0;
   }
   endwin();  /* stop curses */
   return 'q';
@@ -689,159 +650,21 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
 
 int main(int argc, char* argv[])
 {
-  int i, key = 0;
+  int key = 0;
   int list_scr = 0;
   struct process_list* proc_list;
   screen_t* screen = NULL;
   int screen_num = 0;
-#if defined(HAS_CURSES)
-  int  batch = 0;
-#else
-  int  batch = 1;
-#endif
 
   /* Check OS to make sure we can run. */
   check();
 
+  init_options(&options);
+  read_config(&options);
+
   /* Parse command line arguments. */
-  for(i=1; i < argc; i++) {
-    if (strcmp(argv[i], "-b") == 0) {
-      batch = 1;
-    }
+  parse_command_line(argc, argv, &cpu_threshold, &list_scr, &screen_num);
 
-    if (strcmp(argv[i], "-c") == 0) {
-      show_cmdline = 1;
-    }
-
-    if (strcmp(argv[i], "--cpu-min") == 0) {
-      if (i+1 < argc) {
-        cpu_threshold = (float)atof(argv[i+1]);
-        i++;
-      }
-      else {
-        fprintf(stderr, "Missing value after --cpu-min.\n");
-        exit(EXIT_FAILURE);
-      }
-    }
-
-    if (strcmp(argv[i], "-d") == 0) {
-      if (i+1 < argc) {
-        delay = (float)atof(argv[i+1]);
-        if (delay < 0.1)
-          delay = 1;
-        i++;
-      }
-      else {
-        fprintf(stderr, "Missing delay after -d.\n");
-        exit(EXIT_FAILURE);
-      }
-    }
-
-    if (strcmp(argv[i], "--epoch") == 0) {
-      show_epoch = 1;
-    }
-
-    if (strcmp(argv[i], "-g") == 0) {
-      debug = 1;
-    }
-
-    if ((strcmp(argv[i], "-h") == 0) || (strcmp(argv[i], "--help") == 0)) {
-      usage(argv[0]);
-      exit(0);
-    }
-
-    if (strcmp(argv[i], "-H") == 0) {
-      show_threads = 1;
-    }
-
-    if (strcmp(argv[i], "-i") == 0) {
-      idle = 1;
-    }
-
-    if (strcmp(argv[i], "--list-screens") == 0) {
-      list_scr = 1;
-    }
-
-    if (strcmp(argv[i], "-n") == 0) {
-      if (i+1 < argc) {
-        max_iter = atoi(argv[i+1]);
-        i++;
-      }
-      else {
-        fprintf(stderr, "Missing number of iterations after -n.\n");
-        exit(EXIT_FAILURE);
-      }
-    }
-
-    if (strcmp(argv[i], "-S") == 0) {
-      if (i+1 < argc) {
-        screen_num = atoi(argv[i+1]);
-        i++;
-      }
-      else {
-        fprintf(stderr, "Missing screen number after -S.\n");
-        exit(EXIT_FAILURE);
-      }
-    }
-
-    if (strcmp(argv[i], "--sticky") == 0) {
-      sticky = 1;
-    }
-
-    if (strcmp(argv[i], "--timestamp") == 0) {
-      show_timestamp = 1;
-    }
-
-    if (strcmp(argv[i], "-U") == 0) {
-      show_user = 1;
-    }
-
-    if (strcmp(argv[i], "-u") == 0) {
-      if (i+1 < argc) {
-        if (isdigit(argv[i+1][0])) {
-          watch_uid = atoi(argv[i+1]);
-        }
-        else {
-          struct passwd* passwd = getpwnam(argv[i+1]);
-          if (!passwd) {
-            fprintf(stderr, "User name '%s' does not exist.\n", argv[i+1]);
-            exit(EXIT_FAILURE);
-          }
-          watch_uid = passwd->pw_uid;
-        }
-        i++;
-      }
-      else {
-        fprintf(stderr, "Missing user name after -u.\n");
-        exit(EXIT_FAILURE);
-      }
-    }
-
-    if (strcmp(argv[i], "-v") == 0) {
-      print_version();
-      exit(0);
-    }
-
-    if (strcmp(argv[i], "--version") == 0) {
-      print_legal();
-      exit(0);
-    }
-
-    if (strcmp(argv[i], "-w") == 0) {
-      if (i+1 < argc) {
-        watch_pid = atoi(argv[i+1]);
-        if (watch_pid == 0)
-          watch_name = strdup(argv[i+1]);
-        i++;
-      }
-      else {
-        fprintf(stderr, "Missing pid/name after -w.\n");
-        exit(EXIT_FAILURE);
-      }
-    }
-  }
-
-  read_config();
   init_screen();
 
   if (list_scr) {
@@ -856,12 +679,13 @@ int main(int argc, char* argv[])
       exit(EXIT_FAILURE);
     }
 
-    header = gen_header(screen, show_user,
-                        show_timestamp && batch, show_epoch && batch);
+    header = gen_header(screen, options.show_user,
+                        options.show_timestamp && options.batch,
+                        options.show_epoch && options.batch);
 
     /* initialize the list of processes, and then run */
     proc_list = init_proc_list();
-    if (batch) {
+    if (options.batch) {
       batch_mode(proc_list, screen);
       key = 'q';
     }
@@ -888,8 +712,8 @@ int main(int argc, char* argv[])
   free(header);
   delete_screens();
   done_proc_list(proc_list);
-  if (watch_name)
-    free(watch_name);
+  if (options.watch_name)
+    free(options.watch_name);
 
   return 0;
 }

@@ -2,7 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int debug = 0;
+#include "options.h"
+
+extern struct option options;
 
 static FILE* debug_file = NULL;
 
@@ -11,7 +13,7 @@ void debug_printf(char* fmt, ...)
 {
   va_list args;
 
-  if (!debug)
+  if (!options.debug)
     return;
 
   /* open file the first time we get here. */
