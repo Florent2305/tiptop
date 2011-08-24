@@ -7,6 +7,7 @@
 /* global state */
 struct option {
   float  delay;
+  float  cpu_threshold;  /* CPU activity below which a thread is considered inactive */
   int    max_iter;
   char*  watch_name;
   pid_t  watch_pid;
@@ -21,11 +22,10 @@ struct option {
   int    show_timestamp : 1;
   int    show_epoch : 1;
   int    sticky : 1;
-} options;
+};
 
 
 void init_options(struct option* opt);
-void parse_command_line(int argc, char* argv[],
-                        float*, int*, int*);
+void parse_command_line(int argc, char* argv[], struct option*, int*, int*);
 
 #endif  /* _OPTIONS_H */

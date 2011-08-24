@@ -40,6 +40,7 @@ void init_options(struct option* opt)
   /* default status for options */
   memset(opt, 0, sizeof(*opt));
   opt->delay = 2;
+  opt->cpu_threshold = 0.00001;
   opt->watch_uid = -1;
 #if !defined(HAS_CURSES)
   /* make batch mode default if curses is not available */
@@ -49,7 +50,7 @@ void init_options(struct option* opt)
 
 
 void parse_command_line(int argc, char* argv[],
-                        float* cpu_threshold,
+                        struct option* options,
                         int* list_scr,
                         int* screen_num)
 {
@@ -57,16 +58,16 @@ void parse_command_line(int argc, char* argv[],
 
   for(i=1; i < argc; i++) {
     if (strcmp(argv[i], "-b") == 0) {
-      options.batch = 1;
+      options->batch = 1;
     }
 
     if (strcmp(argv[i], "-c") == 0) {
-      options.show_cmdline = 1;
+      options->show_cmdline = 1;
     }
 
     if (strcmp(argv[i], "--cpu-min") == 0) {
       if (i+1 < argc) {
-        *cpu_threshold = (float)atof(argv[i+1]);
+        options->cpu_threshold = (float)atof(argv[i+1]);
         i++;
       }
       else {
@@ -77,9 +78,9 @@ void parse_command_line(int argc, char* argv[],
 
     if (strcmp(argv[i], "-d") == 0) {
       if (i+1 < argc) {
-        options.delay = (float)atof(argv[i+1]);
-        if (options.delay < 0.1)
-          options.delay = 1;
+        options->delay = (float)atof(argv[i+1]);
+        if (options->delay < 0.1)
+          options->delay = 1;
         i++;
       }
       else {
@@ -89,11 +90,11 @@ void parse_command_line(int argc, char* argv[],
     }
 
     if (strcmp(argv[i], "--epoch") == 0) {
-      options.show_epoch = 1;
+      options->show_epoch = 1;
     }
 
     if (strcmp(argv[i], "-g") == 0) {
-      options.debug = 1;
+      options->debug = 1;
     }
 
     if ((strcmp(argv[i], "-h") == 0) || (strcmp(argv[i], "--help") == 0)) {
@@ -102,11 +103,11 @@ void parse_command_line(int argc, char* argv[],
     }
 
     if (strcmp(argv[i], "-H") == 0) {
-      options.show_threads = 1;
+      options->show_threads = 1;
     }
 
     if (strcmp(argv[i], "-i") == 0) {
-      options.idle = 1;
+      options->idle = 1;
     }
 
     if (strcmp(argv[i], "--list-screens") == 0) {
@@ -115,7 +116,7 @@ void parse_command_line(int argc, char* argv[],
 
     if (strcmp(argv[i], "-n") == 0) {
       if (i+1 < argc) {
-        options.max_iter = atoi(argv[i+1]);
+        options->max_iter = atoi(argv[i+1]);
         i++;
       }
       else {
@@ -136,21 +137,21 @@ void parse_command_line(int argc, char* argv[],
     }
 
     if (strcmp(argv[i], "--sticky") == 0) {
-      options.sticky = 1;
+      options->sticky = 1;
     }
 
     if (strcmp(argv[i], "--timestamp") == 0) {
-      options.show_timestamp = 1;
+      options->show_timestamp = 1;
     }
 
     if (strcmp(argv[i], "-U") == 0) {
-      options.show_user = 1;
+      options->show_user = 1;
     }
 
     if (strcmp(argv[i], "-u") == 0) {
       if (i+1 < argc) {
         if (isdigit(argv[i+1][0])) {
-          options.watch_uid = atoi(argv[i+1]);
+          options->watch_uid = atoi(argv[i+1]);
         }
         else {
           struct passwd* passwd = getpwnam(argv[i+1]);
@@ -158,7 +159,7 @@ void parse_command_line(int argc, char* argv[],
             fprintf(stderr, "User name '%s' does not exist.\n", argv[i+1]);
             exit(EXIT_FAILURE);
           }
-          options.watch_uid = passwd->pw_uid;
+          options->watch_uid = passwd->pw_uid;
         }
         i++;
       }
@@ -180,9 +181,9 @@ void parse_command_line(int argc, char* argv[],
 
     if (strcmp(argv[i], "-w") == 0) {
       if (i+1 < argc) {
-        options.watch_pid = atoi(argv[i+1]);
-        if (options.watch_pid == 0)
-          options.watch_name = strdup(argv[i+1]);
+        options->watch_pid = atoi(argv[i+1]);
+        if (options->watch_pid == 0)
+          options->watch_name = strdup(argv[i+1]);
         i++;
       }
       else {

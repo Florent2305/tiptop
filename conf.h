@@ -1,6 +1,8 @@
 #ifndef _CONF_H
 #define _CONF_H
 
-int read_config();
+#include "options.h"
+
+int read_config(struct option*);
 
 #endif  /* _CONF_H */

@@ -38,9 +38,7 @@
 #include "utils.h"
 
 
-/* CPU activity below which a thread is considered inactive */
-static float  cpu_threshold = 0.00001;
-
+struct option options;
 
 static struct timeval tv;
 
@@ -294,7 +292,7 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
     for(i=0; i < proc_list->num_tids; i++) {
 
       /* not active, skip */
-      if (!options.idle && (p[i].cpu_percent < cpu_threshold))
+      if (!options.idle && (p[i].cpu_percent < options.cpu_threshold))
         continue;
 
       /* In batch mode, if a process is being watched, only print this
@@ -547,7 +545,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
     for(i=0; i < proc_list->num_tids; i++) {
 
       /* not active, skip */
-      if (!options.idle && (p[i].cpu_percent < cpu_threshold))
+      if (!options.idle && (p[i].cpu_percent < options.cpu_threshold))
         continue;
 
       /* highlight watched process, if any */
@@ -663,7 +661,7 @@ int main(int argc, char* argv[])
   read_config(&options);
 
   /* Parse command line arguments. */
-  parse_command_line(argc, argv, &cpu_threshold, &list_scr, &screen_num);
+  parse_command_line(argc, argv, &options, &list_scr, &screen_num);
 
   init_screen();
 
