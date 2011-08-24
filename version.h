@@ -14,5 +14,6 @@ static const char compile_host[] = "unknown" ;
 #endif
 
 void print_version(void);
+void print_legal(void);
 
 #endif
