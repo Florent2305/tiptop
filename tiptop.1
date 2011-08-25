@@ -1,0 +1,209 @@
+.TH TIPTOP 1 "August 2011" "Linux" "Linux User's Manual"
+.ds ME \fBtiptop\fR
+.ds Me tiptop
+
+.SH NAME
+tiptop \- display hardware performance counters for Linux tasks
+
+.SH SYNOPSIS
+\*(ME [OPTION]
+
+.SH DESCRIPTION
+The \*(ME program provides a dynamic real-time view of the tasks
+running in the system. \*(Me is very similar to top (1), but the
+information displayed comes from hardware counters.
+
+\*(Me has two running \fImodes\fR: live-mode and batch-mode. In both
+modes, the system is periodically queried for the values of hardware
+counters, and various ratios are printed for each task. In live-mode,
+the display is regularly updated with new values at constant time
+intervals. In batch-mode, the same information is emitted to
+stdout. Batch-mode is appropriate for saving to a file or for further
+processing. No interaction is possible in batch-mode.
+
+Unless \*(Me is run by root, or the executable is setuid-root, a user
+can only monitor the tasks it owns.
+
+The results produced by \*(Me are organized in \fIscreens\fR. A screen
+consists in rows representing tasks, and columns reporting various
+values and ratios collected from hardware counters. Many screens can
+be defined. Only one screen is displayed at a time. The default screen
+(number 0) reports target independent values as defined in the file
+/usr/include/linux/event_counter.h. Other screens may rely on
+target-dependent counters.
+
+
+\*(Me requires Linux 2.6.31+.
+
+
+.SH COMMAND-LINE OPTIONS
+Command line options override values specified in the configuration
+file.
+
+.TP 4
+\-\fBb\fR
+Start \*(Me in batch-mode. Output is sent to stdout, and no
+interactive command is accepted. \*(Me will run forever, or until the
+number of iterations specified by \fB-n\fR.
+
+.TP 4
+\-\fBc\fR 
+display the command line of the task instead of its name.
+
+.TP 4
+\-\-\fBcpu\-min\fR VALUE
+%CPU activity threshold. Below this value, a task is considered
+ idle and is not reported (unless idle-mode is on).
+
+.TP 4
+\-\fBd\fR VALUE
+Specify the delay between refreshes. VALUE can be fractional.
+
+.TP 4
+\-\-\fBepoch\fR
+Print the Epoch at each refresh. In batch-mode, it is printed at the
+beginning of each row. In live-mode, it is at the bottom of the
+display.
+
+.TP 4
+\-\fBh --help\fR
+Print a brief help message and exit.
+
+.TP 4
+\-\fBH\fR
+Show threads.
+
+.TP 4
+\-\fBi\fR
+Show idle tasks.
+
+.TP 4
+\-\-\fBlist\-screens\fR
+List available screens and exit.
+
+.TP 4
+\-\fBn\fR VALUE
+Automatically exit after VALUE iterations.
+
+.TP 4
+\-\fBS\fR
+Start \*(Me with screen number VALUE.
+
+.TP 4
+\-\-\fBsticky\fR
+Start in sticky mode: tasks stay in the list after they die. In
+live-mode, they appear in a different color (when supported). In
+batch-mode, the word DEAD is appended.
+
+.TP 4
+\-\-\fBtimestamp\fR
+Print a timestamp at the beginning of each row. The timestamp is the
+number of refreshes so far. In batch-mode, it is printed at the
+beginning of each row. In live-mode, it is at the bottom of the
+display.
+
+.TP 4
+\-\fBu\fR USER
+Only show tasks owned by USER. USER can be either a login name, or the
+numeric value UID.
+
+.TP 4
+\-\fBU\fR
+Show the owner of each task.
+
+.TP 4
+\-\fBv\fR
+Display build information and exit.
+
+.TP 4
+\-\-\fBversion\fR
+Display version information and disclaimer and exit.
+
+.TP 4
+\-\fBw\fR VALUE
+Watch the task specified by VALUE. VALUE can be either the numeric
+value PID, or a string. In case of a string, all tasks whose names or
+command lines contain VALUE are reported. In live-mode, watched tasks
+are shown in a different color (when supported). In batch-mode, only
+watched tasks are shown.
+
+
+.SH INTERACTIVE COMMANDS
+In live-mode, \*(Me accepts single-key commands.
+
+.TP 4
+\fBc\fR
+Toggle between showing task names and command lines.
+
+.TP 4
+\fBd\fR
+Change the refresh interval. The new value is queried. Positive,
+non-zero fractional values are accepted.
+
+.TP 4
+\fBh\fR
+Display a brief description of the columns.
+
+.TP 4
+\fBH\fR
+Toggle between showing individual threads and accumulating values per
+process.
+
+.TP 4
+\fBi\fR
+Toggle between showing only active tasks and showing also idle tasks.
+
+.TP 4
+\fBk\fR
+Kill a process. The user is asked for the PID, and the signal to send.
+
+.TP 4
+\fBq\fR
+Quit.
+
+.TP 4
+\fBs\fR
+Same as d.
+
+.TP 4
+\fBu\fR
+Only show tasks owned by a given user. The user name or PID is
+queried. Note that, unless \*(Me is run by root or setuid root, tasks
+owned by somebody else cannot be monitored.
+
+.TP 4
+\fBU\fR
+Toggle displaying each task's owner.
+
+.TP 4
+\fBw\fR
+Used to track a particular task. The user is asked for a PID or
+string. In case a string is entered, all tasks whose name or command
+line contain the string are highlighted.
+
+
+
+.SH FILES
+During startup, \*(ME attemps to read a configuration file. The file
+must be named \fB.tiptoprc\fR. This file is first searched in the
+directory defined by the environment variable \fBTIPTOP\fR if it
+exists, then in the current directory, finally in the user's home.
+
+.SS Syntax
+TBD
+
+.SH BUGS
+Send bug reports to:
+   Erven Rohou <erven.rohou@inria.fr>
+
+
+.SH AUTHOR
+Written by Erven Rohou.
+
+.SH SEE ALSO
+.BR top (1),
+.BR ps (1)
+
+
+/usr/include/linux/perf_counter.h (Linux 2.6.31)
+/usr/include/linux/event_counter.h (Linux 2.6.32+)
