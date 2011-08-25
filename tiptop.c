@@ -508,6 +508,17 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
       printw(" [debug]");
     }
 
+    if (options.show_epoch) {
+      unsigned int epoch = time(NULL);
+      move(LINES-1, COLS-18);
+      printw("Epoch: %u", epoch);
+    }
+
+    if (options.show_timestamp) {
+      move(LINES-1, 0);
+      printw("Iteration: %u", num_iter);
+    }
+
     /* print main header */
     move(3,0);
     if (with_colors)
