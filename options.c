@@ -11,7 +11,7 @@
 
 static void usage(const char* name)
 {
-  fprintf(stderr, "Usage: %s flags\n", name);
+  fprintf(stderr, "Usage: %s [option]\n", name);
   fprintf(stderr, "\t-b             run in batch mode\n");
   fprintf(stderr, "\t-c             use command line instead of process name\n");
   fprintf(stderr, "\t--cpu-min m    minimum %%CPU to display a process\n");
