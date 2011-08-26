@@ -130,7 +130,7 @@ int add_column_cpu_u(screen_t* const s, char* header, char* format)
 int add_column_proc_id(screen_t* const s, char* header, char* format)
 {
   return add_column_tmpl(s, PROC_ID, header, format, -1, -1,
-                         "Processor on which process was last run");
+                         "Processor on which task was last seen");
 }
 
 
