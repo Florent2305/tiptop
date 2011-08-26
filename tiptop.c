@@ -248,7 +248,7 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
   foo = system("date");
   foo = system("uname -a");
   printf("delay: %.2f  idle: %d  threads: %d\n",
-         options.delay, options.idle, options.show_threads);
+         options.delay, (int)options.idle, (int)options.show_threads);
   if (options.watch_pid) {
     printf("watching pid %d\n", options.watch_pid);
   }

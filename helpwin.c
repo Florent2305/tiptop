@@ -2,6 +2,8 @@
 
 #include <curses.h>
 #include <string.h>
+
+#include "helpwin.h"
 #include "screen.h"
 
 WINDOW* prepare_help_win(screen_t* screen)

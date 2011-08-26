@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "debug.h"
 #include "options.h"
 
 extern struct option options;

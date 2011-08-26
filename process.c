@@ -341,13 +341,13 @@ int update_proc_list(struct process_list* const list,
           memset(buffer, 0, sizeof(buffer));
           res = fgets(buffer, sizeof(buffer), f);
           if (res && res[0]) {
-            int i;
-            for(i=0; i < sizeof(buffer)-1; i++) {
-              if (buffer[i] == '\0') {
-                if (buffer[i+1] == '\0')  /* two zeroes in a row, stop */
+            int j;
+            for(j=0; j < sizeof(buffer)-1; j++) {
+              if (buffer[j] == '\0') {
+                if (buffer[j+1] == '\0')  /* two zeroes in a row, stop */
                   break;
                 else
-                  buffer[i] = ' '; /* only one, a separator, it becomes ' ' */
+                  buffer[j] = ' '; /* only one, a separator, it becomes ' ' */
               }
             }
             
