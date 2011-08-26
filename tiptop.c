@@ -235,7 +235,7 @@ static int cmp_cpu(const void* p1, const void* p2)
 static void batch_mode(struct process_list* proc_list, screen_t* screen)
 {
   int   num_iter = 0;
-  int   num_printed;
+  int   num_printed, foo;
   struct process* p;
 
   tv.tv_sec = 0;
@@ -244,9 +244,9 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
   /* Print various information about this run */
   printf("tiptop -");
   fflush(stdout);
-  system("uptime");
-  system("date");
-  system("uname -a");
+  foo = system("uptime");
+  foo = system("date");
+  foo = system("uname -a");
   printf("delay: %.2f  idle: %d  threads: %d\n",
          options.delay, options.idle, options.show_threads);
   if (options.watch_pid) {
