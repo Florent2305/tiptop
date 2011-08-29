@@ -109,7 +109,7 @@ static void build_rows(struct process_list* proc_list, screen_t* s, int width)
         if (p[i].proc_id != -1)
           sprintf(substr, fmt, p[i].proc_id);
         else
-          sprintf(substr, "%s", "?");
+          sprintf(substr, "%s", s->columns[col].error_field);
         break;
       }
 
