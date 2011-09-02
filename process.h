@@ -8,7 +8,7 @@
 
 
 #define MAX_EVENTS 16
-#define TXT_LEN 120
+#define TXT_LEN 200
 
 /* Main structure describing a thread */
 struct process {

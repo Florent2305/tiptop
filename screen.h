@@ -18,6 +18,7 @@ enum comput_type {
   COMPUT_RAW,
   COMPUT_RAW_M,  /* RAW, print in millions */
   COMPUT_ABS,    /* absolute number, from the beginning */
+  COMPUT_ABS_M,  /* ABS, in millions */
   COMPUT_RATIO,
   COMPUT_PERCENT
 };
@@ -58,6 +59,7 @@ int add_column_proc_id(screen_t* const, char*, char*);
 int add_column_raw(screen_t* const, char*, char*, int, char*);
 int add_column_raw_m(screen_t* const, char*, char*, int, char*);
 int add_column_abs(screen_t* const, char*, char*, int, char*);
+int add_column_abs_m(screen_t* const, char*, char*, int, char*);
 int add_column_ratio(screen_t* const, char*, char*, int, int, char*);
 int add_column_percent(screen_t* const, char*, char*, int, int, char*);
 
@@ -72,7 +74,7 @@ int get_num_screens();
 void list_screens();
 
 char* gen_header(const screen_t* const s, int show_user,
-                 int timestamp, int epoch);
+                 int timestamp, int epoch, int width);
 
 void delete_screen(screen_t* s);
 void delete_screens();

@@ -35,7 +35,6 @@
 #include "process.h"
 #include "requisite.h"
 #include "screen.h"
-#include "utils.h"
 
 
 struct option options;
@@ -54,22 +53,33 @@ static char* header = NULL;
  */
 static void build_rows(struct process_list* proc_list, screen_t* s, int width)
 {
-  int i, num_tids, len;
+  int i, num_tids;
   struct process* p;
-  char*  row;
-  int    row_alloc;
-  char   tmp[100];
+
+  assert(TXT_LEN > 20);
 
   num_tids = proc_list->num_tids;
   p = proc_list->processes;
 
   /* For all processes/threads */
   for(i=0; i < num_tids; ++i) {
-    char substr[100];
-    int  col;
+    int   col, written;
+    char* row = p[i].txt;       /* the row we are building */
+    int   remaining = TXT_LEN;  /* remaining bytes in row */
+    int   thr = ' ';
+
+    if ((p[i].dead == 1) && (!options.sticky)) /* dead */
+      continue;
+
+    /* not active, skip */
+    if (!options.idle && (p[i].cpu_percent < options.cpu_threshold))
+      continue;
+
+
+    if ((width != -1) && (width < remaining))
+      remaining = width;
 
     /* display a '+' sign after processes made of multiple threads */
-    int thr = ' ';
     if (p[i].num_threads > 1) {
       if (p[i].tid == p[i].pid)
         thr = '+';
@@ -77,64 +87,55 @@ static void build_rows(struct process_list* proc_list, screen_t* s, int width)
         thr = '*';
     }
 
-    if ((p[i].dead == 1) && (!options.sticky)) /* dead */
-      continue;
-
     if (options.show_user)
-      sprintf(tmp, "%5d%c %-10s ", p[i].tid, thr, p[i].username);
+      written = snprintf(row, remaining, "%5d%c %-10s ", p[i].tid, thr,
+                                                         p[i].username);
     else
-      sprintf(tmp, "%5d%c ", p[i].tid, thr);
-    row = str_init(tmp, &row_alloc);
+      written = snprintf(row, remaining, "%5d%c ", p[i].tid, thr);
+    row += written;
+    remaining -= written;
 
     for(col = 0; col < s->num_columns; col++) {
-      char* fmt = s->columns[col].format;
+      const char* const fmt = s->columns[col].format;
 
       switch(s->columns[col].data.type) {
-      case CPU_TOT: {
-        sprintf(substr, fmt, p[i].cpu_percent);
+      case CPU_TOT:
+        written = snprintf(row, remaining, fmt, p[i].cpu_percent);
         break;
-      }
 
-      case CPU_SYS: {
-        sprintf(substr, fmt, p[i].cpu_percent_s);
+      case CPU_SYS:
+        written = snprintf(row, remaining, fmt, p[i].cpu_percent_s);
         break;
-      }
 
-      case CPU_USER: {
-        sprintf(substr, fmt, p[i].cpu_percent_u);
+      case CPU_USER:
+        written = snprintf(row, remaining, fmt, p[i].cpu_percent_u);
         break;
-      }
 
-      case PROC_ID: {
+      case PROC_ID:
         if (p[i].proc_id != -1)
-          sprintf(substr, fmt, p[i].proc_id);
+          written = snprintf(row, remaining, fmt, p[i].proc_id);
         else
-          sprintf(substr, "%s", s->columns[col].error_field);
+          written = snprintf(row, remaining, "%s", s->columns[col].error_field);
         break;
-      }
 
       case COMPUT_RAW: {
         int counter = s->columns[col].data.param1;
-        uint64_t delta;
-        if (p[i].values[counter] == 0xffffffff) {
-          sprintf(substr, "%s",  s->columns[col].error_field);
-        }
+        if (p[i].values[counter] == 0xffffffff)
+          written = snprintf(row, remaining, "%s", s->columns[col].error_field);
         else {
-          delta = p[i].values[counter] - p[i].prev_values[counter];
-          sprintf(substr, fmt, delta);
+          uint64_t delta = p[i].values[counter] - p[i].prev_values[counter];
+          written = snprintf(row, remaining, fmt, delta);
         }
       }
         break;
 
       case COMPUT_RAW_M: {
         int counter = s->columns[col].data.param1;
-        uint64_t delta;
-        if (p[i].values[counter] == 0xffffffff) {
-          sprintf(substr, "%s",  s->columns[col].error_field);
-        }
+        if (p[i].values[counter] == 0xffffffff)
+          written = snprintf(row, remaining, "%s", s->columns[col].error_field);
         else {
-          delta = p[i].values[counter] - p[i].prev_values[counter];
-          sprintf(substr, fmt, delta / 1000000.0);
+          uint64_t delta = p[i].values[counter] - p[i].prev_values[counter];
+          written = snprintf(row, remaining, fmt, delta / 1000000.0);
         }
       }
         break;
@@ -142,31 +143,37 @@ static void build_rows(struct process_list* proc_list, screen_t* s, int width)
       case COMPUT_ABS: {
         int counter = s->columns[col].data.param1;
         if (p[i].values[counter] == 0xffffffff) {
-          sprintf(substr, "%s",  s->columns[col].error_field);
+          written = snprintf(row, remaining, "%s", s->columns[col].error_field);
         }
-        else {
-          sprintf(substr, fmt, p[i].values[counter]);
-        }
+        else
+          written = snprintf(row, remaining, fmt, p[i].values[counter]);
+      }
+        break;
+
+      case COMPUT_ABS_M: {
+        int counter = s->columns[col].data.param1;
+        if (p[i].values[counter] == 0xffffffff)
+          written = snprintf(row, remaining, "%s", s->columns[col].error_field);
+        else
+          written = snprintf(row, remaining,fmt,p[i].values[counter]/1000000.0);
       }
         break;
 
       case COMPUT_RATIO: {
         int counter1 = s->columns[col].data.param1;
         int counter2 = s->columns[col].data.param2;
-        uint64_t delta1, delta2;
 
         if ((p[i].values[counter1] == 0xffffffff) ||
             (p[i].values[counter2] == 0xffffffff)) {
-          sprintf(substr, "%s",  s->columns[col].error_field);
+          written = snprintf(row, remaining, "%s", s->columns[col].error_field);
         }
         else {
-          delta1 = p[i].values[counter1] - p[i].prev_values[counter1];
-          delta2 = p[i].values[counter2] - p[i].prev_values[counter2];
+          uint64_t delta1 = p[i].values[counter1] - p[i].prev_values[counter1];
+          uint64_t delta2 = p[i].values[counter2] - p[i].prev_values[counter2];
           if (delta2 != 0)
-            sprintf(substr, fmt, 1.0*delta1/delta2);
-          else {
-            sprintf(substr, "%s", s->columns[col].empty_field);
-          }
+            written = snprintf(row, remaining, fmt, 1.0*delta1/delta2);
+          else
+            written = snprintf(row, remaining,"%s",s->columns[col].empty_field);
         }
       }
         break;
@@ -174,19 +181,17 @@ static void build_rows(struct process_list* proc_list, screen_t* s, int width)
       case COMPUT_PERCENT: {
         int counter1 = s->columns[col].data.param1;
         int counter2 = s->columns[col].data.param2;
-        uint64_t delta1, delta2;
         if ((p[i].values[counter1] == 0xffffffff) ||
             (p[i].values[counter2] == 0xffffffff)) {
-          sprintf(substr, "%s",  s->columns[col].error_field);
+          written = snprintf(row, remaining, "%s", s->columns[col].error_field);
         }
         else {
-          delta1 = p[i].values[counter1] - p[i].prev_values[counter1];
-          delta2 = p[i].values[counter2] - p[i].prev_values[counter2];
+          uint64_t delta1 = p[i].values[counter1] - p[i].prev_values[counter1];
+          uint64_t delta2 = p[i].values[counter2] - p[i].prev_values[counter2];
           if (delta2 != 0)
-            sprintf(substr, fmt, 100.0*delta1/delta2);
-          else {
-            sprintf(substr, "%s", s->columns[col].empty_field);
-          }
+            written = snprintf(row, remaining, fmt, 100.0*delta1/delta2);
+          else
+            written = snprintf(row, remaining,"%s",s->columns[col].empty_field);
         }
       }
         break;
@@ -196,21 +201,37 @@ static void build_rows(struct process_list* proc_list, screen_t* s, int width)
         exit(EXIT_FAILURE);
       }
 
-      row = str_append(row, &row_alloc, substr);
-      row = str_append(row, &row_alloc, " ");
+      /* man snprintf: The functions snprintf() and vsnprintf() do not
+       write more than size bytes (including the trailing '\0').  If
+       the output was truncated due to this limit then the return
+       value is the number of characters (not including the trailing
+       '\0') which would have been written to the final string if
+       enough space had been available.  Thus, a return value of size
+       or more means that the output was truncated.  */
+      if (written >= remaining) {
+        remaining = 0;
+        break;  /* line is full */
+      }
+
+      row += written;
+      remaining -= written;
+
+      /* add space after column, if it fits */
+      if (remaining >= 2) {
+        row[0] = ' ';
+        row[1] = '\0';
+        row++;
+        remaining--;
+      }
     }
 
     if (options.show_cmdline)
-      row = str_append(row, &row_alloc, p[i].cmdline);
+      strncpy(row, p[i].cmdline, remaining);
     else
-      row = str_append(row, &row_alloc, p[i].name);
+      strncpy(row, p[i].name, remaining);
 
-    len = TXT_LEN - 1;
-    if ((width != -1) && (width < len))
-      len = width;
-    strncpy(p[i].txt, row, len);
-    p[i].txt[len] = '\0';
-    free(row);
+    if (remaining)
+      row[remaining-1] = '\0';
   }
 }
 
@@ -260,6 +281,11 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
     assert(passwd);
     printf("watching uid %d '%s'\n", options.watch_uid, passwd->pw_name);
   }
+
+  header = gen_header(screen, options.show_user,
+                      options.show_timestamp && options.batch,
+                      options.show_epoch && options.batch,
+                      TXT_LEN - 1);
 
   printf("Screen %d: %s\n", screen->id, screen->name);
   printf("\n%s\n", header);
@@ -488,6 +514,11 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
   tv.tv_sec = 0;
   tv.tv_usec = 200000; /* 200 ms for first iteration */
 
+  header = gen_header(screen, options.show_user,
+                      options.show_timestamp && options.batch,
+                      options.show_epoch && options.batch,
+                      COLS - 1);
+
   for(num_iter=0; !options.max_iter || num_iter<options.max_iter; num_iter++) {
     int        i, zz, printed;
     int        num_fd;
@@ -638,8 +669,8 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
       }
       if (c == 'U') {
         free(header);
-        header = gen_header(screen, options.show_user, options.show_timestamp,
-                                                       options.show_epoch);
+        header = gen_header(screen,options.show_user, options.show_timestamp,
+                            options.show_epoch, COLS - 1);
       }
       if ((c == '+') || (c == '-') || (c == KEY_LEFT) || (c == KEY_RIGHT)) {
         return c;
@@ -687,10 +718,6 @@ int main(int argc, char* argv[])
       fprintf(stderr, "No such screen.\n");
       exit(EXIT_FAILURE);
     }
-
-    header = gen_header(screen, options.show_user,
-                        options.show_timestamp && options.batch,
-                        options.show_epoch && options.batch);
 
     /* initialize the list of processes, and then run */
     proc_list = init_proc_list();

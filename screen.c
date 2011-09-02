@@ -14,7 +14,6 @@
 #include "debug.h"
 #include "screen.h"
 #include "screens-intel.h"
-#include "utils.h"
 
 static const int alloc_chunk = 10;
 
@@ -156,6 +155,14 @@ int add_column_abs(screen_t* const s, char* header, char* format, int counter,
 }
 
 
+int add_column_abs_m(screen_t* const s, char* header, char* format, int counter,
+                   char* desc)
+{
+  return add_column_tmpl(s, COMPUT_ABS_M, header, format, counter, -1,
+                         desc);
+}
+
+
 int add_column_ratio(screen_t* const s,
 		     char* header, char* format,
 		     int counter1, int counter2,
@@ -211,6 +218,7 @@ screen_t* default_screen()
 void init_screen()
 {
   default_screen();
+  tmp_screen();
 #if defined(TARGET_X86)
   nehalem_fp();
   nehalem_mem();
@@ -229,32 +237,57 @@ screen_t* get_screen(int num)
 
 
 char* gen_header(const screen_t* const s, int show_user,
-                 int timestamp, int epoch)
+                 int timestamp, int epoch,
+                 int width)
 {
   char* hdr;
-  int   num_cols, i;
-  int   cur_alloc;
+  char* ptr;
+  int   num_cols, i, written = 0;
 
-  if (timestamp)
-    hdr = str_init("timest ", &cur_alloc);
-  else
-    hdr = str_init("", &cur_alloc);
+  hdr = malloc(width);
+  ptr = hdr;
+
+  if (timestamp) {
+    written = snprintf(ptr, width, "timest ");
+    ptr += written;
+    width -= written;
+  }
 
   if (epoch) {
-    hdr = str_append(hdr, &cur_alloc, "     epoch ");
+    written = snprintf(ptr, width, "     epoch ");
+    ptr += written;
+    width -= written;
   }
 
   if (show_user)
-    hdr = str_append(hdr, &cur_alloc, "  PID  user      ");
+    written = snprintf(ptr, width, "  PID  user      ");
   else
-    hdr = str_append(hdr, &cur_alloc, "  PID ");
+    written = snprintf(ptr, width, "  PID ");
+
+  ptr += written;
+  width -= written;
 
   num_cols = s->num_columns;
   for(i=0; i < num_cols; i++) {
-    hdr = str_append(hdr, &cur_alloc, " ");
-    hdr = str_append(hdr, &cur_alloc, s->columns[i].header);
+
+    /* add space, if it fits */
+    if (width >= 2) {
+      ptr[0] = ' ';
+      ptr[1] = '\0';
+      ptr++;
+      width--;
+    }
+
+    /* add column header */
+    written = snprintf(ptr, width, "%s", s->columns[i].header);
+    if (written >= width) {
+      width = 0;
+      break;
+    }
+    ptr += written;
+    width -= written;
   }
-  hdr = str_append(hdr, &cur_alloc, " COMMAND");
+  snprintf(ptr, width, " COMMAND");
   return hdr;
 }
 
