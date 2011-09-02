@@ -5,6 +5,8 @@
 #include "debug.h"
 #include "utils.h"
 
+/* Allocate a string and initialize it with the 'str'
+   parameter. 'curr_alloc' is set to the allocated size. */
 char* str_init(const char* str, int* curr_alloc)
 {
   char* res = strdup(str);
