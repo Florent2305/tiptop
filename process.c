@@ -28,7 +28,7 @@ static int   clk_tck;
  */
 struct process_list* init_proc_list()
 {
-  char  name[100];  /* needs to fit the name /proc/xxxx/limits */
+  char  name[100] = { 0 };  /* needs to fit the name /proc/xxxx/limits */
   char  line[100];
   FILE* f;
 
@@ -41,7 +41,7 @@ struct process_list* init_proc_list()
   l->num_tids = 0;
 
   num_files_limit = 0;
-  sprintf(name, "/proc/%d/limits", getpid());
+  snprintf(name, sizeof(name) - 1, "/proc/%d/limits", getpid());
   f = fopen(name, "r");
   if (f) {
     while (fgets(line, 100, f)) {
@@ -142,10 +142,10 @@ int update_proc_list(struct process_list* const list,
   /* mark dead tasks */
   num_tids = list->num_tids;
   for(i=0; i < list->num_tids; ++i) {
-    char name[50]; /* needs to fit the name /proc/xxxxx/task/yyyyy/status */
+    char name[50] = { 0 }; /* needs to fit /proc/xxxxx/task/yyyyy/status */
     int  zz;
 
-    sprintf(name, "/proc/%d/task/%d/status", p[i].pid, p[i].tid);
+    snprintf(name,sizeof(name)-1,"/proc/%d/task/%d/status", p[i].pid, p[i].tid);
     if (access(name, F_OK) == -1) {
       ret_val = 1;  /* at least one dead */
       p[i].dead = 1;  /* mark dead */
@@ -176,7 +176,7 @@ int update_proc_list(struct process_list* const list,
   /* check all directories of /proc */
   pid_dir = opendir("/proc");
   while ((pid_dirent = readdir(pid_dir))) {
-    char  name[50]; /* needs to fit the name /proc/xxxx/{status,cmdline} */
+    char  name[50] = { 0 }; /* needs to fit /proc/xxxx/{status,cmdline} */
     char  proc_name[1000];
     char* cmdline = NULL;
     char  line[100]; /* line of /proc/xxxx/status */
@@ -191,7 +191,7 @@ int update_proc_list(struct process_list* const list,
     if ((pid = atoi(pid_dirent->d_name)) == 0)  /* not a number */
       continue;
 
-    sprintf(name, "/proc/%d/status", pid);
+    snprintf(name, sizeof(name) - 1, "/proc/%d/status", pid);
     f = fopen(name, "r");
     if (!f)
       continue;
@@ -222,9 +222,9 @@ int update_proc_list(struct process_list* const list,
       int  fail;
       DIR* thr_dir;
       struct dirent* thr_dirent;
-      char task_name[50];
+      char task_name[50] = { 0 };
 
-      sprintf(task_name, "/proc/%d/task", pid);
+      snprintf(task_name, sizeof(task_name) - 1, "/proc/%d/task", pid);
       thr_dir = opendir(task_name);
       if (!thr_dir) {
         perror("opendir");
@@ -244,7 +244,7 @@ int update_proc_list(struct process_list* const list,
         pos = pos_in_list(list, tid);
         if (pos != -1) {  /* already known */
           FILE*     fstat;
-          char      sub_task_name[100];
+          char      sub_task_name[100] = { 0 };
           double    elapsed;
           unsigned long   utime = 0, stime = 0;
           unsigned long   prev_cpu_time, curr_cpu_time;
@@ -253,7 +253,8 @@ int update_proc_list(struct process_list* const list,
           struct process* ptr = &(list->processes[pos]);
 
           /* Compute %CPU */
-          sprintf(sub_task_name, "/proc/%d/task/%d/stat", pid, tid);
+          snprintf(sub_task_name, sizeof(sub_task_name) - 1,
+                   "/proc/%d/task/%d/stat", pid, tid);
           fstat = fopen(sub_task_name, "r");
           if (fstat) {
             int n;
@@ -340,7 +341,7 @@ int update_proc_list(struct process_list* const list,
         p[num_tids].num_threads = num_threads;
 
         /* get process' command line */
-        sprintf(name, "/proc/%d/cmdline", pid);
+        snprintf(name, sizeof(name) - 1, "/proc/%d/cmdline", pid);
         f = fopen(name, "r");
         if (f) {
           char  buffer[100];

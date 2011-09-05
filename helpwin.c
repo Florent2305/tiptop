@@ -24,7 +24,7 @@ WINDOW* prepare_help_win(screen_t* screen)
 void show_help_win(WINDOW* win, screen_t* screen)
 {
   int  i, header_width = 0;
-  char fmt[20];
+  char fmt[20] = { 0 };
   int  n = screen->num_columns;
 
   /* in case we have more lines than rows on the display... */
@@ -44,7 +44,7 @@ void show_help_win(WINDOW* win, screen_t* screen)
       header_width = strlen(ptr);
   }
   /* generate sprintf format for headers */
-  sprintf(fmt, "%%-%ds: %%s", header_width);
+  snprintf(fmt, sizeof(fmt) - 1, "%%-%ds: %%s", header_width);
   for(i = 0; i < n; i++) {
     /* strip leading spaces */
     char* ptr = screen->columns[i].header;

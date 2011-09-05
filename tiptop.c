@@ -42,7 +42,6 @@ struct option options;
 static struct timeval tv;
 
 static char* message = NULL;
-static char  tmp_message[100];
 
 
 static char* header = NULL;
@@ -418,14 +417,17 @@ static int handle_key()
         options.show_kernel = 1;
         message = "Kernel mode On";
       }
-      else
+      else {
         message = "Kernel mode only available to root.";
+        c = ' ';  /* do not return the 'K' to the upper level, since
+                     it was ignored. */
+      }
     }
   }
 
 
   else if (c == 'k') {  /* initialize string to 0s */
-    char str[100] = { 0 };
+    char str[10] = { 0 };
     int  kill_pid, kill_sig, kill_res;
     move(2,0);
     printw("PID to kill: ");
@@ -440,15 +442,17 @@ static int handle_key()
       kill_pid = atoi(str);
       move(2,0);
       printw("Kill PID %d with signal [15]: ", kill_pid);
-      getstr(str);
+      getnstr(str, sizeof(str) - 1);
       kill_sig = atoi(str);
       if (kill_sig == 0)
         kill_sig = 15;
       kill_res = kill(kill_pid, kill_sig);
       if (kill_res == -1) {
+        char tmp_message[100];
         move(2,0);
-        sprintf(tmp_message, "Kill of PID '%d' with '%d' failed: %s",
-                kill_pid, kill_sig, strerror(errno));
+        snprintf(tmp_message, sizeof(tmp_message),
+                 "Kill of PID '%d' with '%d' failed: %s",
+                 kill_pid, kill_sig, strerror(errno));
         message = tmp_message;
       }
     }
@@ -681,12 +685,11 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
       printw("screen %2d: %s\n", screen->id, screen->name);
     }
     else {
-      char screen_str[50];
+      char screen_str[50] = { 0 };
       move(1, 35 + 20);
-      printw("screen %2d: ", screen->id);
-      sprintf(screen_str, "%s\n", screen->name);
-      screen_str[COLS - 35 - 20 - 11] = '\0';
-      printw("%s", screen_str);
+      snprintf(screen_str, sizeof(screen_str) - 1, "%s\n", screen->name);
+      screen_str[COLS - 35 - 20 - 11] = '\0';  /* truncate */
+      printw("screen %2d: %s", screen->id, screen_str);
     }
     if (with_colors)
       attroff(COLOR_PAIR(4));
