@@ -33,7 +33,7 @@ debug.o: debug.h options.h
 helpwin.o: helpwin.h screen.h
 options.o: options.h version.h
 pmc.o: pmc.h
-process.o: pmc.h process.h screen.h utils.h
+process.o: options.h pmc.h process.h screen.h utils.h
 requisite.o: pmc.h requisite.h
 screen.o: debug.h screen.h screens-intel.h
 screens-intel.o: screen.h screens-intel.h

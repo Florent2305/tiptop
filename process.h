@@ -47,7 +47,9 @@ struct process_list {
 
 struct process_list* init_proc_list();
 void done_proc_list(struct process_list*);
-int  update_proc_list(struct process_list* const, const screen_t* const, int);
+int  update_proc_list(struct process_list* const,
+                      const screen_t* const,
+                      const struct option* const);
 void compact_proc_list(struct process_list* const);
 void accumulate_stats(const struct process_list* const);
 void reset_values(const struct process_list* const);

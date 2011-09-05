@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 #include "options.h"
 #include "version.h"
@@ -20,6 +21,7 @@ static void usage(const char* name)
   fprintf(stderr, "\t-g             debug\n");
   fprintf(stderr, "\t-h --help      print this message\n");
   fprintf(stderr, "\t-H             show threads\n");
+  fprintf(stderr, "\t-K --kernel    show kernel activity (only for root)\n");
   fprintf(stderr, "\t-i             also display idle processes\n");
   fprintf(stderr, "\t--list-screens display list of available screens\n");
   fprintf(stderr, "\t-n num         max number of refreshes\n");
@@ -110,6 +112,16 @@ void parse_command_line(int argc, char* argv[],
       options->idle = 1;
     }
 
+    if ((strcmp(argv[i], "-K") == 0) || (strcmp(argv[i], "--kernel") == 0)) {
+      if (geteuid() == 0)
+        options->show_kernel = 1;
+      else {
+        fprintf(stderr, "Kernel mode (-K --kernel) not available.\n");
+        fprintf(stderr, "You are not root, or the binary is not setuid.\n");
+        exit(EXIT_FAILURE);
+      }
+    }
+
     if (strcmp(argv[i], "--list-screens") == 0) {
       *list_scr = 1;
     }
@@ -191,5 +203,7 @@ void parse_command_line(int argc, char* argv[],
         exit(EXIT_FAILURE);
       }
     }
+    fprintf(stderr, "Unknown flag: '%s'\n", argv[i]);
+    exit(EXIT_FAILURE);
   }
 }

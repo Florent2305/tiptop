@@ -78,6 +78,11 @@ Show threads.
 Show idle tasks.
 
 .TP 4
+\-\fBK --kernel\fR
+Include kernel activity in the reported values. This is only possible
+is the user is root, or the \*(Me binary is setuid root.
+
+.TP 4
 \-\-\fBlist\-screens\fR
 List available screens and exit.
 
@@ -152,6 +157,11 @@ process.
 .TP 4
 \fBi\fR
 Toggle between showing only active tasks and showing also idle tasks.
+
+.TP 4
+\fBK\fR
+Toggle between showing kernel activity and only user activity. Kernel
+mode is only available to root.
 
 .TP 4
 \fBk\fR

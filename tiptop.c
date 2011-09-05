@@ -299,7 +299,7 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
     if (options.show_epoch)
       epoch = time(NULL);
 
-    if (update_proc_list(proc_list, screen, options.watch_uid) &&
+    if (update_proc_list(proc_list, screen, &options) &&
         (!options.sticky)) {
       compact_proc_list(proc_list);
     }
@@ -388,6 +388,22 @@ static int handle_key()
 
   else if (c == 'i')
     options.idle = 1 - options.idle;
+
+  else if (c == 'K') {
+    if (options.show_kernel) {
+      options.show_kernel = 0;
+      message = "Kernel mode Off";
+    }
+    else {
+      if (geteuid() == 0) {
+        options.show_kernel = 1;
+        message = "Kernel mode On";
+      }
+      else
+        message = "Kernel mode only available to root.";
+    }
+  }
+
 
   else if (c == 'k') {
     char str[100];  /* buffer overflow? */
@@ -563,7 +579,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
 
     /* update the list of processes/threads and accumulate info if
        needed */
-    if (update_proc_list(proc_list, screen, options.watch_uid) &&
+    if (update_proc_list(proc_list, screen, &options) &&
         (!options.sticky)) {
       compact_proc_list(proc_list);
     }

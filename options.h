@@ -17,10 +17,11 @@ struct option {
   int    help : 1;
   int    idle : 1;
   int    show_cmdline : 1;
-  int    show_threads : 1;
-  int    show_user : 1;
-  int    show_timestamp : 1;
   int    show_epoch : 1;
+  int    show_kernel : 1;
+  int    show_threads : 1;
+  int    show_timestamp : 1;
+  int    show_user : 1;
   int    sticky : 1;
 };
 

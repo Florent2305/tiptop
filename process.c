@@ -8,6 +8,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "options.h"
 #include "pmc.h"
 #include "process.h"
 #include "screen.h"
@@ -15,8 +16,10 @@
 
 extern int debug;
 
-int num_files = 0;
-int num_files_limit = 0;
+static int num_files = 0;
+static int num_files_limit = 0;
+
+static uid_t my_uid = -1;
 
 /*
  * Build the (empty) list of processes/threads.
@@ -26,6 +29,8 @@ struct process_list* init_proc_list()
   char  name[100];  /* needs to fit the name /proc/xxxx/limits */
   char  line[100];
   FILE* f;
+
+  my_uid = geteuid();
 
   struct process_list* l = malloc(sizeof(struct process_list));
   l->num_alloc = 20;
@@ -117,12 +122,11 @@ static int pos_in_list(const struct process_list* const list, pid_t tid)
  */
 int update_proc_list(struct process_list* const list,
                      const screen_t* const screen,
-                     int watch_uid)
+                     const struct option* const options)
 {
   int i;
   struct dirent* pid_dirent;
   DIR* pid_dir;
-  uid_t  my_uid;
   int    cpu, grp, flags;
   int    clk_tck;
   struct process* p;
@@ -156,14 +160,15 @@ int update_proc_list(struct process_list* const list,
 
 
   /* update statistics, and add newly created processes/threads */
-  my_uid = geteuid();
+
   cpu = -1;  /* CPU to monitor, -1 = per thread */
   grp = -1;
   flags = 0;
 
   events.disabled = 0;
   events.exclude_hv = 1;
-  events.exclude_kernel = 1;
+  if (options->show_kernel == 0)
+    events.exclude_kernel = 1;
 
   /* check all directories of /proc */
   pid_dir = opendir("/proc");
@@ -204,8 +209,8 @@ int update_proc_list(struct process_list* const list,
 
     /* my process, or somebody else's process and I am root (skip
        root's processes because they are too many. */
-    if (((watch_uid != -1) && (uid == watch_uid)) ||
-        ((watch_uid == -1) &&
+    if (((options->watch_uid != -1) && (uid == options->watch_uid)) ||
+        ((options->watch_uid == -1) &&
          (((my_uid != 0) && (uid == my_uid)) ||  /* not root, monitor mine */
           ((my_uid == 0) && (uid != 0)))))  /* I am root, monitor all others */
     { 
