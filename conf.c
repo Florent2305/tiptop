@@ -34,6 +34,9 @@ int read_config(struct option* options)
 
   if (f) {
     /* read config file */
+
+    /* ====== VERY PRELIMINARY ================== */
+
     char line[LINE_SIZE];
     while (fgets(line, LINE_SIZE, f)) {
       if (line[0] == '#')  /* comment */
