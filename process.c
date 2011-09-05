@@ -20,6 +20,8 @@ static int num_files = 0;
 static int num_files_limit = 0;
 
 static uid_t my_uid = -1;
+static int   clk_tck;
+
 
 /*
  * Build the (empty) list of processes/threads.
@@ -31,6 +33,7 @@ struct process_list* init_proc_list()
   FILE* f;
 
   my_uid = geteuid();
+  clk_tck = sysconf(_SC_CLK_TCK);
 
   struct process_list* l = malloc(sizeof(struct process_list));
   l->num_alloc = 20;
@@ -128,7 +131,6 @@ int update_proc_list(struct process_list* const list,
   struct dirent* pid_dirent;
   DIR* pid_dir;
   int    cpu, grp, flags;
-  int    clk_tck;
   struct process* p;
   struct STRUCT_NAME events = {0, };
   int    ret_val = 0;
@@ -136,8 +138,6 @@ int update_proc_list(struct process_list* const list,
   assert(screen);
   assert(list && list->processes);
   p = list->processes;
-
-  clk_tck = sysconf(_SC_CLK_TCK);
 
   /* remove dead threads */
   for(i=0; i < list->num_tids; ++i) {
