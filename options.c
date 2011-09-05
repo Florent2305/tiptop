@@ -59,14 +59,16 @@ void parse_command_line(int argc, char* argv[],
 {
   int i;
 
+  /* Note: many flags are toggles. They invert what is in the
+     configuration file. */
   for(i=1; i < argc; i++) {
     if (strcmp(argv[i], "-b") == 0) {
-      options->batch = 1;
+      options->batch = 1 - options->batch;
       continue;
     }
 
     if (strcmp(argv[i], "-c") == 0) {
-      options->show_cmdline = 1;
+      options->show_cmdline = 1 - options->show_cmdline;
       continue;
     }
 
@@ -102,7 +104,7 @@ void parse_command_line(int argc, char* argv[],
     }
 
     if (strcmp(argv[i], "-g") == 0) {
-      options->debug = 1;
+      options->debug = 1 - options->debug;
       continue;
     }
 
@@ -112,18 +114,18 @@ void parse_command_line(int argc, char* argv[],
     }
 
     if (strcmp(argv[i], "-H") == 0) {
-      options->show_threads = 1;
+      options->show_threads = 1 - options->show_threads;
       continue;
     }
 
     if (strcmp(argv[i], "-i") == 0) {
-      options->idle = 1;
+      options->idle = 1 - options->idle;
       continue;
     }
 
     if ((strcmp(argv[i], "-K") == 0) || (strcmp(argv[i], "--kernel") == 0)) {
       if (geteuid() == 0) {
-        options->show_kernel = 1;
+        options->show_kernel = 1 - options->show_kernel;
         continue;
       }
       else {
@@ -177,7 +179,7 @@ void parse_command_line(int argc, char* argv[],
     }
 
     if (strcmp(argv[i], "--sticky") == 0) {
-      options->sticky = 1;
+      options->sticky = 1 - options->sticky;
       continue;
     }
 
@@ -187,7 +189,7 @@ void parse_command_line(int argc, char* argv[],
     }
 
     if (strcmp(argv[i], "-U") == 0) {
-      options->show_user = 1;
+      options->show_user = 1 - options->show_user;
       continue;
     }
 
