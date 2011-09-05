@@ -91,6 +91,13 @@ List available screens and exit.
 Automatically exit after VALUE iterations.
 
 .TP 4
+\-\fBp --pid\fR VALUE
+Only display selected tasks. VALUE can be either the numeric value
+PID, or a string. In case of a string, all tasks whose names or
+command lines (depending on the display, see -c) contain VALUE are
+reported.
+
+.TP 4
 \-\fBS\fR
 Start \*(Me with screen number VALUE.
 
@@ -128,9 +135,10 @@ Display version information and disclaimer and exit.
 \-\fBw\fR VALUE
 Watch the task specified by VALUE. VALUE can be either the numeric
 value PID, or a string. In case of a string, all tasks whose names or
-command lines contain VALUE are reported. In live-mode, watched tasks
-are shown in a different color (when supported). In batch-mode, only
-watched tasks are shown.
+command lines (depending on the display, see -c) contain VALUE are
+reported. In live-mode, watched tasks are shown in a different color
+(when supported). In batch-mode, an ASCII arrow points to the watched
+tasks.
 
 
 .SH INTERACTIVE COMMANDS
@@ -166,6 +174,12 @@ mode is only available to root.
 .TP 4
 \fBk\fR
 Kill a process. The user is asked for the PID, and the signal to send.
+
+.TP 4
+\fBp\fR
+Used to display only selected task. The user is asked for a PID or
+string. In case a string is entered, only the tasks whose name or command
+line contain the string are displayed.
 
 .TP 4
 \fBq\fR

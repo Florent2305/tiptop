@@ -68,6 +68,8 @@ static void build_rows(struct process_list* proc_list, screen_t* s, int width)
     int   remaining = TXT_LEN;  /* remaining bytes in row */
     int   thr = ' ';
 
+    p[i].skip = 1;  /* first, assume not ready */
+
     if ((p[i].dead == 1) && (!options.sticky)) /* dead */
       continue;
 
@@ -75,6 +77,13 @@ static void build_rows(struct process_list* proc_list, screen_t* s, int width)
     if (!options.idle && (p[i].cpu_percent < options.cpu_threshold))
       continue;
 
+    /* only some tasks are monitored, skip those that do not qualify */
+    if (((options.only_pid) && (p[i].tid != options.only_pid)) ||
+        (options.only_name && options.show_cmdline &&
+                                  !strstr(p[i].cmdline, options.only_name)) ||
+        (options.only_name && !options.show_cmdline &&
+                                  !strstr(p[i].name, options.only_name)))
+      continue;
 
     if ((width != -1) && (width < remaining))
       remaining = width;
@@ -84,7 +93,7 @@ static void build_rows(struct process_list* proc_list, screen_t* s, int width)
       if (p[i].tid == p[i].pid)
         thr = '+';
       else
-        thr = '*';
+        thr = '-';
     }
 
     if (options.show_user)
@@ -232,6 +241,8 @@ static void build_rows(struct process_list* proc_list, screen_t* s, int width)
 
     if (remaining)
       row[remaining-1] = '\0';
+
+    p[i].skip = 0;
   }
 }
 
@@ -276,6 +287,12 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
   else if (options.watch_name) {
     printf("watching pid '%s'\n", options.watch_name);
   }
+  if (options.only_pid) {
+    printf("only pid %d\n", options.only_pid);
+  }
+  else if (options.only_name) {
+    printf("only pid '%s'\n", options.only_name);
+  }
   if (options.watch_uid != -1) {
     struct passwd* passwd = getpwuid(options.watch_uid);
     assert(passwd);
@@ -317,14 +334,7 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
     num_printed = 0;
     for(i=0; i < proc_list->num_tids; i++) {
 
-      /* not active, skip */
-      if (!options.idle && (p[i].cpu_percent < options.cpu_threshold))
-        continue;
-
-      /* In batch mode, if a process is being watched, only print this
-         one. */
-      if ((options.watch_pid && (p[i].tid != options.watch_pid)) ||
-          (options.watch_name && !strstr(p[i].cmdline, options.watch_name)))
+      if (p[i].skip)
         continue;
 
       if (options.show_threads || (p[i].pid == p[i].tid)) {
@@ -332,7 +342,16 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
           printf("%6d ", num_iter);
         if (options.show_epoch)
           printf("%10u ", epoch);
-        printf("%s%s\n", p[i].txt, p[i].dead ? " DEAD" : "");
+        printf("%s%s", p[i].txt, p[i].dead ? " DEAD" : "");
+
+        /* if the process is being watched */
+        if ((p[i].tid == options.watch_pid) ||
+            (options.watch_name && options.show_cmdline &&
+                                  strstr(p[i].cmdline, options.watch_name)) ||
+            (options.watch_name && !options.show_cmdline &&
+                                  strstr(p[i].name, options.watch_name)))
+          printf(" <---");
+        printf("\n");
         num_printed++;
       }
     }
@@ -405,14 +424,14 @@ static int handle_key()
   }
 
 
-  else if (c == 'k') {
-    char str[100];  /* buffer overflow? */
+  else if (c == 'k') {  /* initialize string to 0s */
+    char str[100] = { 0 };
     int  kill_pid, kill_sig, kill_res;
     move(2,0);
     printw("PID to kill: ");
     echo();
     nocbreak();
-    getstr(str);
+    getnstr(str, sizeof(str) - 1);
     if (!isdigit(str[0])) {
       move(2,0);
       message = "Not valid";
@@ -437,16 +456,35 @@ static int handle_key()
     noecho();
   }
 
+  else if (c == 'p') {
+    char str[100] = { 0 };  /* initialize string to 0s */
+    move(2,0);
+    printw("Only display process: ");
+    echo();
+    nocbreak();
+    getnstr(str, sizeof(str)-1);  /* keep final '\0' as string delimiter */
+    options.only_pid = atoi(str);
+    if (options.only_name) {
+      free(options.only_name);
+      options.only_name = NULL;
+    }
+    if (!options.only_pid && strcmp(str, "")) {
+      options.only_name = strdup(str);
+    }
+    cbreak();
+    noecho();
+  }
+
   else if (c == 'U')
     options.show_user = 1 - options.show_user;
 
   else if (c == 'u') {
-    char  str[100];  /* buffer overflow? */
+    char str[100] = { 0 };  /* initialize string to 0s */
     move(2,0);
     printw("Which user (blank for all): ");
     echo();
     nocbreak();
-    getstr(str);
+    getnstr(str, sizeof(str) - 1);  /* keep final '\0' as string delimiter */
     cbreak();
     noecho();
     if (str[0] == '\0') {  /* blank */
@@ -468,12 +506,12 @@ static int handle_key()
   }
 
   else if (c == 'w') {
-    char str[100];  /* buffer overflow? */
+    char str[100] = { 0 };  /* initialize string to 0s */
     move(2,0);
     printw("Watch process: ");
     echo();
     nocbreak();
-    getstr(str);
+    getnstr(str, sizeof(str)-1);  /* keep final '\0' as string delimiter */
     options.watch_pid = atoi(str);
     if (options.watch_name) {
       free(options.watch_name);
@@ -577,10 +615,8 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
     if (with_colors)
       attroff(COLOR_PAIR(1));
 
-    /* update the list of processes/threads and accumulate info if
-       needed */
-    if (update_proc_list(proc_list, screen, &options) &&
-        (!options.sticky)) {
+    /* update the list of processes/threads and accumulate info if needed */
+    if (update_proc_list(proc_list, screen, &options) && !options.sticky) {
       compact_proc_list(proc_list);
     }
     if (!options.show_threads)
@@ -602,8 +638,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
     /* Iterate over all threads */
     for(i=0; i < proc_list->num_tids; i++) {
 
-      /* not active, skip */
-      if (!options.idle && (p[i].cpu_percent < options.cpu_threshold))
+      if (p[i].skip)
         continue;
 
       /* highlight watched process, if any */
@@ -612,7 +647,10 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
           attron(COLOR_PAIR(5));
         }
         else if ((p[i].tid == options.watch_pid) ||
-            (options.watch_name && strstr(p[i].cmdline, options.watch_name)))
+                 (options.watch_name && options.show_cmdline &&
+                                strstr(p[i].cmdline, options.watch_name)) ||
+                 (options.watch_name && !options.show_cmdline &&
+                                strstr(p[i].name, options.watch_name)))
           attron(COLOR_PAIR(3));
       }
 

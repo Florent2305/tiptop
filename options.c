@@ -25,6 +25,7 @@ static void usage(const char* name)
   fprintf(stderr, "\t-i             also display idle processes\n");
   fprintf(stderr, "\t--list-screens display list of available screens\n");
   fprintf(stderr, "\t-n num         max number of refreshes\n");
+  fprintf(stderr, "\t-p --pid pid|name  only display task with this PID/name\n");
   fprintf(stderr, "\t-S num         screen number to display\n");
   fprintf(stderr, "\t--sticky       keep final status of dead processes\n");
   fprintf(stderr, "\t--timestamp    add timestamp at beginning of each line\n");
@@ -52,7 +53,7 @@ void init_options(struct option* opt)
 
 
 void parse_command_line(int argc, char* argv[],
-                        struct option* options,
+                        struct option* const options,
                         int* list_scr,
                         int* screen_num)
 {
@@ -145,6 +146,20 @@ void parse_command_line(int argc, char* argv[],
       }
       else {
         fprintf(stderr, "Missing number of iterations after -n.\n");
+        exit(EXIT_FAILURE);
+      }
+    }
+
+    if ((strcmp(argv[i], "-p") == 0) || (strcmp(argv[i], "--pid") == 0)) {
+      if (i+1 < argc) {
+        options->only_pid = atoi(argv[i+1]);
+        if (options->only_pid == 0)
+          options->only_name = strdup(argv[i+1]);
+        i++;
+        continue;
+      }
+      else {
+        fprintf(stderr, "Missing pid/name after -p.\n");
         exit(EXIT_FAILURE);
       }
     }
