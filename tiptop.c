@@ -691,7 +691,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
       if ((c == '+') || (c == '-') || (c == KEY_LEFT) || (c == KEY_RIGHT)) {
         return c;
       }
-      if (c == 'u')  /* change user, need to rebuild list of processes */
+      if ((c == 'u') || (c == 'K')) /* need to rebuild list of tasks */
         return c;
     }
 
@@ -753,7 +753,7 @@ int main(int argc, char* argv[])
         screen_num = (screen_num + n - 1) % n;
         done_proc_list(proc_list);
       }
-      if (key == 'u') {
+      if ((key == 'u') || (key == 'K')) {
         done_proc_list(proc_list);
       }
     }
