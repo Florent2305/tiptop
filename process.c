@@ -166,7 +166,9 @@ int update_proc_list(struct process_list* const list,
   flags = 0;
 
   events.disabled = 0;
+  events.pinned = 1;
   events.exclude_hv = 1;
+  /* events.exclude_idle = 1; ?? */
   if (options->show_kernel == 0)
     events.exclude_kernel = 1;
 
