@@ -61,16 +61,19 @@ void parse_command_line(int argc, char* argv[],
   for(i=1; i < argc; i++) {
     if (strcmp(argv[i], "-b") == 0) {
       options->batch = 1;
+      continue;
     }
 
     if (strcmp(argv[i], "-c") == 0) {
       options->show_cmdline = 1;
+      continue;
     }
 
     if (strcmp(argv[i], "--cpu-min") == 0) {
       if (i+1 < argc) {
         options->cpu_threshold = (float)atof(argv[i+1]);
         i++;
+        continue;
       }
       else {
         fprintf(stderr, "Missing value after --cpu-min.\n");
@@ -84,6 +87,7 @@ void parse_command_line(int argc, char* argv[],
         if (options->delay < 0.1)
           options->delay = 1;
         i++;
+        continue;
       }
       else {
         fprintf(stderr, "Missing delay after -d.\n");
@@ -93,10 +97,12 @@ void parse_command_line(int argc, char* argv[],
 
     if (strcmp(argv[i], "--epoch") == 0) {
       options->show_epoch = 1;
+      continue;
     }
 
     if (strcmp(argv[i], "-g") == 0) {
       options->debug = 1;
+      continue;
     }
 
     if ((strcmp(argv[i], "-h") == 0) || (strcmp(argv[i], "--help") == 0)) {
@@ -106,15 +112,19 @@ void parse_command_line(int argc, char* argv[],
 
     if (strcmp(argv[i], "-H") == 0) {
       options->show_threads = 1;
+      continue;
     }
 
     if (strcmp(argv[i], "-i") == 0) {
       options->idle = 1;
+      continue;
     }
 
     if ((strcmp(argv[i], "-K") == 0) || (strcmp(argv[i], "--kernel") == 0)) {
-      if (geteuid() == 0)
+      if (geteuid() == 0) {
         options->show_kernel = 1;
+        continue;
+      }
       else {
         fprintf(stderr, "Kernel mode (-K --kernel) not available.\n");
         fprintf(stderr, "You are not root, or the binary is not setuid.\n");
@@ -124,12 +134,14 @@ void parse_command_line(int argc, char* argv[],
 
     if (strcmp(argv[i], "--list-screens") == 0) {
       *list_scr = 1;
+      continue;
     }
 
     if (strcmp(argv[i], "-n") == 0) {
       if (i+1 < argc) {
         options->max_iter = atoi(argv[i+1]);
         i++;
+        continue;
       }
       else {
         fprintf(stderr, "Missing number of iterations after -n.\n");
@@ -141,6 +153,7 @@ void parse_command_line(int argc, char* argv[],
       if (i+1 < argc) {
         *screen_num = atoi(argv[i+1]);
         i++;
+        continue;
       }
       else {
         fprintf(stderr, "Missing screen number after -S.\n");
@@ -150,14 +163,17 @@ void parse_command_line(int argc, char* argv[],
 
     if (strcmp(argv[i], "--sticky") == 0) {
       options->sticky = 1;
+      continue;
     }
 
     if (strcmp(argv[i], "--timestamp") == 0) {
       options->show_timestamp = 1;
+      continue;
     }
 
     if (strcmp(argv[i], "-U") == 0) {
       options->show_user = 1;
+      continue;
     }
 
     if (strcmp(argv[i], "-u") == 0) {
@@ -174,6 +190,7 @@ void parse_command_line(int argc, char* argv[],
           options->watch_uid = passwd->pw_uid;
         }
         i++;
+        continue;
       }
       else {
         fprintf(stderr, "Missing user name after -u.\n");
@@ -197,12 +214,14 @@ void parse_command_line(int argc, char* argv[],
         if (options->watch_pid == 0)
           options->watch_name = strdup(argv[i+1]);
         i++;
+        continue;
       }
       else {
         fprintf(stderr, "Missing pid/name after -w.\n");
         exit(EXIT_FAILURE);
       }
     }
+
     fprintf(stderr, "Unknown flag: '%s'\n", argv[i]);
     exit(EXIT_FAILURE);
   }
