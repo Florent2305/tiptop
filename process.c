@@ -130,7 +130,7 @@ int update_proc_list(struct process_list* const list,
   int i;
   struct dirent* pid_dirent;
   DIR* pid_dir;
-  int    cpu, grp, flags;
+  int    cpu, grp, flags, num_tids;
   struct process* p;
   struct STRUCT_NAME events = {0, };
   int    ret_val = 0;
@@ -139,14 +139,15 @@ int update_proc_list(struct process_list* const list,
   assert(list && list->processes);
   p = list->processes;
 
-  /* remove dead threads */
+  /* mark dead tasks */
+  num_tids = list->num_tids;
   for(i=0; i < list->num_tids; ++i) {
     char name[50]; /* needs to fit the name /proc/xxxxx/task/yyyyy/status */
     int  zz;
 
     sprintf(name, "/proc/%d/task/%d/status", p[i].pid, p[i].tid);
     if (access(name, F_OK) == -1) {
-      ret_val = 1;
+      ret_val = 1;  /* at least one dead */
       p[i].dead = 1;  /* mark dead */
       for(zz=0; zz < p[i].num_events; ++zz) {
         if (p[i].fd[zz] != -1) {
@@ -316,27 +317,27 @@ int update_proc_list(struct process_list* const list,
         }
 
         /* We have a new thread. Reallocate space as needed. */
-        if (list->num_tids == list->num_alloc) {
+        if (num_tids == list->num_alloc) {
           list->num_alloc += 10;
           list->processes = realloc(list->processes,
                                     list->num_alloc*sizeof(struct process));
         }
 
         p = list->processes;
-        p[list->num_tids].tid = tid;
-        p[list->num_tids].pid = pid;
-        p[list->num_tids].proc_id = -1;
-        p[list->num_tids].dead = 0;
-        p[list->num_tids].attention = 0;
+        p[num_tids].tid = tid;
+        p[num_tids].pid = pid;
+        p[num_tids].proc_id = -1;
+        p[num_tids].dead = 0;
+        p[num_tids].attention = 0;
 
         passwd = getpwuid(uid);
         if (passwd) {
-          p[list->num_tids].username = strdup(passwd->pw_name);
+          p[num_tids].username = strdup(passwd->pw_name);
         }
         else
-          p[list->num_tids].username = NULL;
+          p[num_tids].username = NULL;
 
-        p[list->num_tids].num_threads = num_threads;
+        p[num_tids].num_threads = num_threads;
 
         /* get process' command line */
         sprintf(name, "/proc/%d/cmdline", pid);
@@ -365,27 +366,27 @@ int update_proc_list(struct process_list* const list,
         if (!cmdline)
           cmdline = strdup("[null]");
 
-        p[list->num_tids].cmdline = cmdline;
-        p[list->num_tids].name = strdup(proc_name);
-        p[list->num_tids].timestamp.tv_sec = 0;
-        p[list->num_tids].timestamp.tv_usec = 0;
-        p[list->num_tids].prev_cpu_time_s = 0;
-        p[list->num_tids].prev_cpu_time_u = 0;
-        p[list->num_tids].cpu_percent = 0.0;
-        p[list->num_tids].cpu_percent_s = 0.0;
-        p[list->num_tids].cpu_percent_u = 0.0;
+        p[num_tids].cmdline = cmdline;
+        p[num_tids].name = strdup(proc_name);
+        p[num_tids].timestamp.tv_sec = 0;
+        p[num_tids].timestamp.tv_usec = 0;
+        p[num_tids].prev_cpu_time_s = 0;
+        p[num_tids].prev_cpu_time_u = 0;
+        p[num_tids].cpu_percent = 0.0;
+        p[num_tids].cpu_percent_s = 0.0;
+        p[num_tids].cpu_percent_u = 0.0;
 
         /* Get number of counters from screen */
-        p[list->num_tids].num_events = screen->num_counters;
+        p[num_tids].num_events = screen->num_counters;
 
-        for(zz = 0; zz < p[list->num_tids].num_events; zz++) {
-          p[list->num_tids].prev_values[zz] = 0;
+        for(zz = 0; zz < p[num_tids].num_events; zz++) {
+          p[num_tids].prev_values[zz] = 0;
         }
-        p[list->num_tids].txt = malloc(TXT_LEN * sizeof(char));
+        p[num_tids].txt = malloc(TXT_LEN * sizeof(char));
 
         fail = 0;
 
-        for(zz = 0; zz < p[list->num_tids].num_events; zz++) {
+        for(zz = 0; zz < p[num_tids].num_events; zz++) {
           events.type = screen->counters[zz].type;  /* eg PERF_TYPE_HARDWARE */
           events.config = screen->counters[zz].config;
 
@@ -398,47 +399,32 @@ int update_proc_list(struct process_list* const list,
             fail++;
           else
             num_files++;
-          p[list->num_tids].fd[zz] = fd;
-          p[list->num_tids].values[zz] = 0;
+          p[num_tids].fd[zz] = fd;
+          p[num_tids].values[zz] = 0;
         }
 
         if (fail) {
           /* at least one counter failed, mark it */
-          p[list->num_tids].attention = 1;
+          p[num_tids].attention = 1;
         }
 
 #if 0
-        if (fail != p[list->num_tids].num_events) {
+        if (fail != p[num_tids].num_events) {
           /* at least one counter succeeded, insert the thread in list */
           list->num_tids++;
+          num_tids++;
         }
 #endif
         list->num_tids++;  /* insert in any case */
+        num_tids++;
       }
       closedir(thr_dir);
+
     skip: ;
     }
   }
 
   closedir(pid_dir);
-
-#if 0
-  if (debug) {
-    FILE* debug = fopen("debug", "w");
-    p = list->processes;
-    fprintf(debug, "num PIDs: %d\n", list->num_tids);
-    for(i=0; i < list->num_tids; ++i) {
-      fprintf(debug, "[%d] %5d-%5d %-15s  %d %d %d %d - %"PRIu64"  %"PRIu64"  %"PRIu64"  %"PRIu64" \n",
-              i,
-              p[i].pid, p[i].tid, p[i].name,
-              p[i].fd[0], p[i].fd[1], p[i].fd[2], p[i].fd[3],
-              p[i].values[0], p[i].values[1], p[i].values[2], p[i].values[3]);
-    }
-    fprintf(debug, "----------\n");
-    fclose(debug);
-  }
-#endif
-
   return ret_val;
 }
 
