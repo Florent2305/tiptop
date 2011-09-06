@@ -37,8 +37,9 @@ target-dependent counters.
 
 
 .SH COMMAND-LINE OPTIONS
-Command line options override values specified in the configuration
-file.
+Command line options with a parameter override values specified in the
+configuration file. Toggles set the value or invert the value read in
+the configuration file (if any).
 
 .TP 4
 \-\fBb\fR
@@ -71,16 +72,16 @@ Print a brief help message and exit.
 
 .TP 4
 \-\fBH\fR
-Show threads.
+Show threads (or toggle the configuration file setting).
 
 .TP 4
 \-\fBi\fR
-Show idle tasks.
+Show idle tasks (or toggle the configuration file setting).
 
 .TP 4
 \-\fBK --kernel\fR
 Include kernel activity in the reported values. This is only possible
-is the user is root, or the \*(Me binary is setuid root.
+is the user is root, or the \*(Me executable is setuid root.
 
 .TP 4
 \-\-\fBlist\-screens\fR
@@ -98,7 +99,7 @@ command lines (depending on the display, see -c) contain VALUE are
 reported.
 
 .TP 4
-\-\fBS\fR
+\-\fBS\fR VALUE
 Start \*(Me with screen number VALUE.
 
 .TP 4
@@ -121,7 +122,7 @@ numeric value UID.
 
 .TP 4
 \-\fBU\fR
-Show the owner of each task.
+Show the owner of each task (or toggle the configuration file setting).
 
 .TP 4
 \-\fBv\fR
@@ -143,6 +144,10 @@ tasks.
 
 .SH INTERACTIVE COMMANDS
 In live-mode, \*(Me accepts single-key commands.
+
+.TP 4
+\fBLEFT, RIGHT\fR
+Rotate through available screens.
 
 .TP 4
 \fBc\fR
