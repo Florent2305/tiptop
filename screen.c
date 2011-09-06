@@ -198,9 +198,9 @@ screen_t* default_screen()
   bus =   add_counter(s, PERF_TYPE_HARDWARE, PERF_COUNT_HW_BUS_CYCLES);
 
   /* add columns */
-  add_column_proc_id(s, " P", "%2d");
   add_column_cpu(s, " %CPU", "%5.1f");
   add_column_cpu_s(s, " %SYS", "%5.1f");
+  add_column_proc_id(s, " P", "%2d");
   add_column_raw_m(s, "  Mcycle", "%8.2f", cycle, "Cycles (millions)");
   add_column_raw_m(s, "  Minstr", "%8.2f", insn, "Instructions (millions)");
   add_column_ratio(s, " IPC", "%4.2f", insn, cycle,
@@ -241,6 +241,9 @@ char* gen_header(const screen_t* const s, const struct option* options,
   char* hdr;
   char* ptr;
   int   num_cols, i, written = 0;
+  const char sep = ' ';
+  const char high_on = '[';
+  const char high_off = ']';
 
   hdr = malloc(width);
   ptr = hdr;
@@ -258,9 +261,13 @@ char* gen_header(const screen_t* const s, const struct option* options,
   }
 
   if (options->show_user)
-    written = snprintf(ptr, width, "  PID  user      ");
+    written = snprintf(ptr, width, " %cPID%c user      ",
+                       active_col == -1 ? high_on : sep,
+                       active_col == -1 ? high_off : sep);
   else
-    written = snprintf(ptr, width, "  PID ");
+    written = snprintf(ptr, width, " %cPID%c",
+                       active_col == -1 ? high_on : sep,
+                       active_col == -1 ? high_off : sep);
 
   ptr += written;
   width -= written;
@@ -271,11 +278,11 @@ char* gen_header(const screen_t* const s, const struct option* options,
     /* add space, if it fits */
     if (width >= 2) {
       if (i == active_col)
-        ptr[0] = '[';
-      else if (i-1 == active_col)
-        ptr[0] = ']';
+        ptr[0] = high_on;
+      else if ((i-1 == active_col) && (i != 0))
+        ptr[0] = high_off;
       else
-        ptr[0] = ' ';
+        ptr[0] = sep;
       ptr[1] = '\0';
       ptr++;
       width--;
@@ -290,7 +297,11 @@ char* gen_header(const screen_t* const s, const struct option* options,
     ptr += written;
     width -= written;
   }
-  snprintf(ptr, width, "%cCOMMAND", active_col == s->num_columns-1 ? ']' : ' ');
+  snprintf(ptr, width, "%cCOMMAND%c",
+           active_col == s->num_columns-1
+                      ? high_off
+                      : active_col == s->num_columns ? high_on : sep,
+           active_col == s->num_columns ? high_off : sep);
   return hdr;
 }
 

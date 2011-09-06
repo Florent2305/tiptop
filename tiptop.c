@@ -107,36 +107,59 @@ static int cmp_long(const void* p1, const void* p2)
     return -res;
 }
 
+static int cmp_string(const void* p1, const void* p2)
+{
+  struct process* proc1 = (struct process*)p1;
+  struct process* proc2 = (struct process*)p2;
+  int res;
+  if (options.show_cmdline)
+    res = strcmp(proc1->cmdline, proc2->cmdline);
+  else
+    res = strcmp(proc1->name, proc2->name);
+  if (sorting_order == ASCENDING)
+    return res;
+  else
+    return -res;
+}
+
 
 /* For each process/thread in the list, generate the text form, ready
  * to be printed.
  */
 static void build_rows(struct process_list* proc_list, screen_t* s, int width)
 {
-  int i, num_tids;
+  int i, num_tids, row_width;
   struct process* p;
 
   assert(TXT_LEN > 20);
 
+  row_width = TXT_LEN;
+  if ((width != -1) && (width < row_width))
+    row_width = width;
+
   num_tids = proc_list->num_tids;
   p = proc_list->processes;
 
-  if (s->columns[active_col].data.type == PROC_ID) {
+  /* For the time being, column -1 is the PID, columns 0 to
+     "num_columns-1" are the columns specified in the screen, and
+     column "num_columns" is the task name. */
+
+  /* select appropriate sorting function */
+  if (active_col == s->num_columns)
+    sorting_fun = cmp_string;
+  else if ((active_col == -1) || (s->columns[active_col].data.type == PROC_ID))
     sorting_fun = cmp_int;
-  }
-  else if (s->columns[active_col].data.type == COMPUT_ABS) {
+  else if (s->columns[active_col].data.type == COMPUT_ABS)
     sorting_fun = cmp_long;
-  }
-  else {
+  else
     sorting_fun = cmp_double;
-  }
 
 
   /* For all processes/threads */
   for(i=0; i < num_tids; ++i) {
     int   col, written;
-    char* row = p[i].txt;       /* the row we are building */
-    int   remaining = TXT_LEN;  /* remaining bytes in row */
+    char* row = p[i].txt;  /* the row we are building */
+    int   remaining = row_width;  /* remaining bytes in row */
     int   thr = ' ';
 
     p[i].skip = 1;  /* first, assume not ready */
@@ -156,8 +179,8 @@ static void build_rows(struct process_list* proc_list, screen_t* s, int width)
                                   !strstr(p[i].name, options.only_name)))
       continue;
 
-    if ((width != -1) && (width < remaining))
-      remaining = width;
+    if (active_col == -1)  /* column -1 is the PID */
+      p[i].u.i = p[i].tid;
 
     /* display a '+' sign after processes made of multiple threads */
     if (p[i].num_threads > 1) {
@@ -774,7 +797,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
       move(1, COLS - 11 - strlen(screen->name));
       printw("screen %2d: %s\n", screen->id, screen->name);
     }
-    else {
+    else if (COLS >= 35 + 20 + 11) {
       char screen_str[50] = { 0 };
       move(1, 35 + 20);
       snprintf(screen_str, sizeof(screen_str) - 1, "%s\n", screen->name);
@@ -807,13 +830,13 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
       if (c == 'q')
         break;
       if (c == '>') {
-        if (active_col < screen->num_columns - 1)
+        if (active_col < screen->num_columns )
           active_col++;
         free(header);
         header = gen_header(screen, &options, COLS - 1, active_col);
       }
       if (c == '<') {
-        if (active_col > 0)
+        if (active_col > -1)
           active_col--;
         free(header);
         header = gen_header(screen, &options, COLS - 1, active_col);
