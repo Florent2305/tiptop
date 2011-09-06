@@ -3,6 +3,7 @@
 
 #include <inttypes.h>
 
+#include "options.h"
 
 typedef struct {
   uint32_t  type;
@@ -23,11 +24,13 @@ enum comput_type {
   COMPUT_PERCENT
 };
 
+
 typedef struct {
   enum comput_type type : 8;
   int  param1 : 8;
   int  param2 : 8;
 } col_comput_t;
+
 
 typedef struct {
   char* header;
@@ -49,6 +52,7 @@ typedef struct {
   int        num_alloc_columns;
   column_t*  columns;
 } screen_t;
+
 
 screen_t* new_screen(const char* const);
 int add_counter(screen_t* const, int32_t type, int64_t config);
@@ -73,8 +77,8 @@ int get_num_screens();
 
 void list_screens();
 
-char* gen_header(const screen_t* const s, int show_user,
-                 int timestamp, int epoch, int width);
+char* gen_header(const screen_t* const s, const struct option* const,
+                 int width, int active_col);
 
 void delete_screen(screen_t* s);
 void delete_screens();

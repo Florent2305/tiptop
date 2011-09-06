@@ -330,6 +330,7 @@ int update_proc_list(struct process_list* const list,
         p[num_tids].proc_id = -1;
         p[num_tids].dead = 0;
         p[num_tids].attention = 0;
+        p[num_tids].u.d = 0.0;
 
         passwd = getpwuid(uid);
         if (passwd) {

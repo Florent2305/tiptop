@@ -8,7 +8,18 @@
 
 
 #define MAX_EVENTS 16
-#define TXT_LEN 200
+#define TXT_LEN   200  /* max size of the text representation (or row) */
+
+
+/* An instance of this union is owned by each process. It is used to
+   sort rows according to the active column. */
+union sorting_column {
+  double   d;
+  uint64_t l;
+  int      i;
+  char     c;
+};
+
 
 /* Main structure describing a thread */
 struct process {
@@ -32,7 +43,9 @@ struct process {
   int       fd[MAX_EVENTS];           /* file handles */
   uint64_t  values[MAX_EVENTS];       /* values read from counters */
   uint64_t  prev_values[MAX_EVENTS];  /* previous iteration */
-  char* txt;
+  char* txt;  /* text representation of the process (what is displayed) */
+
+  union sorting_column u;
 
   int   attention;
 };

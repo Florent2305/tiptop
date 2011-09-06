@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "debug.h"
+#include "options.h"
 #include "screen.h"
 #include "screens-intel.h"
 
@@ -235,9 +235,8 @@ screen_t* get_screen(int num)
 }
 
 
-char* gen_header(const screen_t* const s, int show_user,
-                 int timestamp, int epoch,
-                 int width)
+char* gen_header(const screen_t* const s, const struct option* options,
+                 int width, int active_col)
 {
   char* hdr;
   char* ptr;
@@ -246,19 +245,19 @@ char* gen_header(const screen_t* const s, int show_user,
   hdr = malloc(width);
   ptr = hdr;
 
-  if (timestamp) {
+  if (options->show_timestamp && options->batch) {
     written = snprintf(ptr, width, "timest ");
     ptr += written;
     width -= written;
   }
 
-  if (epoch) {
+  if (options->show_epoch && options->batch) {
     written = snprintf(ptr, width, "     epoch ");
     ptr += written;
     width -= written;
   }
 
-  if (show_user)
+  if (options->show_user)
     written = snprintf(ptr, width, "  PID  user      ");
   else
     written = snprintf(ptr, width, "  PID ");
@@ -271,7 +270,12 @@ char* gen_header(const screen_t* const s, int show_user,
 
     /* add space, if it fits */
     if (width >= 2) {
-      ptr[0] = ' ';
+      if (i == active_col)
+        ptr[0] = '[';
+      else if (i-1 == active_col)
+        ptr[0] = ']';
+      else
+        ptr[0] = ' ';
       ptr[1] = '\0';
       ptr++;
       width--;
@@ -286,7 +290,7 @@ char* gen_header(const screen_t* const s, int show_user,
     ptr += written;
     width -= written;
   }
-  snprintf(ptr, width, " COMMAND");
+  snprintf(ptr, width, "%cCOMMAND", active_col == s->num_columns-1 ? ']' : ' ');
   return hdr;
 }
 

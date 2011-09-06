@@ -42,9 +42,70 @@ struct option options;
 static struct timeval tv;
 
 static char* message = NULL;
-
-
 static char* header = NULL;
+
+static int active_col = 0;
+
+static enum sorting_order {
+  DESCENDING,
+  ASCENDING
+}  sorting_order = DESCENDING;
+
+static int (*sorting_fun)(const void *, const void *);
+
+
+/* Utility functions used by qsort to sort processes according to
+   active column */
+static int cmp_double(const void* p1, const void* p2)
+{
+  int res;
+  struct process* proc1 = (struct process*)p1;
+  struct process* proc2 = (struct process*)p2;
+  if (proc1->u.d > proc2->u.d)
+    res = -1;
+  else if (proc1->u.d == proc2->u.d)
+    res = 0;
+  else
+    res = 1;
+  if (sorting_order == DESCENDING)
+    return res;
+  else
+    return -res;
+}
+
+static int cmp_int(const void* p1, const void* p2)
+{
+  int res;
+  struct process* proc1 = (struct process*)p1;
+  struct process* proc2 = (struct process*)p2;
+  if (proc1->u.i > proc2->u.i)
+    res = -1;
+  else if (proc1->u.i == proc2->u.i)
+    res = 0;
+  else
+    res = 1;
+  if (sorting_order == DESCENDING)
+    return res;
+  else
+    return -res;
+}
+
+static int cmp_long(const void* p1, const void* p2)
+{
+  struct process* proc1 = (struct process*)p1;
+  struct process* proc2 = (struct process*)p2;
+  int res;
+  if (proc1->u.l > proc2->u.l)
+    res = -1;
+  else if (proc1->u.l == proc2->u.l)
+    res = 0;
+  else
+    res = 1;
+  if (sorting_order == DESCENDING)
+    return res;
+  else
+    return -res;
+}
 
 
 /* For each process/thread in the list, generate the text form, ready
@@ -60,6 +121,17 @@ static void build_rows(struct process_list* proc_list, screen_t* s, int width)
   num_tids = proc_list->num_tids;
   p = proc_list->processes;
 
+  if (s->columns[active_col].data.type == PROC_ID) {
+    sorting_fun = cmp_int;
+  }
+  else if (s->columns[active_col].data.type == COMPUT_ABS) {
+    sorting_fun = cmp_long;
+  }
+  else {
+    sorting_fun = cmp_double;
+  }
+
+
   /* For all processes/threads */
   for(i=0; i < num_tids; ++i) {
     int   col, written;
@@ -69,7 +141,7 @@ static void build_rows(struct process_list* proc_list, screen_t* s, int width)
 
     p[i].skip = 1;  /* first, assume not ready */
 
-    if ((p[i].dead == 1) && (!options.sticky)) /* dead */
+    if ((p[i].dead == 1) && (!options.sticky)) /* dead, not changing anymore */
       continue;
 
     /* not active, skip */
@@ -104,35 +176,52 @@ static void build_rows(struct process_list* proc_list, screen_t* s, int width)
     remaining -= written;
 
     for(col = 0; col < s->num_columns; col++) {
+      int error = 0;
       const char* const fmt = s->columns[col].format;
+
+      /* zero the sorting field. The double '.d' is the longest field. */
+      if (active_col == col)
+        p[i].u.d = 0.0;
 
       switch(s->columns[col].data.type) {
       case CPU_TOT:
         written = snprintf(row, remaining, fmt, p[i].cpu_percent);
+        if (active_col == col)
+          p[i].u.d = p[i].cpu_percent;
         break;
 
       case CPU_SYS:
         written = snprintf(row, remaining, fmt, p[i].cpu_percent_s);
+        if (active_col == col)
+          p[i].u.d = p[i].cpu_percent_s;
         break;
 
       case CPU_USER:
         written = snprintf(row, remaining, fmt, p[i].cpu_percent_u);
+        if (active_col == col)
+          p[i].u.d = p[i].cpu_percent_u;
         break;
 
       case PROC_ID:
-        if (p[i].proc_id != -1)
+        if (p[i].proc_id != -1) {
           written = snprintf(row, remaining, fmt, p[i].proc_id);
+          if (active_col == col) {
+            p[i].u.i = p[i].proc_id;
+          }
+        }
         else
-          written = snprintf(row, remaining, "%s", s->columns[col].error_field);
+          error = 1;
         break;
 
       case COMPUT_RAW: {
         int counter = s->columns[col].data.param1;
         if (p[i].values[counter] == 0xffffffff)
-          written = snprintf(row, remaining, "%s", s->columns[col].error_field);
+          error = 1;
         else {
           uint64_t delta = p[i].values[counter] - p[i].prev_values[counter];
           written = snprintf(row, remaining, fmt, delta);
+          if (active_col == col)
+            p[i].u.d = delta;
         }
       }
         break;
@@ -140,30 +229,37 @@ static void build_rows(struct process_list* proc_list, screen_t* s, int width)
       case COMPUT_RAW_M: {
         int counter = s->columns[col].data.param1;
         if (p[i].values[counter] == 0xffffffff)
-          written = snprintf(row, remaining, "%s", s->columns[col].error_field);
+          error = 1;
         else {
           uint64_t delta = p[i].values[counter] - p[i].prev_values[counter];
           written = snprintf(row, remaining, fmt, delta / 1000000.0);
+          if (active_col == col)
+            p[i].u.d = delta;
         }
       }
         break;
 
       case COMPUT_ABS: {
         int counter = s->columns[col].data.param1;
-        if (p[i].values[counter] == 0xffffffff) {
-          written = snprintf(row, remaining, "%s", s->columns[col].error_field);
-        }
-        else
+        if (p[i].values[counter] == 0xffffffff)
+          error = 1;
+        else {
           written = snprintf(row, remaining, fmt, p[i].values[counter]);
+          if (active_col == col)
+            p[i].u.l = p[i].values[counter];
+        }
       }
         break;
 
       case COMPUT_ABS_M: {
         int counter = s->columns[col].data.param1;
         if (p[i].values[counter] == 0xffffffff)
-          written = snprintf(row, remaining, "%s", s->columns[col].error_field);
-        else
+          error = 1;
+        else {
           written = snprintf(row, remaining,fmt,p[i].values[counter]/1000000.0);
+          if (active_col == col)
+            p[i].u.d = p[i].values[counter]/1000000.0;
+        }
       }
         break;
 
@@ -172,16 +268,18 @@ static void build_rows(struct process_list* proc_list, screen_t* s, int width)
         int counter2 = s->columns[col].data.param2;
 
         if ((p[i].values[counter1] == 0xffffffff) ||
-            (p[i].values[counter2] == 0xffffffff)) {
-          written = snprintf(row, remaining, "%s", s->columns[col].error_field);
-        }
+            (p[i].values[counter2] == 0xffffffff))
+          error = 1;
         else {
           uint64_t delta1 = p[i].values[counter1] - p[i].prev_values[counter1];
           uint64_t delta2 = p[i].values[counter2] - p[i].prev_values[counter2];
-          if (delta2 != 0)
+          if (delta2 != 0) {
             written = snprintf(row, remaining, fmt, 1.0*delta1/delta2);
+            if (active_col == col)
+              p[i].u.d = 1.0*delta1/delta2;
+          }
           else
-            written = snprintf(row, remaining,"%s",s->columns[col].empty_field);
+            error = 2;
         }
       }
         break;
@@ -190,16 +288,18 @@ static void build_rows(struct process_list* proc_list, screen_t* s, int width)
         int counter1 = s->columns[col].data.param1;
         int counter2 = s->columns[col].data.param2;
         if ((p[i].values[counter1] == 0xffffffff) ||
-            (p[i].values[counter2] == 0xffffffff)) {
-          written = snprintf(row, remaining, "%s", s->columns[col].error_field);
-        }
+            (p[i].values[counter2] == 0xffffffff))
+          error = 1;
         else {
           uint64_t delta1 = p[i].values[counter1] - p[i].prev_values[counter1];
           uint64_t delta2 = p[i].values[counter2] - p[i].prev_values[counter2];
-          if (delta2 != 0)
+          if (delta2 != 0) {
             written = snprintf(row, remaining, fmt, 100.0*delta1/delta2);
+            if (active_col == col)
+              p[i].u.d = 100.0*delta1/delta2;
+          }
           else
-            written = snprintf(row, remaining,"%s",s->columns[col].empty_field);
+            error = 2;
         }
       }
         break;
@@ -208,6 +308,12 @@ static void build_rows(struct process_list* proc_list, screen_t* s, int width)
         fprintf(stderr, "Internal error: unknown column type.\n");
         exit(EXIT_FAILURE);
       }
+
+      if (error == 1)
+        written = snprintf(row, remaining,"%s",s->columns[col].error_field);
+      else if (error == 2)
+        written = snprintf(row, remaining,"%s",s->columns[col].empty_field);
+
 
       /* man snprintf: The functions snprintf() and vsnprintf() do not
        write more than size bytes (including the trailing '\0').  If
@@ -243,20 +349,6 @@ static void build_rows(struct process_list* proc_list, screen_t* s, int width)
 
     p[i].skip = 0;
   }
-}
-
-
-/* Utility function used by qsort to sort processes by decreasing %CPU. */
-static int cmp_cpu(const void* p1, const void* p2)
-{
-  struct process* proc1 = (struct process*)p1;
-  struct process* proc2 = (struct process*)p2;
-  if (proc1->cpu_percent > proc2->cpu_percent)
-    return -1;
-  else if (proc1->cpu_percent == proc2->cpu_percent)
-    return 0;
-  else
-    return 1;
 }
 
 
@@ -298,10 +390,7 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
     printf("watching uid %d '%s'\n", options.watch_uid, passwd->pw_name);
   }
 
-  header = gen_header(screen, options.show_user,
-                      options.show_timestamp && options.batch,
-                      options.show_epoch && options.batch,
-                      TXT_LEN - 1);
+  header = gen_header(screen, &options, TXT_LEN - 1, active_col);
 
   printf("Screen %d: %s\n", screen->id, screen->name);
   printf("\n%s\n", header);
@@ -328,7 +417,7 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
     build_rows(proc_list, screen, -1);
 
     /* sort by %CPU */
-    qsort(p, proc_list->num_tids, sizeof(struct process), cmp_cpu);
+    qsort(p, proc_list->num_tids, sizeof(struct process), sorting_fun);
 
     num_printed = 0;
     for(i=0; i < proc_list->num_tids; i++) {
@@ -365,6 +454,7 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
     tv.tv_sec = options.delay;
     tv.tv_usec = (options.delay - tv.tv_sec) * 1000000.0;
   }
+  free(header);
 }
 
 
@@ -479,6 +569,9 @@ static int handle_key()
     noecho();
   }
 
+  else if (c == 'R')
+    sorting_order = 1 - sorting_order;
+
   else if (c == 'U')
     options.show_user = 1 - options.show_user;
 
@@ -572,10 +665,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
   tv.tv_sec = 0;
   tv.tv_usec = 200000; /* 200 ms for first iteration */
 
-  header = gen_header(screen, options.show_user,
-                      options.show_timestamp && options.batch,
-                      options.show_epoch && options.batch,
-                      COLS - 1);
+  header = gen_header(screen, &options, COLS - 1, active_col);
 
   for(num_iter=0; !options.max_iter || num_iter<options.max_iter; num_iter++) {
     int        i, zz, printed;
@@ -636,7 +726,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
     build_rows(proc_list, screen, COLS - 1);
 
     /* sort by %CPU */
-    qsort(p, proc_list->num_tids, sizeof(struct process), cmp_cpu);
+    qsort(p, proc_list->num_tids, sizeof(struct process), sorting_fun);
 
     printed = 0;
     /* Iterate over all threads */
@@ -716,6 +806,18 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
       int c = handle_key();
       if (c == 'q')
         break;
+      if (c == '>') {
+        if (active_col < screen->num_columns - 1)
+          active_col++;
+        free(header);
+        header = gen_header(screen, &options, COLS - 1, active_col);
+      }
+      if (c == '<') {
+        if (active_col > 0)
+          active_col--;
+        free(header);
+        header = gen_header(screen, &options, COLS - 1, active_col);
+      }
       if (c == 'H') {
         if (options.show_threads) {
           reset_values(proc_list);
@@ -726,8 +828,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
       }
       if (c == 'U') {
         free(header);
-        header = gen_header(screen,options.show_user, options.show_timestamp,
-                            options.show_epoch, COLS - 1);
+        header = gen_header(screen, &options, COLS - 1, active_col);
       }
       if ((c == '+') || (c == '-') || (c == KEY_LEFT) || (c == KEY_RIGHT)) {
         return c;
@@ -739,6 +840,9 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
     tv.tv_sec = options.delay;
     tv.tv_usec = (options.delay - tv.tv_sec) * 1000000.0;
   }
+
+  free(header);
+
   endwin();  /* stop curses */
   return 'q';
 }
@@ -787,11 +891,13 @@ int main(int argc, char* argv[])
       key = live_mode(proc_list, screen);
       if ((key == '+')  || (key == KEY_RIGHT)) {
         screen_num = (screen_num + 1) % get_num_screens();
+        active_col = 0;
         done_proc_list(proc_list);
       }
       if ((key == '-') || (key == KEY_LEFT)) {
         int n = get_num_screens();
         screen_num = (screen_num + n - 1) % n;
+        active_col = 0;
         done_proc_list(proc_list);
       }
       if ((key == 'u') || (key == 'K')) {
@@ -802,7 +908,6 @@ int main(int argc, char* argv[])
   } while (key != 'q');
 
   /* done, free memory (makes valgrind happy) */
-  free(header);
   delete_screens();
   done_proc_list(proc_list);
   if (options.watch_name)
