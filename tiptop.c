@@ -162,10 +162,11 @@ static void build_rows(struct process_list* proc_list, screen_t* s, int width)
     int   remaining = row_width;  /* remaining bytes in row */
     int   thr = ' ';
 
-    p[i].skip = 1;  /* first, assume not ready */
-
-    if ((p[i].dead == 1) && (!options.sticky)) /* dead, not changing anymore */
+    /* dead, not changing anymore, the row should be up-to-date. */
+    if ((p[i].dead == 1) && (!options.sticky))
       continue;
+
+    p[i].skip = 1;  /* first, assume not ready */
 
     /* not active, skip */
     if (!options.idle && (p[i].cpu_percent < options.cpu_threshold))
@@ -182,7 +183,7 @@ static void build_rows(struct process_list* proc_list, screen_t* s, int width)
     if (active_col == -1)  /* column -1 is the PID */
       p[i].u.i = p[i].tid;
 
-    /* display a '+' sign after processes made of multiple threads */
+    /* display a '+' or '-' sign after processes made of multiple threads */
     if (p[i].num_threads > 1) {
       if (p[i].tid == p[i].pid)
         thr = '+';
@@ -199,7 +200,8 @@ static void build_rows(struct process_list* proc_list, screen_t* s, int width)
     remaining -= written;
 
     for(col = 0; col < s->num_columns; col++) {
-      int error = 0;
+      int error = 0;  /* used to track error situations requiring an
+                         error_field (code 1) or an empty_field (code 2) */
       const char* const fmt = s->columns[col].format;
 
       /* zero the sorting field. The double '.d' is the longest field. */
