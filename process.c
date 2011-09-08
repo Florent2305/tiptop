@@ -8,6 +8,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "hash.h"
 #include "options.h"
 #include "pmc.h"
 #include "process.h"
@@ -37,8 +38,11 @@ struct process_list* init_proc_list()
 
   struct process_list* l = malloc(sizeof(struct process_list));
   l->num_alloc = 20;
-  l->processes = malloc(l->num_alloc*sizeof(struct process));
+  l->processes = malloc(l->num_alloc * sizeof(struct process));
+  l->proc_ptrs = malloc(l->num_alloc * sizeof(struct process*));
   l->num_tids = 0;
+
+  hash_init();
 
   num_files_limit = 0;
   snprintf(name, sizeof(name) - 1, "/proc/%d/limits", getpid());
@@ -90,38 +94,21 @@ void done_proc_list(struct process_list* list)
   int i;
   struct process* p;
 
-  assert(list && list->processes);
+  assert(list && list->processes && list->proc_ptrs);
   p = list->processes;
   for(i=0; i < list->num_tids; i++) {
     done_proc(&p[i]);
   }
   free(p);
+  free(list->proc_ptrs);
   free(list);
-}
-
-
-/* 
- * Return the index in the list of the thread 'tid'.
- * -1 if not present.
- */
-static int pos_in_list(const struct process_list* const list, pid_t tid)
-{
-  int i;
-  struct process* p;
-
-  assert(list && list->processes);
-  p = list->processes;
-  for(i=0; i < list->num_tids; i++) {
-    if (p[i].tid == tid)
-      return i;
-  }
-  return -1;
+  hash_fini();
 }
 
 
 /*
  * Update all processes in the list with newly collected statistics.
- * Return 1 if processes have died.
+ * Return the number of dead processes.
  */
 int update_proc_list(struct process_list* const list,
                      const screen_t* const screen,
@@ -133,21 +120,21 @@ int update_proc_list(struct process_list* const list,
   int    cpu, grp, flags, num_tids;
   struct process* p;
   struct STRUCT_NAME events = {0, };
-  int    ret_val = 0;
+  int    num_dead = 0;
 
   assert(screen);
-  assert(list && list->processes);
+  assert(list && list->processes && list->proc_ptrs);
   p = list->processes;
 
   /* mark dead tasks */
   num_tids = list->num_tids;
   for(i=0; i < list->num_tids; ++i) {
-    char name[50] = { 0 }; /* needs to fit /proc/xxxxx/task/yyyyy/status */
+    char name[50] = { 0 };  /* needs to fit /proc/xxxxx/task/yyyyy/status */
     int  zz;
 
     snprintf(name,sizeof(name)-1,"/proc/%d/task/%d/status", p[i].pid, p[i].tid);
     if (access(name, F_OK) == -1) {
-      ret_val = 1;  /* at least one dead */
+      num_dead++;  /* no longer exists */
       p[i].dead = 1;  /* mark dead */
       for(zz=0; zz < p[i].num_events; ++zz) {
         if (p[i].fd[zz] != -1) {
@@ -234,15 +221,17 @@ int update_proc_list(struct process_list* const list,
 
       /* Iterate over all threads in the process */
       while ((thr_dirent = readdir(thr_dir))) {
-        int pos, zz;
+        int zz;
+        struct process* ptr;
         struct passwd* passwd;
 
         tid = atoi(thr_dirent->d_name);
         if (tid == 0)
           continue;
 
-        pos = pos_in_list(list, tid);
-        if (pos != -1) {  /* already known */
+        ptr = hash_get(tid);
+        
+        if (ptr) {  /* already known */
           FILE*     fstat;
           char      sub_task_name[100] = { 0 };
           double    elapsed;
@@ -250,7 +239,6 @@ int update_proc_list(struct process_list* const list,
           unsigned long   prev_cpu_time, curr_cpu_time;
           int             proc_id;
           struct timeval  now;
-          struct process* ptr = &(list->processes[pos]);
 
           /* Compute %CPU */
           snprintf(sub_task_name, sizeof(sub_task_name) - 1,
@@ -319,12 +307,23 @@ int update_proc_list(struct process_list* const list,
 
         /* We have a new thread. Reallocate space as needed. */
         if (num_tids == list->num_alloc) {
-          list->num_alloc += 10;
+          struct process* old = list->processes;
+          list->num_alloc += 20;
           list->processes = realloc(list->processes,
                                     list->num_alloc*sizeof(struct process));
+          list->proc_ptrs = realloc(list->proc_ptrs,
+                                    list->num_alloc*sizeof(struct process));
+          if (list->processes != old) {  /* things have moved */
+            int i;
+            hash_fini();
+            hash_fillin(list);
+            for(i = 0; i < list->num_tids; i++)
+              list->proc_ptrs[i] = &list->processes[i];
+          }
         }
 
         p = list->processes;
+        list->proc_ptrs[num_tids] = &p[num_tids];
         p[num_tids].tid = tid;
         p[num_tids].pid = pid;
         p[num_tids].proc_id = -1;
@@ -332,10 +331,11 @@ int update_proc_list(struct process_list* const list,
         p[num_tids].attention = 0;
         p[num_tids].u.d = 0.0;
 
+        hash_add(tid, &p[num_tids]);
+
         passwd = getpwuid(uid);
-        if (passwd) {
+        if (passwd)
           p[num_tids].username = strdup(passwd->pw_name);
-        }
         else
           p[num_tids].username = NULL;
 
@@ -381,9 +381,9 @@ int update_proc_list(struct process_list* const list,
         /* Get number of counters from screen */
         p[num_tids].num_events = screen->num_counters;
 
-        for(zz = 0; zz < p[num_tids].num_events; zz++) {
+        for(zz = 0; zz < p[num_tids].num_events; zz++)
           p[num_tids].prev_values[zz] = 0;
-        }
+
         p[num_tids].txt = malloc(TXT_LEN * sizeof(char));
 
         fail = 0;
@@ -427,7 +427,7 @@ int update_proc_list(struct process_list* const list,
   }
 
   closedir(pid_dir);
-  return ret_val;
+  return num_dead;
 }
 
 
@@ -453,6 +453,13 @@ void compact_proc_list(struct process_list* const list)
     }
   }
   list->num_tids -= num_dead;
+
+  /* update pointers */
+  for(src = 0; src < list->num_tids; src++)
+    list->proc_ptrs[src] = &list->processes[src];
+
+  hash_fini();
+  hash_fillin(list);
 }
 
 
@@ -469,24 +476,24 @@ void accumulate_stats(const struct process_list* const list)
   p = list->processes;
   for(i=0; i < list->num_tids; ++i) {
     if (p[i].pid != p[i].tid) {
-      int pos;
+      struct process* owner;
 
       if (p[i].dead)
         continue;
 
       /* find the owner */
-      pos = pos_in_list(list, p[i].pid);
-      assert(pos != -1);
+      owner = hash_get(p[i].pid);
+      assert(owner);
 
       /* accumulate in owner process */
-      p[pos].cpu_percent += p[i].cpu_percent;
+      owner->cpu_percent += p[i].cpu_percent;
       for(zz = 0; zz < p[i].num_events; zz++) {
         /* as soon as one thread has invalid value, skip entire process. */
         if (p[i].values[zz] == 0xffffffff) {
-          p[pos].values[zz] = 0xffffffff;
+          owner->values[zz] = 0xffffffff;
           break;
         }
-        p[pos].values[zz] += p[i].values[zz];
+        owner->values[zz] += p[i].values[zz];
       }
     }
   }

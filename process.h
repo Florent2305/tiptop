@@ -56,6 +56,7 @@ struct process_list {
   int  num_tids;
   int  num_alloc;
   struct process* processes;
+  struct process** proc_ptrs;
 };
 
 

@@ -59,8 +59,8 @@ static int (*sorting_fun)(const void *, const void *);
 static int cmp_double(const void* p1, const void* p2)
 {
   int res;
-  struct process* proc1 = (struct process*)p1;
-  struct process* proc2 = (struct process*)p2;
+  struct process* proc1 = *(struct process**)p1;
+  struct process* proc2 = *(struct process**)p2;
   if (proc1->u.d > proc2->u.d)
     res = -1;
   else if (proc1->u.d == proc2->u.d)
@@ -76,8 +76,8 @@ static int cmp_double(const void* p1, const void* p2)
 static int cmp_int(const void* p1, const void* p2)
 {
   int res;
-  struct process* proc1 = (struct process*)p1;
-  struct process* proc2 = (struct process*)p2;
+  struct process* proc1 = *(struct process**)p1;
+  struct process* proc2 = *(struct process**)p2;
   if (proc1->u.i > proc2->u.i)
     res = -1;
   else if (proc1->u.i == proc2->u.i)
@@ -92,8 +92,8 @@ static int cmp_int(const void* p1, const void* p2)
 
 static int cmp_long(const void* p1, const void* p2)
 {
-  struct process* proc1 = (struct process*)p1;
-  struct process* proc2 = (struct process*)p2;
+  struct process* proc1 = *(struct process**)p1;
+  struct process* proc2 = *(struct process**)p2;
   int res;
   if (proc1->u.l > proc2->u.l)
     res = -1;
@@ -109,8 +109,8 @@ static int cmp_long(const void* p1, const void* p2)
 
 static int cmp_string(const void* p1, const void* p2)
 {
-  struct process* proc1 = (struct process*)p1;
-  struct process* proc2 = (struct process*)p2;
+  struct process* proc1 = *(struct process**)p1;
+  struct process* proc2 = *(struct process**)p2;
   int res;
   if (options.show_cmdline)
     res = strcmp(proc1->cmdline, proc2->cmdline);
@@ -384,7 +384,7 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
 {
   int   num_iter = 0;
   int   num_printed, foo;
-  struct process* p;
+  struct process** p;
 
   tv.tv_sec = 0;
   tv.tv_usec = 200000;  /* 200 ms for first iteration */
@@ -436,33 +436,33 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
     if (!options.show_threads)
       accumulate_stats(proc_list);
 
-    p = proc_list->processes;
+    p = proc_list->proc_ptrs;
 
     /* generate the text version of all rows */
     build_rows(proc_list, screen, -1);
 
     /* sort by %CPU */
-    qsort(p, proc_list->num_tids, sizeof(struct process), sorting_fun);
+    qsort(p, proc_list->num_tids, sizeof(struct process*), sorting_fun);
 
     num_printed = 0;
     for(i=0; i < proc_list->num_tids; i++) {
 
-      if (p[i].skip)
+      if (p[i]->skip)
         continue;
 
-      if (options.show_threads || (p[i].pid == p[i].tid)) {
+      if (options.show_threads || (p[i]->pid == p[i]->tid)) {
         if (options.show_timestamp)
           printf("%6d ", num_iter);
         if (options.show_epoch)
           printf("%10u ", epoch);
-        printf("%s%s", p[i].txt, p[i].dead ? " DEAD" : "");
+        printf("%s%s", p[i]->txt, p[i]->dead ? " DEAD" : "");
 
         /* if the process is being watched */
-        if ((p[i].tid == options.watch_pid) ||
+        if ((p[i]->tid == options.watch_pid) ||
             (options.watch_name && options.show_cmdline &&
-                                  strstr(p[i].cmdline, options.watch_name)) ||
+             strstr(p[i]->cmdline, options.watch_name)) ||
             (options.watch_name && !options.show_cmdline &&
-                                  strstr(p[i].name, options.watch_name)))
+                                  strstr(p[i]->name, options.watch_name)))
           printf(" <---");
         printf("\n");
         num_printed++;
@@ -662,7 +662,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
 {
   WINDOW*         help_win;
   fd_set          fds;
-  struct process* p;
+  struct process** p;
   int             num_iter = 0;
   int             with_colors = 0;
 
@@ -741,7 +741,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
     if (!options.show_threads)
       accumulate_stats(proc_list);
 
-    p = proc_list->processes;
+    p = proc_list->proc_ptrs;
 
     /* prepare for select */
     FD_ZERO(&fds);
@@ -751,30 +751,30 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
     build_rows(proc_list, screen, COLS - 1);
 
     /* sort by %CPU */
-    qsort(p, proc_list->num_tids, sizeof(struct process), sorting_fun);
+    qsort(p, proc_list->num_tids, sizeof(struct process*), sorting_fun);
 
     printed = 0;
     /* Iterate over all threads */
     for(i=0; i < proc_list->num_tids; i++) {
 
-      if (p[i].skip)
+      if (p[i]->skip)
         continue;
 
       /* highlight watched process, if any */
       if (with_colors) {
-        if (p[i].dead == 1) {
+        if (p[i]->dead == 1) {
           attron(COLOR_PAIR(5));
         }
-        else if ((p[i].tid == options.watch_pid) ||
+        else if ((p[i]->tid == options.watch_pid) ||
                  (options.watch_name && options.show_cmdline &&
-                                strstr(p[i].cmdline, options.watch_name)) ||
+                                strstr(p[i]->cmdline, options.watch_name)) ||
                  (options.watch_name && !options.show_cmdline &&
-                                strstr(p[i].name, options.watch_name)))
+                                strstr(p[i]->name, options.watch_name)))
           attron(COLOR_PAIR(3));
       }
 
-      if (options.show_threads || (p[i].pid == p[i].tid)) {
-        printw("%s\n", p[i].txt);
+      if (options.show_threads || (p[i]->pid == p[i]->tid)) {
+        printw("%s\n", p[i]->txt);
         printed++;
       }
 

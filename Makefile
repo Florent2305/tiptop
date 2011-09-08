@@ -7,7 +7,7 @@ CFLAGS+=$(XCFLAGS)
 LDFLAGS+=$(XLDFLAGS)
 
 OBJS=tiptop.o pmc.o process.o requisite.o conf.o screen.o screens-intel.o \
-     debug.o version.o helpwin.o options.o
+     debug.o version.o helpwin.o options.o hash.o
 
 all: tiptop
 
@@ -30,13 +30,14 @@ depend:
 
 conf.o: conf.h options.h
 debug.o: debug.h options.h
-helpwin.o: helpwin.h screen.h
+hash.o: hash.h process.h screen.h options.h
+helpwin.o: helpwin.h screen.h options.h
 options.o: options.h version.h
 pmc.o: pmc.h
-process.o: options.h pmc.h process.h screen.h utils.h
+process.o: hash.h process.h screen.h options.h pmc.h utils.h
 requisite.o: pmc.h requisite.h
-screen.o: debug.h screen.h screens-intel.h
-screens-intel.o: screen.h screens-intel.h
+screen.o: options.h screen.h screens-intel.h
+screens-intel.o: screen.h options.h screens-intel.h
 tiptop.o: conf.h options.h helpwin.h screen.h pmc.h process.h requisite.h
 utils.o: debug.h utils.h
 version.o: version.h
