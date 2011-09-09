@@ -96,9 +96,9 @@ void done_proc_list(struct process_list* list)
 
   assert(list && list->processes && list->proc_ptrs);
   p = list->processes;
-  for(i=0; i < list->num_tids; i++) {
+  for(i=0; i < list->num_tids; i++)
     done_proc(&p[i]);
-  }
+
   free(p);
   free(list->proc_ptrs);
   free(list);
@@ -106,52 +106,30 @@ void done_proc_list(struct process_list* list)
 }
 
 
-/*
- * Update all processes in the list with newly collected statistics.
- * Return the number of dead processes.
- */
-int update_proc_list(struct process_list* const list,
-                     const screen_t* const screen,
-                     const struct option* const options)
+void new_processes(struct process_list* const list,
+                   const screen_t* const screen,
+                   const struct option* const options)
 {
-  int i;
+  static int most_recent_pid = 0;
   struct dirent* pid_dirent;
-  DIR* pid_dir;
-  int    cpu, grp, flags, num_tids;
-  struct process* p;
+  DIR*           pid_dir;
+  int            num_tids, val;
   struct STRUCT_NAME events = {0, };
-  int    num_dead = 0;
+  FILE*          f;
 
-  assert(screen);
-  assert(list && list->processes && list->proc_ptrs);
-  p = list->processes;
+  const int cpu = -1;
+  const int grp = -1;
+  const int flags = 0;
 
-  /* mark dead tasks */
+  f = fopen("/proc/loadavg", "r");
+  fscanf(f, "%*f %*f %*f %*d/%*d %d", &val);
+  fclose(f);
+  if (val == most_recent_pid)  /* no new process since last time */
+    return;
+
+  most_recent_pid = val;
+
   num_tids = list->num_tids;
-  for(i=0; i < list->num_tids; ++i) {
-    char name[50] = { 0 };  /* needs to fit /proc/xxxxx/task/yyyyy/status */
-    int  zz;
-
-    snprintf(name,sizeof(name)-1,"/proc/%d/task/%d/status", p[i].pid, p[i].tid);
-    if (access(name, F_OK) == -1) {
-      num_dead++;  /* no longer exists */
-      p[i].dead = 1;  /* mark dead */
-      for(zz=0; zz < p[i].num_events; ++zz) {
-        if (p[i].fd[zz] != -1) {
-          close(p[i].fd[zz]);
-          num_files--;
-          p[i].fd[zz] = -1;
-        }
-      }
-    }
-  }
-
-
-  /* update statistics, and add newly created processes/threads */
-
-  cpu = -1;  /* CPU to monitor, -1 = per thread */
-  grp = -1;
-  flags = 0;
 
   events.disabled = 0;
   events.pinned = 1;
@@ -163,14 +141,11 @@ int update_proc_list(struct process_list* const list,
   /* check all directories of /proc */
   pid_dir = opendir("/proc");
   while ((pid_dirent = readdir(pid_dir))) {
+    int   uid, pid, num_threads;
     char  name[50] = { 0 }; /* needs to fit /proc/xxxx/{status,cmdline} */
-    char  proc_name[1000];
-    char* cmdline = NULL;
-    char  line[100]; /* line of /proc/xxxx/status */
-    int   uid;
-    int   pid;
-    int   num_threads;
     FILE* f;
+    char  line[100]; /* line of /proc/xxxx/status */
+    char  proc_name[100];
 
     if (pid_dirent->d_type != DT_DIR)  /* not a directory */
       continue;
@@ -185,6 +160,7 @@ int update_proc_list(struct process_list* const list,
 
     /* collect basic information about process */
     while (fgets(line, sizeof(line), f)) {
+      /* read the name now, since we will encounter it before Uid anyway */
       if (strncmp(line, "Name:", 5) == 0) {
         sscanf(line, "%*s %s", proc_name);
       }
@@ -203,12 +179,10 @@ int update_proc_list(struct process_list* const list,
         ((options->watch_uid == -1) &&
          (((my_uid != 0) && (uid == my_uid)) ||  /* not root, monitor mine */
           ((my_uid == 0) && (uid != 0)))))  /* I am root, monitor all others */
-    { 
-      int  fd;
-      int  tid;
-      int  fail;
+    {
       DIR* thr_dir;
       struct dirent* thr_dirent;
+      int  tid;
       char task_name[50] = { 0 };
 
       snprintf(task_name, sizeof(task_name) - 1, "/proc/%d/task", pid);
@@ -216,96 +190,27 @@ int update_proc_list(struct process_list* const list,
       if (!thr_dir) {
         perror("opendir");
         fprintf(stderr, "Cannot open '%s': '%s'\n", task_name, proc_name);
-        goto skip;
+        continue;
       }
-
       /* Iterate over all threads in the process */
       while ((thr_dirent = readdir(thr_dir))) {
-        int zz;
+        int   zz, fail;
+        char* cmdline = NULL;
         struct process* ptr;
-        struct passwd* passwd;
-
+        struct passwd*  passwd;
+        struct process* p;
         tid = atoi(thr_dirent->d_name);
         if (tid == 0)
           continue;
 
         ptr = hash_get(tid);
-        
-        if (ptr) {  /* already known */
-          FILE*     fstat;
-          char      sub_task_name[100] = { 0 };
-          double    elapsed;
-          unsigned long   utime = 0, stime = 0;
-          unsigned long   prev_cpu_time, curr_cpu_time;
-          int             proc_id;
-          struct timeval  now;
-
-          /* Compute %CPU */
-          snprintf(sub_task_name, sizeof(sub_task_name) - 1,
-                   "/proc/%d/task/%d/stat", pid, tid);
-          fstat = fopen(sub_task_name, "r");
-          if (fstat) {
-            int n;
-            n = fscanf(fstat,
-                 "%*d %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu %lu",
-                       &utime, &stime);
-            if (n != 2) {
-              fprintf(stderr, "Cannot read from '%s'\n", sub_task_name);
-              exit(EXIT_FAILURE);
-            }
-            /* get processor ID */
-            n = fscanf(fstat,
-                       "%*d %*d %*d %*d %*d %*d %*d %*u %*d %*u %*u %*u %*u "
-                       "%*u %*u %*u %*u %*u %*u %*u %*u %*u %*d %d",
-                       &proc_id);
-            if (n != 1)
-              proc_id = -1;
-            fclose(fstat);
-          }
-          gettimeofday(&now, NULL);
-          elapsed = (now.tv_sec - ptr->timestamp.tv_sec) +
-                    (now.tv_usec - ptr->timestamp.tv_usec)/1000000.0;
-          elapsed *= clk_tck;
-
-          ptr->timestamp = now;
-
-          prev_cpu_time = ptr->prev_cpu_time_s + ptr->prev_cpu_time_u;
-          curr_cpu_time = stime + utime;
-          ptr->cpu_percent = 100.0*(curr_cpu_time - prev_cpu_time)/elapsed;
-          ptr->cpu_percent_s = 100.0*(stime - ptr->prev_cpu_time_s)/elapsed;
-          ptr->cpu_percent_u = 100.0*(utime - ptr->prev_cpu_time_u)/elapsed;
-
-          ptr->prev_cpu_time_s = stime;
-          ptr->prev_cpu_time_u = utime;
-
-          ptr->proc_id = proc_id;
-          /* Backup previous value of counters */
-          for(zz = 0; zz < ptr->num_events; zz++) {
-            ptr->prev_values[zz] = ptr->values[zz];
-          }
-
-          /* Read performance counters */
-          for(zz = 0; zz < ptr->num_events; zz++) {
-            uint64_t value = 0;
-            int r;
-            /* When fd is -1, the syscall failed on that counter */
-            if (ptr->fd[zz] != -1) {
-              r = read(ptr->fd[zz], &value, sizeof(value));
-              if (r == sizeof(value))
-                ptr->values[zz] = value;
-              else
-                ptr->values[zz] = 0;
-            }
-            else {
-              /* no fd, use marker */
-              ptr->values[zz] = 0xffffffff;
-            }
-          }
-
+        if (ptr)  /* already known */
           continue;
-        }
 
-        /* We have a new thread. Reallocate space as needed. */
+
+        /* We have a new thread. */
+
+        /* reallocate space as needed. */
         if (num_tids == list->num_alloc) {
           struct process* old = list->processes;
           list->num_alloc += 20;
@@ -389,6 +294,8 @@ int update_proc_list(struct process_list* const list,
         fail = 0;
 
         for(zz = 0; zz < p[num_tids].num_events; zz++) {
+          int fd;
+
           events.type = screen->counters[zz].type;  /* eg PERF_TYPE_HARDWARE */
           events.config = screen->counters[zz].config;
 
@@ -421,12 +328,121 @@ int update_proc_list(struct process_list* const list,
         num_tids++;
       }
       closedir(thr_dir);
-
-    skip: ;
     }
   }
-
   closedir(pid_dir);
+}
+
+
+/*
+ * Update all processes in the list with newly collected statistics.
+ * Return the number of dead processes.
+ */
+int update_proc_list(struct process_list* const list,
+                     const screen_t* const screen,
+                     const struct option* const options)
+{
+  struct process* p;
+  int    i, num_tids;
+  int    num_dead = 0;
+
+  assert(screen);
+  assert(list && list->processes && list->proc_ptrs);
+  p = list->processes;
+  num_tids = list->num_tids;
+
+  /* add newly created processes/threads */
+  new_processes(list, screen, options);
+
+  /* update statistics */
+  for(i=0; i < list->num_tids; ++i) {
+    struct process* proc = &list->processes[i];
+    FILE*     fstat;
+    char      sub_task_name[100] = { 0 };
+    double    elapsed;
+    unsigned long   utime = 0, stime = 0;
+    unsigned long   prev_cpu_time, curr_cpu_time;
+    int             proc_id, zz;
+    struct timeval  now;
+
+    if (proc->dead)
+      continue;
+
+    /* Compute %CPU */
+    snprintf(sub_task_name, sizeof(sub_task_name) - 1,
+             "/proc/%d/task/%d/stat", proc->pid, proc->tid);
+    fstat = fopen(sub_task_name, "r");
+
+    if (!fstat) {  /* this task disappeared */
+      num_dead++;
+      proc->dead = 1;  /* mark dead */
+      for(zz=0; zz < proc->num_events; ++zz) {
+        if (proc->fd[zz] != -1) {
+          close(proc->fd[zz]);
+          num_files--;
+          proc->fd[zz] = -1;
+        }
+      }
+      continue;
+    }
+
+    if (fstat) {
+      int n;
+      n = fscanf(fstat,
+                 "%*d %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu %lu",
+                 &utime, &stime);
+      if (n != 2) {
+        fprintf(stderr, "Cannot read from '%s'\n", sub_task_name);
+        exit(EXIT_FAILURE);
+      }
+      /* get processor ID */
+      n = fscanf(fstat,
+                 "%*d %*d %*d %*d %*d %*d %*d %*u %*d %*u %*u %*u %*u "
+                 "%*u %*u %*u %*u %*u %*u %*u %*u %*u %*d %d",
+                 &proc_id);
+      if (n != 1)
+        proc_id = -1;
+      fclose(fstat);
+    }
+    gettimeofday(&now, NULL);
+    elapsed = (now.tv_sec - proc->timestamp.tv_sec) +
+      (now.tv_usec - proc->timestamp.tv_usec)/1000000.0;
+    elapsed *= clk_tck;
+
+    proc->timestamp = now;
+
+    prev_cpu_time = proc->prev_cpu_time_s + proc->prev_cpu_time_u;
+    curr_cpu_time = stime + utime;
+    proc->cpu_percent = 100.0*(curr_cpu_time - prev_cpu_time)/elapsed;
+    proc->cpu_percent_s = 100.0*(stime - proc->prev_cpu_time_s)/elapsed;
+    proc->cpu_percent_u = 100.0*(utime - proc->prev_cpu_time_u)/elapsed;
+
+    proc->prev_cpu_time_s = stime;
+    proc->prev_cpu_time_u = utime;
+
+    proc->proc_id = proc_id;
+    /* Backup previous value of counters */
+    for(zz = 0; zz < proc->num_events; zz++)
+      proc->prev_values[zz] = proc->values[zz];
+
+    /* Read performance counters */
+    for(zz = 0; zz < proc->num_events; zz++) {
+      uint64_t value = 0;
+      int r;
+      /* When fd is -1, the syscall failed on that counter */
+      if (proc->fd[zz] != -1) {
+        r = read(proc->fd[zz], &value, sizeof(value));
+        if (r == sizeof(value))
+          proc->values[zz] = value;
+        else
+          proc->values[zz] = 0;
+      }
+      else  /* no fd, use marker */
+        proc->values[zz] = 0xffffffff;
+    }
+    continue;
+  }
+
   return num_dead;
 }
 

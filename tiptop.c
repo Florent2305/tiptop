@@ -37,6 +37,9 @@
 #include "screen.h"
 
 
+/* number of dead processes before the list is compacted */
+const int num_dead_threshold = 5;
+
 struct option options;
 
 static struct timeval tv;
@@ -422,17 +425,14 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
 
   for(num_iter=0; !options.max_iter || num_iter<options.max_iter; num_iter++) {
     unsigned int epoch = 0;
-    int i;
+    int i, num_dead;
 
-    /* update the list of processes/threads and accumulate info if
-       needed */
+    /* update the list of processes/threads and accumulate info if needed */
     if (options.show_epoch)
       epoch = time(NULL);
 
-    if (update_proc_list(proc_list, screen, &options) &&
-        (!options.sticky)) {
-      compact_proc_list(proc_list);
-    }
+    num_dead = update_proc_list(proc_list, screen, &options);
+
     if (!options.show_threads)
       accumulate_stats(proc_list);
 
@@ -472,6 +472,10 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
     if (num_printed)
       printf("\n");
     fflush(stdout);
+
+    if ((num_dead >= num_dead_threshold) && (!options.sticky))
+      compact_proc_list(proc_list);
+
     /* wait some delay */
     select(0, NULL, NULL, NULL, &tv);
 
@@ -693,35 +697,30 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
   header = gen_header(screen, &options, COLS - 1, active_col);
 
   for(num_iter=0; !options.max_iter || num_iter<options.max_iter; num_iter++) {
-    int        i, zz, printed;
-    int        num_fd;
-    FILE*      f_uptime;
-    char       buffer[100];
+    int  i, zz, printed, num_fd;
 
     /* print various info */
     erase();
-    move(0, 0);
-    printw("tiptop -");
-    f_uptime = popen("uptime", "r");
-    if (fgets(buffer, sizeof(buffer), f_uptime))
-      printw(buffer);
-    fclose(f_uptime);
+    mvprintw(0, 0, "tiptop -");
 
-    if (options.debug) {
-      move(0, COLS-8);
-      printw(" [debug]");
-    }
+    if ((options.only_pid || options.only_name) && (COLS >= 43))
+      mvprintw(0, COLS-43, "[pid]");
+    if (options.show_kernel && (COLS >= 38))
+      mvprintw(0, COLS-38, "[kernel]");
+    if (options.sticky && (COLS >= 30))
+      mvprintw(0, COLS-30, "[sticky]");
+    if (options.show_threads && (COLS >= 22))
+      mvprintw(0, COLS-22, "[threads]");
+    if (options.idle && (COLS >= 13))
+      mvprintw(0, COLS-13, "[idle]");
+    if (options.debug && (COLS >= 7))
+      mvprintw(0, COLS-7, "[debug]");
 
-    if (options.show_epoch) {
-      unsigned int epoch = time(NULL);
-      move(LINES-1, COLS-18);
-      printw("Epoch: %u", epoch);
-    }
+    if (options.show_epoch && (COLS >= 18))
+      mvprintw(LINES-1, COLS-18, "Epoch: %u", time(NULL));
 
-    if (options.show_timestamp) {
-      move(LINES-1, 0);
-      printw("Iteration: %u", num_iter);
-    }
+    if (options.show_timestamp)
+      mvprintw(LINES-1, 0, "Iteration: %u", num_iter);
 
     /* print main header */
     move(3,0);
@@ -762,7 +761,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
 
       /* highlight watched process, if any */
       if (with_colors) {
-        if (p[i]->dead == 1) {
+        if (p[i]->dead) {
           attron(COLOR_PAIR(5));
         }
         else if ((p[i]->tid == options.watch_pid) ||
