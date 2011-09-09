@@ -11,6 +11,10 @@ OBJS=tiptop.o pmc.o process.o requisite.o conf.o screen.o screens-intel.o \
 
 all: tiptop
 
+debug:
+	make clean
+	make XCFLAGS="-g -O0" XLDFLAGS="-g"
+
 tiptop: $(OBJS)
 	$(CC) $(LDFLAGS) -o tiptop $(OBJS) -lcurses
 
