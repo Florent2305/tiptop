@@ -25,21 +25,18 @@ union sorting_column {
 struct process {
   pid_t    tid;           /* thread ID */
   pid_t    pid;           /* process ID. For owning process, tip == pid */
-  int      dead;          /* is the process dead? */
-  int      skip;          /* do not display, for any reason (dead, idle...) */
-  int      proc_id;       /* processor ID on which process was last seen */
-  char*    username;
-  int      num_threads;   /* number of threads in brotherhood */
-  char*    cmdline;       /* command line */
-  char*    name;          /* name of process */
+  short    proc_id;       /* processor ID on which process was last seen */
+  short    num_threads;   /* number of threads in brotherhood */
+  int       num_events;
+
   double   cpu_percent;   /* %CPU as displayed by top */
   double   cpu_percent_s; /* %CPU system */
   double   cpu_percent_u; /* %CPU user */
-  
+
   struct timeval timestamp;         /* timestamp of last update */
   unsigned long prev_cpu_time_s;    /* system */
   unsigned long prev_cpu_time_u;    /* user */
-  int       num_events;
+
   int       fd[MAX_EVENTS];           /* file handles */
   uint64_t  values[MAX_EVENTS];       /* values read from counters */
   uint64_t  prev_values[MAX_EVENTS];  /* previous iteration */
@@ -47,7 +44,13 @@ struct process {
 
   union sorting_column u;
 
-  int   attention;
+  char* username;
+  char* cmdline;       /* command line */
+  char* name;          /* name of process */
+
+  int   dead : 1;     /* is the process dead? */
+  int   skip : 1;     /* do not display, for any reason (dead, idle...) */
+  int   attention : 1;
 };
 
 
