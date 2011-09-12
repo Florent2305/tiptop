@@ -703,6 +703,8 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
     erase();
     mvprintw(0, 0, "tiptop -");
 
+    if ((options.euid == 0) && (COLS >= 49))
+      mvprintw(0, COLS-49, "[root]");
     if ((options.only_pid || options.only_name) && (COLS >= 43))
       mvprintw(0, COLS-43, "[pid]");
     if (options.show_kernel && (COLS >= 38))
