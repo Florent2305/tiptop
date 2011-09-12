@@ -601,6 +601,9 @@ static int handle_key()
   else if (c == 'R')
     sorting_order = 1 - sorting_order;
 
+  else if (c == 'S')
+    options.sticky = 1 - options.sticky;
+
   else if (c == 'U')
     options.show_user = 1 - options.show_user;
 
