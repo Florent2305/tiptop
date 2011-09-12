@@ -20,7 +20,6 @@ extern int debug;
 static int num_files = 0;
 static int num_files_limit = 0;
 
-static uid_t my_uid = -1;
 static int   clk_tck;
 
 
@@ -33,7 +32,6 @@ struct process_list* init_proc_list()
   char  line[100];
   FILE* f;
 
-  my_uid = geteuid();
   clk_tck = sysconf(_SC_CLK_TCK);
 
   struct process_list* l = malloc(sizeof(struct process_list));
@@ -116,6 +114,7 @@ void new_processes(struct process_list* const list,
   int            num_tids, val;
   struct STRUCT_NAME events = {0, };
   FILE*          f;
+  uid_t          my_uid = -1;
 
   const int cpu = -1;
   const int grp = -1;
@@ -175,6 +174,7 @@ void new_processes(struct process_list* const list,
 
     /* my process, or somebody else's process and I am root (skip
        root's processes because they are too many. */
+    my_uid = options->euid;
     if (((options->watch_uid != -1) && (uid == options->watch_uid)) ||
         ((options->watch_uid == -1) &&
          (((my_uid != 0) && (uid == my_uid)) ||  /* not root, monitor mine */

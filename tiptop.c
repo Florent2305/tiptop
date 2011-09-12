@@ -338,9 +338,9 @@ static void build_rows(struct process_list* proc_list, screen_t* s, int width)
       }
 
       if (error == 1)
-        written = snprintf(row, remaining,"%s",s->columns[col].error_field);
+        written = snprintf(row, remaining, "%s", s->columns[col].error_field);
       else if (error == 2)
-        written = snprintf(row, remaining,"%s",s->columns[col].empty_field);
+        written = snprintf(row, remaining, "%s", s->columns[col].empty_field);
 
 
       /* man snprintf: The functions snprintf() and vsnprintf() do not
@@ -532,7 +532,7 @@ static int handle_key()
       message = "Kernel mode Off";
     }
     else {
-      if (geteuid() == 0) {
+      if (options.euid == 0) {
         options.show_kernel = 1;
         message = "Kernel mode On";
       }
@@ -785,7 +785,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
     }
 
     move(1, 0);
-    printw("Tasks: %3d total, %3d running", proc_list->num_tids, printed);
+    printw("Tasks: %3d total, %3d displayed", proc_list->num_tids, printed);
     if (options.watch_uid != -1) {
       move(1, 35);
       printw("Watching uid: %5d\n", options.watch_uid);

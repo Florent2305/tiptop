@@ -14,6 +14,9 @@ struct option {
   char*  watch_name;
   pid_t  watch_pid;
   int    watch_uid;
+  
+  uid_t  euid;  /* effective user ID of tiptop */
+
   int    batch : 1;
   int    debug : 1;
   int    help : 1;

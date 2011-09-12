@@ -49,6 +49,7 @@ void init_options(struct option* opt)
   /* make batch mode default if curses is not available */
   opt->batch = 1;
 #endif
+  opt->euid = geteuid();
 }
 
 
@@ -124,7 +125,7 @@ void parse_command_line(int argc, char* argv[],
     }
 
     if ((strcmp(argv[i], "-K") == 0) || (strcmp(argv[i], "--kernel") == 0)) {
-      if (geteuid() == 0) {
+      if (options->euid == 0) {
         options->show_kernel = 1 - options->show_kernel;
         continue;
       }
