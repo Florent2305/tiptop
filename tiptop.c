@@ -869,6 +869,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
 
   free(header);
 
+  delwin(help_win);
   endwin();  /* stop curses */
   return 'q';
 }
