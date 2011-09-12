@@ -39,6 +39,7 @@ struct process_list* init_proc_list()
   l->processes = malloc(l->num_alloc * sizeof(struct process));
   l->proc_ptrs = malloc(l->num_alloc * sizeof(struct process*));
   l->num_tids = 0;
+  l->most_recent_pid = 0;
 
   hash_init();
 
@@ -108,7 +109,6 @@ void new_processes(struct process_list* const list,
                    const screen_t* const screen,
                    const struct option* const options)
 {
-  static int most_recent_pid = 0;
   struct dirent* pid_dirent;
   DIR*           pid_dir;
   int            num_tids, val;
@@ -120,13 +120,17 @@ void new_processes(struct process_list* const list,
   const int grp = -1;
   const int flags = 0;
 
+  /* To avoid scanning the entire /proc directory, we first check if
+     any process has been created since last time. /proc/loadavg
+     contains the PID of the most recent process. We compare with our
+     own most recent. */
   f = fopen("/proc/loadavg", "r");
   fscanf(f, "%*f %*f %*f %*d/%*d %d", &val);
   fclose(f);
-  if (val == most_recent_pid)  /* no new process since last time */
+  if (val == list->most_recent_pid)  /* no new process since last time */
     return;
 
-  most_recent_pid = val;
+  list->most_recent_pid = val;
 
   num_tids = list->num_tids;
 

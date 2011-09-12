@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <sys/time.h>
+#include <sys/types.h>
 
 #include "screen.h"
 
@@ -58,6 +59,8 @@ struct process {
 struct process_list {
   int  num_tids;
   int  num_alloc;
+  pid_t most_recent_pid;
+
   struct process* processes;
   struct process** proc_ptrs;
 };
