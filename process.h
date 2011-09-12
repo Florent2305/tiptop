@@ -49,9 +49,9 @@ struct process {
   char* cmdline;       /* command line */
   char* name;          /* name of process */
 
-  int   dead : 1;     /* is the process dead? */
-  int   skip : 1;     /* do not display, for any reason (dead, idle...) */
-  int   attention : 1;
+  unsigned int dead : 1;  /* is the process dead? */
+  unsigned int skip : 1;  /* do not display, for any reason (dead, idle...) */
+  unsigned int attention : 1;
 };
 
 

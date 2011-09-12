@@ -369,8 +369,10 @@ int update_proc_list(struct process_list* const list,
     int             proc_id, zz;
     struct timeval  now;
 
-    if (proc->dead)
+    if (proc->dead) {
+      num_dead++;
       continue;
+    }
 
     /* Compute %CPU */
     snprintf(sub_task_name, sizeof(sub_task_name) - 1,
@@ -463,7 +465,7 @@ void compact_proc_list(struct process_list* const list)
   dst = 0;
   num_dead = 0;
   for(src=0; src < num_tids; src++, dst++) {
-    while ((src < num_tids) && (p[src].dead == 1)) {
+    while ((src < num_tids) && (p[src].dead)) {
       done_proc(&p[src]);
       src++;
       num_dead++;

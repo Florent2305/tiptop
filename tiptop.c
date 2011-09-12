@@ -165,11 +165,11 @@ static void build_rows(struct process_list* proc_list, screen_t* s, int width)
     int   remaining = row_width;  /* remaining bytes in row */
     int   thr = ' ';
 
-    /* dead, not changing anymore, the row should be up-to-date. */
-    if ((p[i].dead == 1) && (!options.sticky))
-      continue;
-
     p[i].skip = 1;  /* first, assume not ready */
+
+    /* dead, not changing anymore, the row should be up-to-date. */
+    if ((p[i].dead) && (!options.sticky))
+      continue;
 
     /* not active, skip */
     if (!options.idle && (p[i].cpu_percent < options.cpu_threshold))
@@ -697,7 +697,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
   header = gen_header(screen, &options, COLS - 1, active_col);
 
   for(num_iter=0; !options.max_iter || num_iter<options.max_iter; num_iter++) {
-    int  i, zz, printed, num_fd;
+    int  i, zz, printed, num_fd, num_dead;
 
     /* print various info */
     erase();
@@ -736,9 +736,8 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
       attroff(COLOR_PAIR(1));
 
     /* update the list of processes/threads and accumulate info if needed */
-    if (update_proc_list(proc_list, screen, &options) && !options.sticky) {
-      compact_proc_list(proc_list);
-    }
+    num_dead = update_proc_list(proc_list, screen, &options);
+
     if (!options.show_threads)
       accumulate_stats(proc_list);
 
@@ -788,6 +787,8 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
 
     move(1, 0);
     printw("Tasks: %3d total, %3d displayed", proc_list->num_tids, printed);
+    if (options.sticky)
+      printw(", %3d dead", num_dead);
     if (options.watch_uid != -1) {
       move(1, 35);
       printw("Watching uid: %5d\n", options.watch_uid);
@@ -822,9 +823,11 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
     }
 
     refresh();  /* display everything */
-    if (options.help) {
+    if (options.help)
       show_help_win(help_win, screen);
-    }
+
+    if ((num_dead >= num_dead_threshold) && (!options.sticky))
+      compact_proc_list(proc_list);
 
     /* wait some delay, or until a key is pressed */
     num_fd = select(1 + STDIN_FILENO, &fds, NULL, NULL, &tv);
