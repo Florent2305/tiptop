@@ -15,6 +15,10 @@ debug:
 	make clean
 	make XCFLAGS="-g -O0" XLDFLAGS="-g"
 
+release:
+	make clean
+	make
+
 tiptop: $(OBJS)
 	$(CC) $(LDFLAGS) -o tiptop $(OBJS) -lcurses
 
