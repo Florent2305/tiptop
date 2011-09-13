@@ -55,6 +55,7 @@ void hash_fini()
 }
 
 
+#if defined(DEBUG)
 /* Dump all entries (skip NULL buckets). */
 void hash_dump()
 {
@@ -71,6 +72,7 @@ void hash_dump()
     printf("\n");
   }
 }
+#endif  /* DEBUG */
 
 
 /* Add a pair (key, process) to the table. If the key is already
@@ -109,15 +111,29 @@ struct process* hash_get(int key)
 }
 
 
-/* Add all processes from 'list' to the map. This is useful when the
-   list has been moved because of a realloc, and entries must be
-   fixed. */
-void hash_fillin(struct process_list* list)
+/* Delete an entry from the hash table */
+void hash_del(int key)
 {
-  int i;
-  struct process* const pl = list->processes;
-  int num_tids = list->num_tids;
+  int h = hash(key);
+  struct hash_entry* ptr = hash_map[h];
+  struct hash_entry* to_delete;
 
-  for(i=0; i < num_tids; i++)
-    hash_add(pl[i].tid, &pl[i]);
+  /* special case for 1st element */
+  if (ptr->data->tid == key) {
+    to_delete = ptr;
+    hash_map[h] = ptr->next;
+    free(to_delete);
+    return;
+  }
+
+  while (ptr) {
+    if (ptr && ptr->next && ptr->next->data->tid == key) {  /* found */
+      to_delete = ptr->next;
+      ptr->next = to_delete->next;
+      free(to_delete);
+      return;
+    }
+    ptr = ptr->next;
+  }
+  assert(0);
 }

@@ -35,8 +35,8 @@ struct process_list* init_proc_list()
   clk_tck = sysconf(_SC_CLK_TCK);
 
   struct process_list* l = malloc(sizeof(struct process_list));
+  l->processes = NULL;
   l->num_alloc = 20;
-  l->processes = malloc(l->num_alloc * sizeof(struct process));
   l->proc_ptrs = malloc(l->num_alloc * sizeof(struct process*));
   l->num_tids = 0;
   l->most_recent_pid = 0;
@@ -90,15 +90,17 @@ static void done_proc(struct process* const p)
  */
 void done_proc_list(struct process_list* list)
 {
-  int i;
   struct process* p;
 
-  assert(list && list->processes && list->proc_ptrs);
+  assert(list && list->proc_ptrs);
   p = list->processes;
-  for(i=0; i < list->num_tids; i++)
-    done_proc(&p[i]);
+  while (p) {
+    struct process* old = p;
+    done_proc(p);
+    p = p->next;
+    free(old);
+  }
 
-  free(p);
   free(list->proc_ptrs);
   free(list);
   hash_fini();
@@ -144,7 +146,7 @@ void new_processes(struct process_list* const list,
   /* check all directories of /proc */
   pid_dir = opendir("/proc");
   while ((pid_dirent = readdir(pid_dir))) {
-    int   uid, pid, num_threads;
+    int   uid, pid, num_threads, req_info;
     char  name[50] = { 0 }; /* needs to fit /proc/xxxx/{status,cmdline} */
     FILE* f;
     char  line[100]; /* line of /proc/xxxx/status */
@@ -162,19 +164,24 @@ void new_processes(struct process_list* const list,
       continue;
 
     /* collect basic information about process */
-    while (fgets(line, sizeof(line), f)) {
+    req_info = 3;  /* need 3 pieces of information */
+    while (fgets(line, sizeof(line), f) && req_info) {
       /* read the name now, since we will encounter it before Uid anyway */
       if (strncmp(line, "Name:", 5) == 0) {
         sscanf(line, "%*s %s", proc_name);
+        req_info--;
       }
       if (strncmp(line, "Uid:", 4) == 0) {
         sscanf(line, "%*s %d", &uid);
+        req_info--;
       }
       if (strncmp(line, "Threads:", 8) == 0) {
         sscanf(line, "%*s %d", &num_threads);
+        req_info--;
       }
     }
     fclose(f);
+    assert(req_info == 0);
 
     /* my process, or somebody else's process and I am root (skip
        root's processes because they are too many. */
@@ -202,7 +209,7 @@ void new_processes(struct process_list* const list,
         char* cmdline = NULL;
         struct process* ptr;
         struct passwd*  passwd;
-        struct process* p;
+
         tid = atoi(thr_dirent->d_name);
         if (tid == 0)
           continue;
@@ -214,41 +221,39 @@ void new_processes(struct process_list* const list,
 
         /* We have a new thread. */
 
-        /* reallocate space as needed. */
+        /* allocate memory */
+        ptr = malloc(sizeof(struct process));
+
+        /* insert into list of processes */
+        ptr->next = list->processes;
+        list->processes = ptr;
+
+        /* update helper data structures */
         if (num_tids == list->num_alloc) {
-          struct process* old = list->processes;
           list->num_alloc += 20;
-          list->processes = realloc(list->processes,
-                                    list->num_alloc*sizeof(struct process));
           list->proc_ptrs = realloc(list->proc_ptrs,
                                     list->num_alloc*sizeof(struct process));
-          if (list->processes != old) {  /* things have moved */
-            int i;
-            hash_fini();
-            hash_fillin(list);
-            for(i = 0; i < list->num_tids; i++)
-              list->proc_ptrs[i] = &list->processes[i];
-          }
         }
+        list->proc_ptrs[num_tids] = ptr;
+        hash_add(tid, ptr);
 
-        p = list->processes;
-        list->proc_ptrs[num_tids] = &p[num_tids];
-        p[num_tids].tid = tid;
-        p[num_tids].pid = pid;
-        p[num_tids].proc_id = -1;
-        p[num_tids].dead = 0;
-        p[num_tids].attention = 0;
-        p[num_tids].u.d = 0.0;
-
-        hash_add(tid, &p[num_tids]);
+        /* fill in information for new process */
+        ptr->tid = tid;
+        ptr->pid = pid;
+        ptr->proc_id = -1;
+        ptr->dead = 0;
+#if 0
+        ptr->attention = 0;
+#endif
+        ptr->u.d = 0.0;
 
         passwd = getpwuid(uid);
         if (passwd)
-          p[num_tids].username = strdup(passwd->pw_name);
+          ptr->username = strdup(passwd->pw_name);
         else
-          p[num_tids].username = NULL;
+          ptr->username = NULL;
 
-        p[num_tids].num_threads = num_threads;
+        ptr->num_threads = num_threads;
 
         /* get process' command line */
         snprintf(name, sizeof(name) - 1, "/proc/%d/cmdline", pid);
@@ -277,29 +282,27 @@ void new_processes(struct process_list* const list,
         if (!cmdline)
           cmdline = strdup("[null]");
 
-        p[num_tids].cmdline = cmdline;
-        p[num_tids].name = strdup(proc_name);
-        p[num_tids].timestamp.tv_sec = 0;
-        p[num_tids].timestamp.tv_usec = 0;
-        p[num_tids].prev_cpu_time_s = 0;
-        p[num_tids].prev_cpu_time_u = 0;
-        p[num_tids].cpu_percent = 0.0;
-        p[num_tids].cpu_percent_s = 0.0;
-        p[num_tids].cpu_percent_u = 0.0;
+        ptr->cmdline = cmdline;
+        ptr->name = strdup(proc_name);
+        ptr->timestamp.tv_sec = 0;
+        ptr->timestamp.tv_usec = 0;
+        ptr->prev_cpu_time_s = 0;
+        ptr->prev_cpu_time_u = 0;
+        ptr->cpu_percent = 0.0;
+        ptr->cpu_percent_s = 0.0;
+        ptr->cpu_percent_u = 0.0;
 
         /* Get number of counters from screen */
-        p[num_tids].num_events = screen->num_counters;
+        ptr->num_events = screen->num_counters;
 
-        for(zz = 0; zz < p[num_tids].num_events; zz++)
-          p[num_tids].prev_values[zz] = 0;
+        for(zz = 0; zz < ptr->num_events; zz++)
+          ptr->prev_values[zz] = 0;
 
-        p[num_tids].txt = malloc(TXT_LEN * sizeof(char));
+        ptr->txt = malloc(TXT_LEN * sizeof(char));
 
         fail = 0;
-
-        for(zz = 0; zz < p[num_tids].num_events; zz++) {
+        for(zz = 0; zz < ptr->num_events; zz++) {
           int fd;
-
           events.type = screen->counters[zz].type;  /* eg PERF_TYPE_HARDWARE */
           events.config = screen->counters[zz].config;
 
@@ -312,17 +315,17 @@ void new_processes(struct process_list* const list,
             fail++;
           else
             num_files++;
-          p[num_tids].fd[zz] = fd;
-          p[num_tids].values[zz] = 0;
-        }
-
-        if (fail) {
-          /* at least one counter failed, mark it */
-          p[num_tids].attention = 1;
+          ptr->fd[zz] = fd;
+          ptr->values[zz] = 0;
         }
 
 #if 0
-        if (fail != p[num_tids].num_events) {
+        if (fail) {
+          /* at least one counter failed, mark it */
+          ptr->attention = 1;
+        }
+
+        if (fail != ptr->num_events) {
           /* at least one counter succeeded, insert the thread in list */
           list->num_tids++;
           num_tids++;
@@ -346,21 +349,19 @@ int update_proc_list(struct process_list* const list,
                      const screen_t* const screen,
                      const struct option* const options)
 {
-  struct process* p;
-  int    i, num_tids;
+  struct process* proc;
+  int    num_tids;
   int    num_dead = 0;
 
   assert(screen);
-  assert(list && list->processes && list->proc_ptrs);
-  p = list->processes;
+  assert(list && list->proc_ptrs);
   num_tids = list->num_tids;
 
   /* add newly created processes/threads */
   new_processes(list, screen, options);
 
   /* update statistics */
-  for(i=0; i < list->num_tids; ++i) {
-    struct process* proc = &list->processes[i];
+  for(proc = list->processes; proc; proc = proc->next) {
     FILE*     fstat;
     char      sub_task_name[100] = { 0 };
     double    elapsed;
@@ -453,35 +454,38 @@ int update_proc_list(struct process_list* const list,
 }
 
 
-/* Scan list of processes and deallocates the dead ones, compacting
-   the list. */
+/* Scan list of processes and deallocates the dead ones, compacting the list. */
 void compact_proc_list(struct process_list* const list)
 {
-  int dst, src, num_tids, num_dead;
   struct process* p;
+  int i;
 
-  p = list->processes;
-  num_tids = list->num_tids;
-  dst = 0;
-  num_dead = 0;
-  for(src=0; src < num_tids; src++, dst++) {
-    while ((src < num_tids) && (p[src].dead)) {
-      done_proc(&p[src]);
-      src++;
-      num_dead++;
-    }
-    if ((src != dst) && (src < num_tids)) {
-      p[dst] = p[src];
+  for(p = list->processes; p; p = p->next) {
+    if (p && p->next && p->next->dead) {
+      struct process* to_delete = p->next;
+      hash_del(to_delete->tid);
+      p->next = to_delete->next;
+      done_proc(to_delete);
+      free(to_delete);
+      list->num_tids--;
     }
   }
-  list->num_tids -= num_dead;
+  /* special case for 1st element */
+  if (list->processes->dead) {
+    struct process* to_delete = list->processes;
+    hash_del(to_delete->tid);
+    list->processes = to_delete->next;
+    done_proc(to_delete);
+    free(to_delete);
+    list->num_tids--;
+  }
 
   /* update pointers */
-  for(src = 0; src < list->num_tids; src++)
-    list->proc_ptrs[src] = &list->processes[src];
-
-  hash_fini();
-  hash_fillin(list);
+  i = 0;
+  for(p = list->processes; p; p = p->next) {
+    list->proc_ptrs[i] = p;
+    i++;
+  }
 }
 
 
@@ -492,30 +496,30 @@ void compact_proc_list(struct process_list* const list)
  */
 void accumulate_stats(const struct process_list* const list)
 {
-  int i, zz;
+  int zz;
   struct process* p;
 
   p = list->processes;
-  for(i=0; i < list->num_tids; ++i) {
-    if (p[i].pid != p[i].tid) {
+  for(p = list->processes; p; p = p->next) {
+    if (p->pid != p->tid) {
       struct process* owner;
 
-      if (p[i].dead)
+      if (p->dead)
         continue;
 
       /* find the owner */
-      owner = hash_get(p[i].pid);
+      owner = hash_get(p->pid);
       assert(owner);
 
       /* accumulate in owner process */
-      owner->cpu_percent += p[i].cpu_percent;
-      for(zz = 0; zz < p[i].num_events; zz++) {
+      owner->cpu_percent += p->cpu_percent;
+      for(zz = 0; zz < p->num_events; zz++) {
         /* as soon as one thread has invalid value, skip entire process. */
-        if (p[i].values[zz] == 0xffffffff) {
+        if (p->values[zz] == 0xffffffff) {
           owner->values[zz] = 0xffffffff;
           break;
         }
-        owner->values[zz] += p[i].values[zz];
+        owner->values[zz] += p->values[zz];
       }
     }
   }
@@ -530,18 +534,17 @@ void accumulate_stats(const struct process_list* const list)
  */
 void reset_values(const struct process_list* const list)
 {
-  int i, zz;
   struct process* p;
 
-  p = list->processes;
-  for(i=0; i < list->num_tids; ++i) {
-    if (p[i].dead)
+  for(p = list->processes; p; p = p->next) {
+    if (p->dead)
       continue;
     /* only consider 'main' processes (not threads) */
-    if (p[i].pid == p[i].tid) {
-      p[i].cpu_percent = 0;
-      for(zz = 0; zz < p[i].num_events; zz++) {
-        p[i].values[zz] = 0;
+    if (p->pid == p->tid) {
+      int zz;
+      p->cpu_percent = 0;
+      for(zz = 0; zz < p->num_events; zz++) {
+        p->values[zz] = 0;
       }
     }
   }

@@ -51,7 +51,10 @@ struct process {
 
   unsigned int dead : 1;  /* is the process dead? */
   unsigned int skip : 1;  /* do not display, for any reason (dead, idle...) */
+#if 0
   unsigned int attention : 1;
+#endif
+  struct process* next;
 };
 
 
