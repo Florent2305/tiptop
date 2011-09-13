@@ -1,3 +1,5 @@
+#if defined(DEBUG)
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,3 +32,6 @@ void debug_printf(char* fmt, ...)
   va_start(args, fmt);
   vfprintf(debug_file, fmt, args);
 }
+
+
+#endif  /* DEBUG */

@@ -13,7 +13,7 @@ all: tiptop
 
 debug:
 	make clean
-	make XCFLAGS="-g -O0" XLDFLAGS="-g"
+	make XCFLAGS="-g -O0 -DDEBUG" XLDFLAGS="-g"
 
 release:
 	make clean
