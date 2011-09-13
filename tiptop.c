@@ -506,8 +506,7 @@ static int handle_key()
     options.show_cmdline = 1 - options.show_cmdline;
 
   else if ((c == 'd') || (c == 's')) {
-    move(2,0);
-    printw("Change delay from %.2f to: ", options.delay);
+    mvprintw(2, 0, "Change delay from %.2f to: ", options.delay);
     echo();
     nocbreak();
     scanw("%f", &options.delay);
@@ -548,19 +547,15 @@ static int handle_key()
   else if (c == 'k') {  /* initialize string to 0s */
     char str[10] = { 0 };
     int  kill_pid, kill_sig, kill_res;
-    move(2,0);
-    printw("PID to kill: ");
+    mvprintw(2, 0, "PID to kill: ");
     echo();
     nocbreak();
     getnstr(str, sizeof(str) - 1);
-    if (!isdigit(str[0])) {
-      move(2,0);
+    if (!isdigit(str[0]))
       message = "Not valid";
-    }
     else {
       kill_pid = atoi(str);
-      move(2,0);
-      printw("Kill PID %d with signal [15]: ", kill_pid);
+      mvprintw(2, 0, "Kill PID %d with signal [15]: ", kill_pid);
       getnstr(str, sizeof(str) - 1);
       kill_sig = atoi(str);
       if (kill_sig == 0)
@@ -568,7 +563,6 @@ static int handle_key()
       kill_res = kill(kill_pid, kill_sig);
       if (kill_res == -1) {
         char tmp_message[100];
-        move(2,0);
         snprintf(tmp_message, sizeof(tmp_message),
                  "Kill of PID '%d' with '%d' failed: %s",
                  kill_pid, kill_sig, strerror(errno));
@@ -581,8 +575,7 @@ static int handle_key()
 
   else if (c == 'p') {
     char str[100] = { 0 };  /* initialize string to 0s */
-    move(2,0);
-    printw("Only display process: ");
+    mvprintw(2, 0, "Only display process: ");
     echo();
     nocbreak();
     getnstr(str, sizeof(str)-1);  /* keep final '\0' as string delimiter */
@@ -609,8 +602,7 @@ static int handle_key()
 
   else if (c == 'u') {
     char str[100] = { 0 };  /* initialize string to 0s */
-    move(2,0);
-    printw("Which user (blank for all): ");
+    mvprintw(2, 0, "Which user (blank for all): ");
     echo();
     nocbreak();
     getnstr(str, sizeof(str) - 1);  /* keep final '\0' as string delimiter */
@@ -636,8 +628,7 @@ static int handle_key()
 
   else if (c == 'w') {
     char str[100] = { 0 };  /* initialize string to 0s */
-    move(2,0);
-    printw("Watch process: ");
+    mvprintw(2, 0, "Watch process: ");
     echo();
     nocbreak();
     getnstr(str, sizeof(str)-1);  /* keep final '\0' as string delimiter */
@@ -706,8 +697,10 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
     erase();
     mvprintw(0, 0, "tiptop -");
 
-    if ((options.euid == 0) && (COLS >= 49))
-      mvprintw(0, COLS-49, "[root]");
+    if ((options.euid == 0) && (COLS >= 54))
+      mvprintw(0, COLS-54, "[root]");
+    if ((options.watch_uid != -1) && (COLS >= 48))
+      mvprintw(0, COLS-48, "[uid]");
     if ((options.only_pid || options.only_name) && (COLS >= 43))
       mvprintw(0, COLS-43, "[pid]");
     if (options.show_kernel && (COLS >= 38))
@@ -728,10 +721,9 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
       mvprintw(LINES-1, 0, "Iteration: %u", num_iter);
 
     /* print main header */
-    move(3,0);
     if (with_colors)
       attron(COLOR_PAIR(1));
-    printw("%s", header);
+    mvprintw(3, 0, "%s", header);
     for(zz=strlen(header); zz < COLS-1; zz++)
       printw(" ");
     printw("\n");
@@ -788,38 +780,32 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
         break;
     }
 
-    move(1, 0);
-    printw("Tasks: %3d total, %3d displayed", proc_list->num_tids, printed);
+    mvprintw(1, 0, "Tasks: %3d total, %3d displayed",
+             proc_list->num_tids, printed);
     if (options.sticky)
       printw(", %3d dead", num_dead);
-    if (options.watch_uid != -1) {
-      move(1, 35);
-      printw("Watching uid: %5d\n", options.watch_uid);
-    }
 
     /* print the screen name, make sure it fits, or truncate */
     if (with_colors)
       attron(COLOR_PAIR(4));
     if (35 + 20 + 11 + strlen(screen->name) < COLS) {
-      move(1, COLS - 11 - strlen(screen->name));
-      printw("screen %2d: %s\n", screen->id, screen->name);
+      mvprintw(1, COLS - 11 - strlen(screen->name),
+               "screen %2d: %s\n", screen->id, screen->name);
     }
     else if (COLS >= 35 + 20 + 11) {
       char screen_str[50] = { 0 };
-      move(1, 35 + 20);
       snprintf(screen_str, sizeof(screen_str) - 1, "%s\n", screen->name);
       screen_str[COLS - 35 - 20 - 11] = '\0';  /* truncate */
-      printw("screen %2d: %s", screen->id, screen_str);
+      mvprintw(1, 35+20, "screen %2d: %s", screen->id, screen_str);
     }
     if (with_colors)
       attroff(COLOR_PAIR(4));
 
     /* print message if any */
     if (message) {
-      move(2, 0);
       if (with_colors)
         attron(COLOR_PAIR(1));
-      printw("%s", message);
+      mvprintw(2, 0, "%s", message);
       if (with_colors)
         attroff(COLOR_PAIR(1));
       message = NULL;  /* reset message */
