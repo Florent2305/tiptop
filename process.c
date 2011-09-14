@@ -198,11 +198,9 @@ void new_processes(struct process_list* const list,
 
       snprintf(task_name, sizeof(task_name) - 1, "/proc/%d/task", pid);
       thr_dir = opendir(task_name);
-      if (!thr_dir) {
-        perror("opendir");
-        fprintf(stderr, "Cannot open '%s': '%s'\n", task_name, proc_name);
+      if (!thr_dir)  /* died just now? Will be marked dead at next iteration. */
         continue;
-      }
+
       /* Iterate over all threads in the process */
       while ((thr_dirent = readdir(thr_dir))) {
         int   zz, fail;
@@ -375,7 +373,7 @@ int update_proc_list(struct process_list* const list,
       continue;
     }
 
-    /* Compute %CPU */
+    /* Compute %CPU, retrieve processor ID. */
     snprintf(sub_task_name, sizeof(sub_task_name) - 1,
              "/proc/%d/task/%d/stat", proc->pid, proc->tid);
     fstat = fopen(sub_task_name, "r");
@@ -396,12 +394,11 @@ int update_proc_list(struct process_list* const list,
     if (fstat) {
       int n;
       n = fscanf(fstat,
-                 "%*d %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu %lu",
-                 &utime, &stime);
-      if (n != 2) {
-        fprintf(stderr, "Cannot read from '%s'\n", sub_task_name);
-        exit(EXIT_FAILURE);
-      }
+           "%*d (%*[^)]) %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu %lu",
+           &utime, &stime);
+      if (n != 2)
+        utime = stime = 0;
+
       /* get processor ID */
       n = fscanf(fstat,
                  "%*d %*d %*d %*d %*d %*d %*d %*u %*d %*u %*u %*u %*u "
