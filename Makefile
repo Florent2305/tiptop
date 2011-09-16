@@ -1,6 +1,6 @@
 TARGET=TARGET_X86
 
-CFLAGS=-O2 -Wall -DKERNEL31 -DHAS_CURSES -D$(TARGET)
+CFLAGS=-O2 -Wall -DKERNEL31 -D$(TARGET) -DHAS_CURSES 
 LDFLAGS=-O2
 
 CFLAGS+=$(XCFLAGS)
@@ -18,6 +18,10 @@ debug:
 release:
 	make clean
 	make
+	strip tiptop
+
+dist: release
+	tar zcvf tiptop.tar.gz tiptop tiptop.1 README
 
 tiptop: $(OBJS)
 	$(CC) $(LDFLAGS) -o tiptop $(OBJS) -lcurses
@@ -28,7 +32,7 @@ version.o: version.c
                         -c version.c
 
 clean:
-	/bin/rm -f $(OBJS) tiptop
+	/bin/rm -f $(OBJS) tiptop tiptop.tar.gz
 
 
 depend:
