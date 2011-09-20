@@ -35,6 +35,7 @@
 #include "process.h"
 #include "requisite.h"
 #include "screen.h"
+#include "spawn.h"
 
 
 struct option options;
@@ -128,7 +129,7 @@ static int cmp_string(const void* p1, const void* p2)
  */
 static void build_rows(struct process_list* proc_list, screen_t* s, int width)
 {
-  int num_tids, row_width;
+  int row_width;
   struct process* p;
 
   assert(TXT_LEN > 20);
@@ -136,8 +137,6 @@ static void build_rows(struct process_list* proc_list, screen_t* s, int width)
   row_width = TXT_LEN;
   if ((width != -1) && (width < row_width))
     row_width = width;
-
-  num_tids = proc_list->num_tids;
 
   /* For the time being, column -1 is the PID, columns 0 to
      "num_columns-1" are the columns specified in the screen, and
@@ -382,40 +381,66 @@ static void build_rows(struct process_list* proc_list, screen_t* s, int width)
 static void batch_mode(struct process_list* proc_list, screen_t* screen)
 {
   int   num_iter = 0;
-  int   num_printed, foo;
+  int   num_printed;
+  FILE* out = options.out;
   struct process** p;
-
   tv.tv_sec = 0;
   tv.tv_usec = 200000;  /* 200 ms for first iteration */
 
   /* Print various information about this run */
-  printf("tiptop -");
-  fflush(stdout);
-  foo = system("uptime");
-  foo = system("date");
-  foo = system("uname -a");
-  printf("delay: %.2f  idle: %d  threads: %d\n",
-         options.delay, (int)options.idle, (int)options.show_threads);
+  fprintf(out, "tiptop - ");
+  fflush(out);
+
+  { /* uptime */
+    FILE* f;
+    float val1, val5, val15, up;
+    int days, hours, minutes;
+    f = fopen("/proc/loadavg", "r");
+    fscanf(f, "%f %f %f", &val1, &val5, &val15);
+    fclose(f);
+    f = fopen("/proc/uptime", "r");
+    fscanf(f, "%f", &up);
+    fclose(f);
+    days = up / 86400;
+    hours = (up - days*86400) / 3600;
+    minutes = (up - days*86400 - hours*3600) / 60;
+    fprintf(out, "up %d days, %d:%02d, load average: %.2f, %.2f, %.2f\n",
+            days, hours, minutes, val1, val5, val15);
+  }
+
+  { /* date */
+    char outstr[200];
+    time_t t = time(NULL);
+    struct tm *tmp = localtime(&t);
+    if (tmp) {
+      strftime(outstr, sizeof(outstr), "%a %b %e %H:%M:%S %Z %Y", tmp);
+      fprintf(out, "%s\n", outstr);
+    }
+  }
+
+
+  fprintf(out, "delay: %.2f  idle: %d  threads: %d\n",
+          options.delay, (int)options.idle, (int)options.show_threads);
   if (options.watch_pid)
-    printf("watching pid %d\n", options.watch_pid);
+    fprintf(out, "watching pid %d\n", options.watch_pid);
   else if (options.watch_name)
-    printf("watching pid '%s'\n", options.watch_name);
+    fprintf(out, "watching pid '%s'\n", options.watch_name);
 
   if (options.only_pid)
-    printf("only pid %d\n", options.only_pid);
+    fprintf(out, "only pid %d\n", options.only_pid);
   else if (options.only_name)
-    printf("only pid '%s'\n", options.only_name);
+    fprintf(out, "only pid '%s'\n", options.only_name);
 
   if (options.watch_uid != -1) {
     struct passwd* passwd = getpwuid(options.watch_uid);
     assert(passwd);
-    printf("watching uid %d '%s'\n", options.watch_uid, passwd->pw_name);
+    fprintf(out, "watching uid %d '%s'\n", options.watch_uid, passwd->pw_name);
   }
 
   header = gen_header(screen, &options, TXT_LEN - 1, active_col);
 
-  printf("Screen %d: %s\n", screen->id, screen->name);
-  printf("\n%s\n", header);
+  fprintf(out, "Screen %d: %s\n", screen->id, screen->name);
+  fprintf(out, "\n%s\n", header);
 
   for(num_iter=0; !options.max_iter || num_iter<options.max_iter; num_iter++) {
     unsigned int epoch = 0;
@@ -446,10 +471,10 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
 
       if (options.show_threads || (p[i]->pid == p[i]->tid)) {
         if (options.show_timestamp)
-          printf("%6d ", num_iter);
+          fprintf(out, "%6d ", num_iter);
         if (options.show_epoch)
-          printf("%10u ", epoch);
-        printf("%s%s", p[i]->txt, p[i]->dead ? " DEAD" : "");
+          fprintf(out, "%10u ", epoch);
+        fprintf(out, "%s%s", p[i]->txt, p[i]->dead ? " DEAD" : "");
 
         /* if the process is being watched */
         if ((p[i]->tid == options.watch_pid) ||
@@ -457,15 +482,18 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
              strstr(p[i]->cmdline, options.watch_name)) ||
             (options.watch_name && !options.show_cmdline &&
                                   strstr(p[i]->name, options.watch_name)))
-          printf(" <---");
-        printf("\n");
+          fprintf(out, " <---");
+        fprintf(out, "\n");
         num_printed++;
       }
     }
 
     if (num_printed)
-      printf("\n");
-    fflush(stdout);
+      fprintf(out, "\n");
+    fflush(out);
+
+    if (options.command_done && options.sticky)
+      break;
 
     if ((num_dead) && (!options.sticky))
       compact_proc_list(proc_list);
@@ -881,6 +909,9 @@ int main(int argc, char* argv[])
     exit(0);
   }
 
+  if (options.spawn_pos)
+    spawn(argv + options.spawn_pos);
+
   do {
     screen = get_screen(screen_num);
     if (!screen) {
@@ -890,6 +921,13 @@ int main(int argc, char* argv[])
 
     /* initialize the list of processes, and then run */
     proc_list = init_proc_list();
+
+    if (options.spawn_pos) {
+      options.spawn_pos = 0;  /* do this only once */
+      new_processes(proc_list, screen, &options);
+      start_child();
+    }
+
     if (options.batch) {
       batch_mode(proc_list, screen);
       key = 'q';

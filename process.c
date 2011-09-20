@@ -13,6 +13,7 @@
 #include "pmc.h"
 #include "process.h"
 #include "screen.h"
+#include "spawn.h"
 #include "utils.h"
 
 extern int debug;
@@ -104,6 +105,42 @@ void done_proc_list(struct process_list* list)
   free(list->proc_ptrs);
   free(list);
   hash_fini();
+}
+
+
+/* Retrieve the command line of the process from
+   /proc/PID/cmdline. The subtletiy comes from the fact that args are
+   separated by '\0', the command line itself by two consecutive '\0'
+   (see man proc). Some processes have no command line: first
+   character is '\0'. */
+static char* get_cmdline(int pid)
+{
+  FILE* f;
+  char  name[50] = { 0 };  /* needs to fit /proc/xxxx/cmdline */
+  char  buffer[100] = { 0 };
+  char* res = NULL;
+
+  snprintf(name, sizeof(name) - 1, "/proc/%d/cmdline", pid);
+  f = fopen(name, "r");
+  if (f) {    
+    res = fgets(buffer, sizeof(buffer), f);
+    if (res && res[0]) {
+      int j;
+      for(j=0; j < sizeof(buffer)-1; j++) {
+        if (buffer[j] == '\0') {
+          if (buffer[j+1] == '\0')  /* two zeroes in a row, stop */
+            break;
+          else
+            buffer[j] = ' '; /* only one, a separator, it becomes ' ' */
+        }
+      }
+    }
+    fclose(f);
+  }
+  if (!res)
+    res = "[null]";
+
+  return strdup(res);
 }
 
 
@@ -204,7 +241,6 @@ void new_processes(struct process_list* const list,
       /* Iterate over all threads in the process */
       while ((thr_dirent = readdir(thr_dir))) {
         int   zz, fail;
-        char* cmdline = NULL;
         struct process* ptr;
         struct passwd*  passwd;
 
@@ -252,35 +288,7 @@ void new_processes(struct process_list* const list,
           ptr->username = NULL;
 
         ptr->num_threads = num_threads;
-
-        /* get process' command line */
-        snprintf(name, sizeof(name) - 1, "/proc/%d/cmdline", pid);
-        f = fopen(name, "r");
-        if (f) {
-          char  buffer[100];
-          char* res;
-
-          memset(buffer, 0, sizeof(buffer));
-          res = fgets(buffer, sizeof(buffer), f);
-          if (res && res[0]) {
-            int j;
-            for(j=0; j < sizeof(buffer)-1; j++) {
-              if (buffer[j] == '\0') {
-                if (buffer[j+1] == '\0')  /* two zeroes in a row, stop */
-                  break;
-                else
-                  buffer[j] = ' '; /* only one, a separator, it becomes ' ' */
-              }
-            }
-            
-            cmdline = strdup(res);
-          }
-          fclose(f);
-        }
-        if (!cmdline)
-          cmdline = strdup("[null]");
-
-        ptr->cmdline = cmdline;
+        ptr->cmdline = get_cmdline(pid);
         ptr->name = strdup(proc_name);
         ptr->timestamp.tv_sec = 0;
         ptr->timestamp.tv_usec = 0;
@@ -345,15 +353,13 @@ void new_processes(struct process_list* const list,
  */
 int update_proc_list(struct process_list* const list,
                      const screen_t* const screen,
-                     const struct option* const options)
+                     struct option* const options)
 {
   struct process* proc;
-  int    num_tids;
   int    num_dead = 0;
 
   assert(screen);
   assert(list && list->proc_ptrs);
-  num_tids = list->num_tids;
 
   /* add newly created processes/threads */
   new_processes(list, screen, options);
@@ -365,7 +371,7 @@ int update_proc_list(struct process_list* const list,
     double    elapsed;
     unsigned long   utime = 0, stime = 0;
     unsigned long   prev_cpu_time, curr_cpu_time;
-    int             proc_id, zz;
+    int             proc_id, zz, zombie;
     struct timeval  now;
 
     if (proc->dead) {
@@ -391,13 +397,19 @@ int update_proc_list(struct process_list* const list,
       continue;
     }
 
+    zombie = 0;
     if (fstat) {
       int n;
+      char state;
       n = fscanf(fstat,
-           "%*d (%*[^)]) %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu %lu",
-           &utime, &stime);
-      if (n != 2)
+           "%*d (%*[^)]) %c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu %lu",
+           &state, &utime, &stime);
+      if (n != 3)
         utime = stime = 0;
+
+      if (state == 'Z') {  /* zombie */
+        zombie = 1;
+      }
 
       /* get processor ID */
       n = fscanf(fstat,
@@ -408,21 +420,23 @@ int update_proc_list(struct process_list* const list,
         proc_id = -1;
       fclose(fstat);
     }
-    gettimeofday(&now, NULL);
-    elapsed = (now.tv_sec - proc->timestamp.tv_sec) +
-      (now.tv_usec - proc->timestamp.tv_usec)/1000000.0;
-    elapsed *= clk_tck;
+    if (!zombie) {
+      gettimeofday(&now, NULL);
+      elapsed = (now.tv_sec - proc->timestamp.tv_sec) +
+        (now.tv_usec - proc->timestamp.tv_usec)/1000000.0;
+      elapsed *= clk_tck;
 
-    proc->timestamp = now;
+      proc->timestamp = now;
 
-    prev_cpu_time = proc->prev_cpu_time_s + proc->prev_cpu_time_u;
-    curr_cpu_time = stime + utime;
-    proc->cpu_percent = 100.0*(curr_cpu_time - prev_cpu_time)/elapsed;
-    proc->cpu_percent_s = 100.0*(stime - proc->prev_cpu_time_s)/elapsed;
-    proc->cpu_percent_u = 100.0*(utime - proc->prev_cpu_time_u)/elapsed;
+      prev_cpu_time = proc->prev_cpu_time_s + proc->prev_cpu_time_u;
+      curr_cpu_time = stime + utime;
+      proc->cpu_percent = 100.0*(curr_cpu_time - prev_cpu_time)/elapsed;
+      proc->cpu_percent_s = 100.0*(stime - proc->prev_cpu_time_s)/elapsed;
+      proc->cpu_percent_u = 100.0*(utime - proc->prev_cpu_time_u)/elapsed;
 
-    proc->prev_cpu_time_s = stime;
-    proc->prev_cpu_time_u = utime;
+      proc->prev_cpu_time_s = stime;
+      proc->prev_cpu_time_u = utime;
+    }
 
     proc->proc_id = proc_id;
     /* Backup previous value of counters */
@@ -444,7 +458,10 @@ int update_proc_list(struct process_list* const list,
       else  /* no fd, use marker */
         proc->values[zz] = 0xffffffff;
     }
-    continue;
+    if (zombie) {
+      proc->dead = 1;
+      wait_for_child(proc->tid, options);
+    }
   }
 
   return num_dead;
@@ -545,4 +562,42 @@ void reset_values(const struct process_list* const list)
       }
     }
   }
+}
+
+
+/* This is only used when tiptop fires a command itself. Right after
+   the fork, the process name and command line are tiptop's. They are
+   correct after exec. update_name_cmdline is invoked a little while
+   after exec to fix these fields. */
+void update_name_cmdline(int pid)
+{
+  FILE* f;
+  char  name[50] = { 0 };  /* needs to fit /proc/xxxx/{status,cmdline} */
+  char  line[100];  /* line of /proc/xxxx/status */
+  char  proc_name[100];
+
+  struct process* p = hash_get(pid);
+  if (!p)  /* gone? */
+    return;
+
+  /* update name */
+  snprintf(name, sizeof(name) - 1, "/proc/%d/status", pid);
+  f = fopen(name, "r");
+  if (f) {
+    while (fgets(line, sizeof(line), f)) {
+      if (strncmp(line, "Name:", 5) == 0) {
+        sscanf(line, "%*s %s", proc_name);
+        if (p->name)
+          free(p->name);
+        p->name = strdup(proc_name);
+        break;
+      }
+    }
+    fclose(f);
+  }
+
+  /* update command line */
+  if (p->cmdline)
+    free(p->cmdline);
+  p->cmdline = get_cmdline(pid);
 }

@@ -25,6 +25,7 @@ static void usage(const char* name)
   fprintf(stderr, "\t-i             also display idle processes\n");
   fprintf(stderr, "\t--list-screens display list of available screens\n");
   fprintf(stderr, "\t-n num         max number of refreshes\n");
+  fprintf(stderr, "\t-o outfile     output file in batch mode\n");
   fprintf(stderr, "\t-p --pid pid|name  only display task with this PID/name\n");
   fprintf(stderr, "\t-S num         screen number to display\n");
   fprintf(stderr, "\t--sticky       keep final status of dead processes\n");
@@ -42,14 +43,15 @@ void init_options(struct option* opt)
 {
   /* default status for options */
   memset(opt, 0, sizeof(*opt));
-  opt->delay = 2;
-  opt->cpu_threshold = 0.00001;
-  opt->watch_uid = -1;
 #if !defined(HAS_CURSES)
   /* make batch mode default if curses is not available */
   opt->batch = 1;
 #endif
+  opt->cpu_threshold = 0.00001;
+  opt->delay = 2;
   opt->euid = geteuid();
+  opt->out = stdout;
+  opt->watch_uid = -1;
 }
 
 
@@ -63,6 +65,17 @@ void parse_command_line(int argc, char* argv[],
   /* Note: many flags are toggles. They invert what is in the
      configuration file. */
   for(i=1; i < argc; i++) {
+
+    if (strcmp(argv[i], "--") == 0) {  /* command to be spawned by tiptop */
+      if (argc > i+1)  /* at least something after -- */
+        options->spawn_pos = i+1;
+      else {
+        fprintf(stderr, "No command after --, aborting.\n");
+        exit(EXIT_FAILURE);
+      }
+      break;
+    }
+
     if (strcmp(argv[i], "-b") == 0) {
       options->batch = 1 - options->batch;
       continue;
@@ -149,6 +162,31 @@ void parse_command_line(int argc, char* argv[],
       }
       else {
         fprintf(stderr, "Missing number of iterations after -n.\n");
+        exit(EXIT_FAILURE);
+      }
+    }
+
+    if (strcmp(argv[i], "-o") == 0) {
+      if (i+1 < argc) {
+        int euid = geteuid();
+        int res = seteuid(getuid());  /* temporarily drop privileges */
+        if (res != 0) {
+          /* do not proceed as root */
+          fprintf(stderr, "Could not create output file\n");
+          exit(EXIT_FAILURE);
+        }
+        options->out = fopen(argv[i+1], "w");
+        if (!options->out) {
+          perror("fopen");
+          fprintf(stderr, "Could not open '%s'\n", argv[i+1]);
+          exit(EXIT_FAILURE);
+        }
+        seteuid(euid);  /* restore privileges */
+        i++;
+        continue;
+      }
+      else {
+        fprintf(stderr, "Missing filename after -o.\n");
         exit(EXIT_FAILURE);
       }
     }

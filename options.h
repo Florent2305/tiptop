@@ -1,11 +1,13 @@
 #ifndef _OPTIONS_H
 #define _OPTIONS_H
 
+#include <stdio.h>
 #include <sys/types.h>
 
 
 /* global state */
 struct option {
+  int    spawn_pos;
   float  delay;
   float  cpu_threshold;  /* CPU activity below which a thread is considered inactive */
   int    max_iter;
@@ -16,8 +18,10 @@ struct option {
   int    watch_uid;
   
   uid_t  euid;  /* effective user ID of tiptop */
+  FILE*  out;
 
   int    batch : 1;
+  int    command_done : 1;
   int    debug : 1;
   int    help : 1;
   int    idle : 1;
