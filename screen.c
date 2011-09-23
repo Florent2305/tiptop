@@ -219,6 +219,7 @@ void init_screen()
 {
   default_screen();
 #if defined(TARGET_X86)
+  nehalem_uop();
   nehalem_fp();
   nehalem_mem();
   nehalem_br();

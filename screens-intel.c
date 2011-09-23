@@ -256,4 +256,54 @@ screen_t* nehalem_br()
 }
 
 
+screen_t* nehalem_uop()
+{
+  int family_model;
+  int cycle, insn, uop, fused, macrof;
+  screen_t* s = NULL;
+
+  family_model = disp_family_model();
+  if (
+      /* Nehalem */
+      (family_model != 0x061a) && (family_model != 0x061e) &&
+      (family_model != 0x061f) && (family_model != 0x062e) &&
+      /* Gulftown/Westmere-EP */
+      (family_model != 0x062c) &&
+      /* Core */
+      (family_model != 0x060f) &&
+      /* Penryn */
+      (family_model != 0x0617))
+  {
+    return NULL;
+  }
+
+  s = new_screen("Nehalem uops");
+
+  /* setup counters */
+  cycle = add_counter(s, PERF_TYPE_HARDWARE, PERF_COUNT_HW_CPU_CYCLES);
+  uop =   add_counter(s, PERF_TYPE_RAW, 0x01c2); /* UOPS_RETIRED.ALL */
+  fused = add_counter(s, PERF_TYPE_RAW, 0x07c2); /* UOPS_RETIRED.FUSED */
+  macrof = add_counter(s, PERF_TYPE_RAW, 0x04c2); /* UOPS_RETIRED.MACRO_FUSED */
+  insn =  add_counter(s, PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS);
+
+  /* add columns */
+  add_column_cpu(s, " %CPU", "%5.1f");
+  add_column_cpu_s(s, " %SYS", "%5.1f");
+  add_column_raw_m(s, "  Mcycle", "%8.2f", cycle, "Cycles (millions)");
+  add_column_raw_m(s, "   Muops", "%8.2f", uop, "Retired uops (millions)");
+  add_column_raw_m(s, "  Minstr", "%8.2f", insn,
+                                          "Retired instructions (millions)");
+
+  add_column_ratio(s, "  IPC", " %4.2f", insn, cycle,
+                   "Retired instructions per cycle");
+  add_column_ratio(s, "  uPI", " %4.2f", uop, insn,
+                   "Retired uops per instruction");
+  add_column_ratio(s, " fused", "  %4.2f", fused, insn,
+                   "Fused uops (UOPS_RETIRED.FUSED) per instruction");
+  add_column_ratio(s, " macrof", "   %4.2f", macrof, insn,
+                 "Macro fused uops (UOPS_RETIRED.MACRO_FUSED) per instruction");
+
+  return s;
+}
+
 #endif  /* TARGET_X86 */
