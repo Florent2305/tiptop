@@ -394,12 +394,16 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
   { /* uptime */
     FILE* f;
     float val1, val5, val15, up;
-    int days, hours, minutes;
+    int days, hours, minutes, n;
     f = fopen("/proc/loadavg", "r");
-    fscanf(f, "%f %f %f", &val1, &val5, &val15);
+    n = fscanf(f, "%f %f %f", &val1, &val5, &val15);
+    if (n != 3)
+      val1 = val5 = val15 = 0.0;  /* something went wrong, no sure what */
     fclose(f);
     f = fopen("/proc/uptime", "r");
-    fscanf(f, "%f", &up);
+    n = fscanf(f, "%f", &up);
+    if (n != 1)
+      up = 0.0;
     fclose(f);
     days = up / 86400;
     hours = (up - days*86400) / 3600;
