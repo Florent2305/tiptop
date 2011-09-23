@@ -63,7 +63,10 @@ void spawn(char** argv)
   }
 
   if (child == 0) {  /* in the child */
+    int  n;
     char buffer;
+
+    close(pipefd[1]);  /* useless */
 
     /* in case tiptop is set-UID root, we drop privileges in the child */
     if ((geteuid() == 0) && (getuid() != 0)) {
@@ -75,9 +78,10 @@ void spawn(char** argv)
       }
     }
 
-    close(pipefd[1]);
     /* wait for parent to signal */
-    read(pipefd[0], &buffer, 1);  /* blocking read */
+    n = read(pipefd[0], &buffer, 1);  /* blocking read */
+    if (n != 1)
+      fprintf(stderr, "Something went wrong with the command\n");
     close(pipefd[0]);
 
     if (execvp(argv[0], argv) == -1) {
@@ -100,8 +104,12 @@ void start_child()
 {
   struct timeval tv1, tv2 = { 0 };
   struct itimerval it;
+  int n;
 
-  write(pipefd[1], "!", 1);  /* will unblock the read */
+  n = write(pipefd[1], "!", 1);  /* write whatever, will unblock the read */
+  if (n != 1)
+    fprintf(stderr, "Something went wrong with the command...\n");
+
   close(pipefd[1]);
 
   /* set timer, we need to update the name and command line of the new

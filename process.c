@@ -150,7 +150,7 @@ void new_processes(struct process_list* const list,
 {
   struct dirent* pid_dirent;
   DIR*           pid_dir;
-  int            num_tids, val;
+  int            num_tids, val, n;
   struct STRUCT_NAME events = {0, };
   FILE*          f;
   uid_t          my_uid = -1;
@@ -164,9 +164,10 @@ void new_processes(struct process_list* const list,
      contains the PID of the most recent process. We compare with our
      own most recent. */
   f = fopen("/proc/loadavg", "r");
-  fscanf(f, "%*f %*f %*f %*d/%*d %d", &val);
+  n = fscanf(f, "%*f %*f %*f %*d/%*d %d", &val);
   fclose(f);
-  if (val == list->most_recent_pid)  /* no new process since last time */
+  /* if no new process has been created since last time, just quit. */
+  if ((n == 1) && (val == list->most_recent_pid))
     return;
 
   list->most_recent_pid = val;
