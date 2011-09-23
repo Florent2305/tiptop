@@ -498,7 +498,9 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
     if ((num_dead) && (!options.sticky))
       compact_proc_list(proc_list);
 
-    /* wait some delay */
+    /* Wait some delay. Note that this syscall may be interrupted when
+       we receive a signal, such as SICHLD. This is ok, it will force
+       a refresh. */
     select(0, NULL, NULL, NULL, &tv);
 
     /* prepare for next select */

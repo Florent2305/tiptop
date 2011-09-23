@@ -15,10 +15,19 @@ static int pipefd[2];
 static pid_t my_child = 0;
 
 
-static void signal_handler(int sig)
+static void alarm_handler(int sig)
 {
   assert(sig == SIGALRM);
   update_name_cmdline(my_child);
+}
+
+static void child_handler(int sig)
+{
+  assert(sig == SIGCHLD);
+  /* Do nothing special. We only want the signal to be delivered. It
+     will interrupt the 'select' in the main loop (batch/live mode),
+     and force an immediate refresh. If 'sticky' mode is on, we also
+     quit immediately. */
 }
 
 
@@ -26,11 +35,21 @@ static void signal_handler(int sig)
    passed in parameter. */
 void spawn(char** argv)
 {
-  pid_t child;
-  struct sigaction action;
+  pid_t    child;
+  sigset_t sigs;
+  struct sigaction alarm_action, child_action;
 
-  action.sa_handler = signal_handler;
-  sigaction(SIGALRM, &action, NULL);  /* prepare to receive timer signal */
+  sigemptyset(&sigs);
+
+  alarm_action.sa_handler = alarm_handler;
+  alarm_action.sa_flags = 0;
+  alarm_action.sa_mask = sigs;
+  sigaction(SIGALRM, &alarm_action, NULL);  /* prepare to receive timer */
+
+  child_action.sa_handler = child_handler;
+  child_action.sa_flags = 0;
+  child_action.sa_mask = sigs;
+  sigaction(SIGCHLD, &child_action, NULL); /* prepare to receive SIGCHLD */
 
   if (pipe(pipefd)) {  /* parent will signal through the pipe when ready */
     perror("pipe");
@@ -97,8 +116,7 @@ void start_child()
 
 void wait_for_child(pid_t pid, struct option* options)
 {
-  if (pid == my_child) {
-    wait(NULL);  /* release system resources */
-    options->command_done = 1;
-  }
+  assert(pid == my_child);
+  wait(NULL);  /* release system resources */
+  options->command_done = 1;
 }
