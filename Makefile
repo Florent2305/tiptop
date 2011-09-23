@@ -13,11 +13,11 @@ all: tiptop
 
 debug:
 	make clean
-	make XCFLAGS="-g -O0 -DDEBUG" XLDFLAGS="-g"
+	make XCFLAGS+="-g -O0 -DDEBUG" XLDFLAGS="-g"
 
 release:
 	make clean
-	make XCFLAGS="-DNDEBUG"
+	make XCFLAGS+="-DNDEBUG"
 	strip tiptop
 
 dist: release
