@@ -67,8 +67,6 @@ int add_column_abs_m(screen_t* const, char*, char*, int, char*);
 int add_column_ratio(screen_t* const, char*, char*, int, int, char*);
 int add_column_percent(screen_t* const, char*, char*, int, int, char*);
 
-screen_t* default_screen();
-screen_t* micro();
 
 void init_screen();
 screen_t* get_screen(int);
@@ -83,5 +81,6 @@ char* gen_header(const screen_t* const s, const struct option* const,
 void delete_screen(screen_t* s);
 void delete_screens();
 
+void screens_hook();  /* to be implemented by target specific files */
 
 #endif  /* _SCREEN_H */

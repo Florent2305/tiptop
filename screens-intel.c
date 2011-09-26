@@ -1,4 +1,4 @@
-#if defined(TARGET_X86)
+#if defined(TARGET) && (TARGET==TARGET_X86)
 
 #ifdef KERNEL31
 #include <linux/perf_counter.h>
@@ -9,6 +9,15 @@
 #include "screen.h"
 #include "screens-intel.h"
 
+
+void screens_hook()
+{
+  nehalem_uop();
+  nehalem_fp();
+  nehalem_mem();
+  nehalem_br();
+  nehalem_app();
+}
 
 #if 0
 /* Identify the CPU. Not the Intel recommended way (yet), but works for
@@ -187,7 +196,7 @@ screen_t* nehalem_mem()
 
   /* add columns */
   add_column_cpu(s, " %CPU", "%5.1f");
-  add_column_raw(s, " miss L1I", "%9d", l1miss_i,
+  add_column_raw(s, " miss L1I", "%9lld", l1miss_i,
                  "Instruction fetches that miss in L1I (L1I.MISSES)");
   add_column_percent(s, " L1I", "%4.1f", l1miss_i, insn,
                      "   same, per instruction");
@@ -305,5 +314,6 @@ screen_t* nehalem_uop()
 
   return s;
 }
+
 
 #endif  /* TARGET_X86 */

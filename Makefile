@@ -1,13 +1,15 @@
-TARGET=TARGET_X86
+TARGET="-DTARGET=TARGET_X86"
 
-CFLAGS=-O2 -Wall -DKERNEL31 -D$(TARGET) -DHAS_CURSES 
+CFLAGS=-O2 -Wall -DKERNEL31 $(TARGET) -DHAS_CURSES 
 LDFLAGS=-O2
 
 CFLAGS+=$(XCFLAGS)
 LDFLAGS+=$(XLDFLAGS)
 
-OBJS=tiptop.o pmc.o process.o requisite.o conf.o screen.o screens-intel.o \
-     debug.o version.o helpwin.o options.o hash.o spawn.o
+OBJS=tiptop.o pmc.o process.o requisite.o conf.o screen.o \
+     debug.o version.o helpwin.o options.o hash.o spawn.o \
+     screens-intel.o
+
 
 all: tiptop
 
@@ -36,7 +38,7 @@ clean:
 
 
 depend:
-	makedepend -Y -DTARGET_X86 -DHAS_CURSES *.c
+	makedepend -Y -DDEBUG $(TARGET) -DHAS_CURSES *.c
 
 # DO NOT DELETE
 
@@ -48,9 +50,9 @@ options.o: options.h version.h
 pmc.o: pmc.h
 process.o: hash.h process.h screen.h options.h pmc.h spawn.h utils.h
 requisite.o: pmc.h requisite.h
-screen.o: options.h screen.h screens-intel.h
+screen.o: options.h screen.h
 screens-intel.o: screen.h options.h screens-intel.h
-spawn.o: options.h
+spawn.o: options.h process.h screen.h
 tiptop.o: conf.h options.h helpwin.h screen.h pmc.h process.h requisite.h
 tiptop.o: spawn.h
 utils.o: debug.h utils.h

@@ -13,7 +13,6 @@
 
 #include "options.h"
 #include "screen.h"
-#include "screens-intel.h"
 
 static const int alloc_chunk = 10;
 
@@ -185,7 +184,7 @@ int add_column_percent(screen_t* const s,
 
 /* This is the default screen, it uses only counters defined in the
    Linux header file. */
-screen_t* default_screen()
+static screen_t* default_screen()
 {
   int cycle, insn, miss, br, bus;
   screen_t* s = new_screen("default");
@@ -218,12 +217,8 @@ screen_t* default_screen()
 void init_screen()
 {
   default_screen();
-#if defined(TARGET_X86)
-  nehalem_uop();
-  nehalem_fp();
-  nehalem_mem();
-  nehalem_br();
-  nehalem_app();
+#if defined(TARGET)
+  screens_hook();
 #endif
 }
 
