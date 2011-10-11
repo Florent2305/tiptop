@@ -182,8 +182,8 @@ int add_column_percent(screen_t* const s,
 }
 
 
-/* This is the default screen, it uses only counters defined in the
-   Linux header file. */
+/* This is the default screen, it uses only target-independent
+   counters defined in the Linux header file. */
 static screen_t* default_screen()
 {
   int cycle, insn, miss, br, bus;

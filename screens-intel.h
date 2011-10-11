@@ -1,10 +1,10 @@
 #ifndef _SCREENS_INTEL_H
 #define _SCREENS_INTEL_H
 
-screen_t* nehalem_fp();
-screen_t* nehalem_br();
-screen_t* nehalem_mem();
-screen_t* nehalem_app();
-screen_t* nehalem_uop();
+screen_t* intel_fp();
+screen_t* intel_branch();
+screen_t* intel_mem();
+screen_t* intel_imix();
+screen_t* intel_uop();
 
 #endif  /* _SCREENS_INTEL_H */
