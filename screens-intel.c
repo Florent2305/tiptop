@@ -270,23 +270,24 @@ screen_t* intel_mem()
 
   /* add columns */
   add_column_cpu(s, " %CPU", "%5.1f");
-  add_column_raw(s, " miss L1I", "%9lld", l1miss_i,
+  add_column_raw(s, " miss L1I", "%9" PRIu64, l1miss_i,
                  "Instruction fetches that miss in L1I (L1I.MISSES)");
   add_column_percent(s, " L1I", "%4.1f", l1miss_i, insn,
                      "   same, per instruction");
 
-  add_column_raw(s, " miss L2I", "%9d", l2miss_i,
+  add_column_raw(s, " miss L2I", "%9" PRIu64, l2miss_i,
                  "Insn fetches that miss L2 cache (L2_RQSTS.IFETCH_MISS)");
   add_column_percent(s, " L2I", "%4.1f", l2miss_i, insn,
                      "   same, per instruction");
 
   if (tab != A_2) {
-    add_column_raw(s, " miss L2D", "%9d", l2miss_d, "Loads that miss L2 cache");
+    add_column_raw(s, " miss L2D", "%9" PRIu64, l2miss_d,
+                   "Loads that miss L2 cache");
     add_column_percent(s, " L2D", "%4.1f", l2miss_d, insn,
                        "   same, per instruction");
   }
 
-  add_column_raw(s, "   miss L3", " %9lld", l3miss, "LLC Misses");
+  add_column_raw(s, "   miss L3", " %9" PRIu64, l3miss, "LLC Misses");
   add_column_percent(s, "   L3", " %4.1f", l3miss, insn,
                      "   same, per instruction");
 
@@ -370,7 +371,7 @@ screen_t* intel_uop()
 
   if (macrof != -1)
     add_column_ratio(s, " macrof", "   %4.2f", macrof, insn,
-                     "Macro fused uops (UOPS_RETIRED.MACRO_FUSED) per instruction");
+                 "Macro fused uops (UOPS_RETIRED.MACRO_FUSED) per instruction");
 
   return s;
 }
