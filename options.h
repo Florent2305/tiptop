@@ -20,18 +20,18 @@ struct option {
   uid_t  euid;  /* effective user ID of tiptop */
   FILE*  out;
 
-  int    batch : 1;
-  int    command_done : 1;
-  int    debug : 1;
-  int    help : 1;
-  int    idle : 1;
-  int    show_cmdline : 1;
-  int    show_epoch : 1;
-  int    show_kernel : 1;
-  int    show_threads : 1;
-  int    show_timestamp : 1;
-  int    show_user : 1;
-  int    sticky : 1;
+  unsigned int    batch : 1;
+  unsigned int    command_done : 1;
+  unsigned int    debug : 1;
+  unsigned int    help : 1;
+  unsigned int    idle : 1;
+  unsigned int    show_cmdline : 1;
+  unsigned int    show_epoch : 1;
+  unsigned int    show_kernel : 1;
+  unsigned int    show_threads : 1;
+  unsigned int    show_timestamp : 1;
+  unsigned int    show_user : 1;
+  unsigned int    sticky : 1;
 };
 
 
