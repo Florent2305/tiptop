@@ -214,9 +214,35 @@ static screen_t* default_screen()
 }
 
 
+static screen_t* branch_pred_screen()
+{
+  int insn, br, misp;
+  int br2;
+  screen_t* s;
+
+  s = new_screen("branch prediction");
+
+  /* setup counters */
+  insn = add_counter(s, PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS);
+  br  =  add_counter(s, PERF_TYPE_HARDWARE, PERF_COUNT_HW_BRANCH_INSTRUCTIONS);
+  misp = add_counter(s, PERF_TYPE_HARDWARE, PERF_COUNT_HW_BRANCH_MISSES);
+
+  /* add columns */
+  add_column_cpu(s, " %CPU", "%5.1f");
+  add_column_percent(s, "  %MISP", "  %5.2f", misp, br,
+                     "Mispredictions per 100 branch instructions");
+  add_column_percent(s, "  %MIS/I ", "   %5.2f ", misp, insn,
+                     "Mispredictions per 100 instructions");
+  add_column_percent(s, "%BR/I", " %4.1f", br, insn,
+                     "Fraction of branch instructions");
+  return s;
+}
+
+
 void init_screen()
 {
   default_screen();
+  branch_pred_screen();
 #if defined(TARGET)
   screens_hook();
 #endif
