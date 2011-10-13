@@ -1,3 +1,5 @@
+#ifdef HAS_CURSES
+
 #ifndef _HELPWIN_H
 #define _HELPWIN_H
 
@@ -9,3 +11,5 @@ void show_help_win(WINDOW*, screen_t*);
 
 
 #endif  /* _HELPWIN_H */
+
+#endif  /* HAS_CURSES */
