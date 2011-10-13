@@ -1,4 +1,4 @@
-#if defined(TARGET) && (TARGET==TARGET_X86)
+#if defined(TARGET_X86)
 
 #include "pmc.h"
 #include "screen.h"
@@ -376,4 +376,4 @@ screen_t* intel_uop()
   return s;
 }
 
-#endif  /* TARGET && TARGET==TARGET_X86 */
+#endif  /* TARGET_X86 */

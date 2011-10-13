@@ -42,7 +42,7 @@ void show_help_win(WINDOW* win, screen_t* screen)
   mvwprintw(win, 0, 10, " Help (h to close)");
 
   /* target-dependent message */
-#if defined(TARGET)
+#if !defined(NOTARGET)
   target_dep_string(msg, sizeof(msg));
 #endif
   if (has_colors())

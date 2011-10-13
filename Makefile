@@ -1,7 +1,9 @@
-TARGET="-DTARGET=TARGET_X86"
+# Define one of the TARGET_xxx or NOTARGET
+# TARGET=-DNOTARGET
+TARGET=-DTARGET_X86
 
 CFLAGS=-O2 -Wall -DKERNEL31 $(TARGET) -DHAS_CURSES 
-LDFLAGS=-O2
+LDFLAGS=-O2 -lcurses
 
 CFLAGS+=$(XCFLAGS)
 LDFLAGS+=$(XLDFLAGS)
@@ -26,7 +28,7 @@ dist: release
 	tar zcvf tiptop.tar.gz tiptop tiptop.1 README
 
 tiptop: $(OBJS)
-	$(CC) $(LDFLAGS) -o tiptop $(OBJS) -lcurses
+	$(CC) -o tiptop $(OBJS) $(LDFLAGS)
 
 version.o: version.c
 	$(CC) $(CFLAGS) -DCOMPILE_HOST="\""`hostname`"\"" \

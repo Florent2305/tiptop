@@ -217,7 +217,6 @@ static screen_t* default_screen()
 static screen_t* branch_pred_screen()
 {
   int insn, br, misp;
-  int br2;
   screen_t* s;
 
   s = new_screen("branch prediction");
@@ -243,7 +242,7 @@ void init_screen()
 {
   default_screen();
   branch_pred_screen();
-#if defined(TARGET)
+#if !defined(NOTARGET)
   screens_hook();
 #endif
 }
