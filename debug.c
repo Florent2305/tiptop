@@ -1,3 +1,13 @@
+/*
+ * This file is part of tiptop.
+ *
+ * Author: Erven ROHOU
+ * Copyright (c) 2011 Inria
+ *
+ * License: GNU General Public License version 2.
+ *
+ */
+
 #if defined(DEBUG)
 
 #include <stdarg.h>

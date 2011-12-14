@@ -1,7 +1,8 @@
 /*
- * tiptop
+ * This file is part of tiptop.
  *
- * Author: Erven Rohou
+ * Author: Erven ROHOU
+ * Copyright (c) 2011 Inria
  *
  * License: GNU General Public License version 2.
  *

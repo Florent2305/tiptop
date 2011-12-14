@@ -1,3 +1,15 @@
+/*
+ * This file is part of tiptop.
+ *
+ * Author: Erven ROHOU
+ * Copyright (c) 2011 Inria
+ *
+ * License: GNU General Public License version 2.
+ *
+ */
+
+
+
 /* Minimalist hash table to keep track of 'struct process'
    entries. The key is the thread ID 'tid'.
 
