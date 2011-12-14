@@ -422,6 +422,7 @@ int update_proc_list(struct process_list* const list,
       fclose(fstat);
     }
     if (!zombie) {
+      /* do not update these values for a zombie, they have become invalid */
       gettimeofday(&now, NULL);
       elapsed = (now.tv_sec - proc->timestamp.tv_sec) +
         (now.tv_usec - proc->timestamp.tv_usec)/1000000.0;

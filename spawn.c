@@ -124,7 +124,10 @@ void start_child()
 
 void wait_for_child(pid_t pid, struct option* options)
 {
-  assert(pid == my_child);
+  /* only wait for my child */
+  if (pid != my_child)
+    return;
+
   wait(NULL);  /* release system resources */
   options->command_done = 1;
 }
