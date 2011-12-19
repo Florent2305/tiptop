@@ -1,1 +1,5 @@
-TBD.
+=== How to build tiptop ===
+
+Check the first lines of the Makefile.
+Type make.
+
