@@ -1,5 +1,13 @@
 === How to build tiptop ===
 
-Check the first lines of the Makefile.
-Type make.
+1.  ./configure [--prefix=/some/where]
+
+2.  For now, check the first lines of the Makefile, edit as needed.
+
+3.  make
+
+(4. optional)  make install
+
+
+
 

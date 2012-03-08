@@ -1,9 +1,27 @@
+# @configure_input@
+
+package = @PACKAGE_NAME@
+version = @PACKAGE_VERSION@
+tarname = @PACKAGE_TARNAME@
+distdir = $(tarname)-$(version)
+
+prefix      = @prefix@
+exec_prefix = @exec_prefix@
+bindir      = @bindir@
+datarootdir = @datarootdir@
+mandir      = @mandir@
+man1dir     = @man1dir@
+
+
+
+
+
 # Define one of the TARGET_xxx or NOTARGET
 # TARGET=-DNOTARGET
 TARGET=-DTARGET_X86
 
 # If building on a Linux 2.6.31, add -DKERNEL31
-CFLAGS=-O2 -Wall $(TARGET) -DHAS_CURSES 
+CFLAGS=-O2 -Wall $(TARGET) -DHAS_CURSES
 LDFLAGS=-O2 -lcurses
 
 CFLAGS+=$(XCFLAGS)
@@ -20,17 +38,13 @@ tiptop: $(OBJS)
 	$(CC) -o tiptop $(OBJS) $(LDFLAGS)
 
 
-debug:
-	make clean
-	make XCFLAGS+="-g -O0 -DDEBUG" XLDFLAGS="-g"
+Makefile: Makefile.in ../config.status
+	cd .. && ./config.status src/$@
 
-release:
-	make clean
-	make XCFLAGS+="-DNDEBUG"
-	strip tiptop
+../config.status: ../configure
+	cd .. && ./config.status --recheck
 
-dist: release
-	tar zcvf tiptop.tar.gz tiptop tiptop.1 README
+
 
 version.o: version.c
 	$(CC) $(CFLAGS) -DCOMPILE_HOST="\""`hostname`"\"" \
@@ -48,14 +62,14 @@ uninstall:
 	-rm $(DESTDIR)$(man1dir)/tiptop.1
 
 clean:
-	/bin/rm -f $(OBJS) tiptop tiptop.tar.gz
+	/bin/rm -f $(OBJS) tiptop
 
 
 depend:
 	makedepend -Y -DDEBUG $(TARGET) -DHAS_CURSES *.c
 
 
-.PHONY: all clean depend debug release install uninstall
+.PHONY: all clean depend install uninstall
 
 
 # DO NOT DELETE
