@@ -1,8 +1,19 @@
 package = tiptop
 version = 1.0
 
-prefix = /usr/local
+prefix      = /usr/local
+exec_prefix = $(prefix)
+bindir      = $(exec_prefix)/bin
+datarootdir = $(prefix)/share
+mandir      = $(datarootdir)/man
+man1dir     = $(mandir)/man1
+
 export prefix
+export exec_prefix
+export bindir
+export datarootdir
+export mandir
+export man1dir
 
 tarname = $(package)
 distdir = $(tarname)-$(version)

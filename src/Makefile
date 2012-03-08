@@ -38,14 +38,14 @@ version.o: version.c
                         -c version.c
 
 install:
-	install -d $(prefix)/bin
-	install -m 0755 tiptop $(prefix)/bin
-	install -d $(prefix)/share/man/man1
-	install -m 0644 tiptop.1 $(prefix)/share/man/man1
+	install -d $(DESTDIR)$(bindir)
+	install -m 0755 tiptop $(DESTDIR)$(bindir)
+	install -d $(DESTDIR)$(man1dir)
+	install -m 0644 tiptop.1 $(DESTDIR)$(man1dir)
 
 uninstall:
-	-rm $(prefix)/bin/tiptop
-	-rm $(prefix)/share/man/man1/tiptop.1
+	-rm $(DESTDIR)$(bindir)/tiptop
+	-rm $(DESTDIR)$(man1dir)/tiptop.1
 
 clean:
 	/bin/rm -f $(OBJS) tiptop tiptop.tar.gz
