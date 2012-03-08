@@ -37,6 +37,16 @@ version.o: version.c
                         -DCOMPILE_DATE="\"`date`\"" \
                         -c version.c
 
+install:
+	install -d $(prefix)/bin
+	install -m 0755 tiptop $(prefix)/bin
+	install -d $(prefix)/share/man/man1
+	install -m 0644 tiptop.1 $(prefix)/share/man/man1
+
+uninstall:
+	-rm $(prefix)/bin/tiptop
+	-rm $(prefix)/share/man/man1/tiptop.1
+
 clean:
 	/bin/rm -f $(OBJS) tiptop tiptop.tar.gz
 
@@ -45,7 +55,7 @@ depend:
 	makedepend -Y -DDEBUG $(TARGET) -DHAS_CURSES *.c
 
 
-.PHONY: all clean depend debug release
+.PHONY: all clean depend debug release install uninstall
 
 
 # DO NOT DELETE
