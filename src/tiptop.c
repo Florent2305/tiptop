@@ -2,15 +2,17 @@
  * This file is part of tiptop.
  *
  * Author: Erven ROHOU
- * Copyright (c) 2011 Inria
+ * Copyright (c) 2011, 2012 Inria
  *
  * License: GNU General Public License version 2.
  *
  */
 
+#include <config.h>
+
 #include <assert.h>
 
-#if defined(HAS_CURSES)
+#if HAVE_LIBCURSES
 #include <curses.h>
 #endif
 
@@ -516,7 +518,7 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
 }
 
 
-#if defined(HAS_CURSES)
+#if HAVE_LIBCURSES
 /* Handle a key press.  Assumes that a key has been pressed and is
  * ready to read (will block otherwise).
  * Return 1 if 'q' (quit).
@@ -939,7 +941,7 @@ int main(int argc, char* argv[])
       batch_mode(proc_list, screen);
       key = 'q';
     }
-#if defined(HAS_CURSES)
+#if HAVE_LIBCURSES
     else {
       key = live_mode(proc_list, screen);
       if ((key == '+')  || (key == KEY_RIGHT)) {

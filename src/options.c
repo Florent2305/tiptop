@@ -2,11 +2,13 @@
  * This file is part of tiptop.
  *
  * Author: Erven ROHOU
- * Copyright (c) 2011 Inria
+ * Copyright (c) 2011, 2012 Inria
  *
  * License: GNU General Public License version 2.
  *
  */
+
+#include <config.h>
 
 #include <ctype.h>
 #include <pwd.h>
@@ -53,7 +55,7 @@ void init_options(struct option* opt)
 {
   /* default status for options */
   memset(opt, 0, sizeof(*opt));
-#if !defined(HAS_CURSES)
+#if !HAVE_LIBCURSES
   /* make batch mode default if curses is not available */
   opt->batch = 1;
 #endif

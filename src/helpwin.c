@@ -2,13 +2,15 @@
  * This file is part of tiptop.
  *
  * Author: Erven ROHOU
- * Copyright (c) 2011 Inria
+ * Copyright (c) 2011, 2012 Inria
  *
  * License: GNU General Public License version 2.
  *
  */
 
-#ifdef HAS_CURSES
+#include <config.h>
+
+#if HAVE_LIBCURSES
 
 #include <curses.h>
 #include <string.h>
@@ -82,4 +84,4 @@ void show_help_win(WINDOW* win, screen_t* screen)
   wrefresh(win);
 }
 
-#endif  /* HAS_CURSES */
+#endif  /* HAVE_LIBCURSES */

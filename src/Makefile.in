@@ -17,7 +17,10 @@ srcdir= @srcdir@
 VPATH = @srcdir@
 
 
-
+CC =       @CC@
+LIBS =     @LIBS@
+CFLAGS =   @CFLAGS@
+CPPFLAGS = @CPPFLAGS@
 
 
 # Define one of the TARGET_xxx or NOTARGET
@@ -25,11 +28,8 @@ VPATH = @srcdir@
 TARGET=-DTARGET_X86
 
 # If building on a Linux 2.6.31, add -DKERNEL31
-CFLAGS=-O2 -Wall $(TARGET) -DHAS_CURSES
-LDFLAGS=-O2 -lcurses
 
-CFLAGS+=$(XCFLAGS)
-LDFLAGS+=$(XLDFLAGS)
+CFLAGS+=$(TARGET) -I..
 
 OBJS=tiptop.o pmc.o process.o requisite.o conf.o screen.o \
      debug.o version.o helpwin.o options.o hash.o spawn.o \
@@ -39,7 +39,7 @@ OBJS=tiptop.o pmc.o process.o requisite.o conf.o screen.o \
 all: tiptop
 
 tiptop: $(OBJS)
-	$(CC) -o tiptop $(OBJS) $(LDFLAGS)
+	$(CC) -o tiptop $(OBJS) $(LIBS)
 
 
 Makefile: Makefile.in ../config.status
