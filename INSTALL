@@ -1,13 +1,19 @@
 === How to build tiptop ===
 
+* In-directory
+
 1.  ./configure [--prefix=/some/where]
-
 2.  For now, check the first lines of the Makefile, edit as needed.
-
 3.  make
-
 (4. optional)  make install
 
 
 
+* In another directory
 
+1.  mkdir build-dir
+2.  cd build-dir
+3.  /path/to/tiptop/configure  [--prefix=/some/where]
+4.  For now, check the first lines of the Makefile, edit as needed.
+5.  make
+(6. optional)  make install

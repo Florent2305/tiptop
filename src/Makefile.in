@@ -10,7 +10,11 @@ exec_prefix = @exec_prefix@
 bindir      = @bindir@
 datarootdir = @datarootdir@
 mandir      = @mandir@
-man1dir     = @man1dir@
+man1dir     = $(mandir)/man1
+
+# VPATH-specific substitution variables
+srcdir= @srcdir@
+VPATH = @srcdir@
 
 
 
@@ -49,7 +53,7 @@ Makefile: Makefile.in ../config.status
 version.o: version.c
 	$(CC) $(CFLAGS) -DCOMPILE_HOST="\""`hostname`"\"" \
                         -DCOMPILE_DATE="\"`date`\"" \
-                        -c version.c
+                        -c $(srcdir)/version.c
 
 install:
 	install -d $(DESTDIR)$(bindir)
