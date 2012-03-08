@@ -16,6 +16,10 @@ OBJS=tiptop.o pmc.o process.o requisite.o conf.o screen.o \
 
 all: tiptop
 
+tiptop: $(OBJS)
+	$(CC) -o tiptop $(OBJS) $(LDFLAGS)
+
+
 debug:
 	make clean
 	make XCFLAGS+="-g -O0 -DDEBUG" XLDFLAGS="-g"
@@ -28,9 +32,6 @@ release:
 dist: release
 	tar zcvf tiptop.tar.gz tiptop tiptop.1 README
 
-tiptop: $(OBJS)
-	$(CC) -o tiptop $(OBJS) $(LDFLAGS)
-
 version.o: version.c
 	$(CC) $(CFLAGS) -DCOMPILE_HOST="\""`hostname`"\"" \
                         -DCOMPILE_DATE="\"`date`\"" \
@@ -42,6 +43,10 @@ clean:
 
 depend:
 	makedepend -Y -DDEBUG $(TARGET) -DHAS_CURSES *.c
+
+
+.PHONY: all clean depend debug release
+
 
 # DO NOT DELETE
 
