@@ -3207,12 +3207,13 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_curses_initscr" >&5
 $as_echo "$ac_cv_lib_curses_initscr" >&6; }
 if test "x$ac_cv_lib_curses_initscr" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBCURSES 1
-_ACEOF
+  have_curses=yes;
 
-  LIBS="-lcurses $LIBS"
+$as_echo "#define HAVE_LIBCURSES 1" >>confdefs.h
 
+                  LIBS="-lcurses $LIBS"
+else
+  have_curses=no
 fi
 
 
@@ -3626,6 +3627,53 @@ _ACEOF
 fi
 
 done
+
+
+
+
+for ac_header in linux/perf_counter.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "linux/perf_counter.h" "ac_cv_header_linux_perf_counter_h" "$ac_includes_default"
+if test "x$ac_cv_header_linux_perf_counter_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LINUX_PERF_COUNTER_H 1
+_ACEOF
+ have_perf_counter=yes
+else
+  have_perf_counter=no
+fi
+
+done
+
+
+for ac_header in linux/perf_event.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "linux/perf_event.h" "ac_cv_header_linux_perf_event_h" "$ac_includes_default"
+if test "x$ac_cv_header_linux_perf_event_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LINUX_PERF_EVENT_H 1
+_ACEOF
+ have_perf_event=yes
+else
+  have_perf_event=no
+fi
+
+done
+
+
+if test "x${have_perf_counter}" = xno -a "x${have_perf_event}" = xno; then
+   os=`uname -o -r`
+   { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
+as_fn_error $? "
+  ------------------------------------------------------------
+   Could not locate linux/perf_count.h or linux/perf_event.h.
+   Are performance counters supported on this machine?
+   Linux 2.6.31+ is required.
+   uname reports: ${os}
+  ------------------------------------------------------------
+See \`config.log' for more details" "$LINENO" 5; }
+fi
 
 
 # Checks for typedefs, structures, and compiler characteristics.
@@ -4125,6 +4173,20 @@ done
 
 
 ac_config_files="$ac_config_files Makefile src/Makefile"
+
+
+
+if test "x${have_curses}" = xno; then
+   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING:
+  -----------------------------------------------------
+   Library curses not found. Building without support.
+  -----------------------------------------------------" >&5
+$as_echo "$as_me: WARNING:
+  -----------------------------------------------------
+   Library curses not found. Building without support.
+  -----------------------------------------------------" >&2;}
+fi
+
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure

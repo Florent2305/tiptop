@@ -21,13 +21,11 @@ CC =       @CC@
 LIBS =     @LIBS@
 CFLAGS =   @CFLAGS@
 CPPFLAGS = @CPPFLAGS@
-
+INSTALL  = @INSTALL@
 
 # Define one of the TARGET_xxx or NOTARGET
 # TARGET=-DNOTARGET
 TARGET=-DTARGET_X86
-
-# If building on a Linux 2.6.31, add -DKERNEL31
 
 CFLAGS+=$(TARGET) -I..
 
@@ -56,10 +54,10 @@ version.o: version.c
                         -c $(srcdir)/version.c
 
 install:
-	install -d $(DESTDIR)$(bindir)
-	install -m 0755 tiptop $(DESTDIR)$(bindir)
-	install -d $(DESTDIR)$(man1dir)
-	install -m 0644 tiptop.1 $(DESTDIR)$(man1dir)
+	$(INSTALL) -d $(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 tiptop $(DESTDIR)$(bindir)
+	$(INSTALL) -d $(DESTDIR)$(man1dir)
+	$(INSTALL) -m 0644 tiptop.1 $(DESTDIR)$(man1dir)
 
 uninstall:
 	-rm $(DESTDIR)$(bindir)/tiptop
@@ -70,7 +68,7 @@ clean:
 
 
 depend:
-	makedepend -Y -DDEBUG $(TARGET) -DHAS_CURSES *.c
+	makedepend -Y -DDEBUG $(TARGET) *.c
 
 
 .PHONY: all clean depend install uninstall

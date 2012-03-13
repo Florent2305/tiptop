@@ -9,10 +9,34 @@ AC_PROG_CC
 AC_PROG_INSTALL
 
 # Checks for libraries.
-AC_CHECK_LIB([curses], [initscr])
+AC_CHECK_LIB([curses], [initscr],
+                  [have_curses=yes;
+                  AC_DEFINE([HAVE_LIBCURSES], [1], [Define to 1 if you have the `curses' library (-lcurses).])
+                  LIBS="-lcurses $LIBS"],
+             [have_curses=no])
 
 # Checks for header files.
 AC_CHECK_HEADERS([inttypes.h stdint.h stdlib.h string.h sys/ioctl.h sys/time.h unistd.h])
+
+
+
+AC_CHECK_HEADERS([linux/perf_counter.h], [have_perf_counter=yes],
+                                         [have_perf_counter=no])
+
+AC_CHECK_HEADERS([linux/perf_event.h], [have_perf_event=yes],
+                                       [have_perf_event=no])
+
+if test "x${have_perf_counter}" = xno -a "x${have_perf_event}" = xno; then
+   os=`uname -o -r`
+   AC_MSG_FAILURE([
+  ------------------------------------------------------------
+   Could not locate linux/perf_count.h or linux/perf_event.h.
+   Are performance counters supported on this machine?
+   Linux 2.6.31+ is required.
+   uname reports: ${os}
+  ------------------------------------------------------------])
+fi
+
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_INLINE
@@ -31,4 +55,14 @@ AC_CHECK_FUNCS([gettimeofday memset select strdup strerror strstr uname])
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile])
+
+
+if test "x${have_curses}" = xno; then
+   AC_MSG_WARN([
+  -----------------------------------------------------
+   Library curses not found. Building without support.
+  -----------------------------------------------------])
+fi
+
+
 AC_OUTPUT
