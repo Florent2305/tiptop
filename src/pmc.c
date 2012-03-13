@@ -2,7 +2,7 @@
  * This file is part of tiptop.
  *
  * Author: Erven ROHOU
- * Copyright (c) 2011 Inria
+ * Copyright (c) 2011, 2012 Inria
  *
  * License: GNU General Public License version 2.
  *
@@ -28,10 +28,6 @@
 #define __NR_perf_counter_open	336
 #elif defined(TARGET_SPARC)
 #define __NR_perf_counter_open  327
-#endif
-
-#ifdef KERNEL31
-#define perf_event_attr		perf_counter_attr
 #endif
 
 long sys_perf_counter_open(struct STRUCT_NAME *hw_event,

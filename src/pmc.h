@@ -17,21 +17,20 @@
  * between Linux 2.6.31 and 2.6.32. Do the mangling here. */
 #if HAVE_LINUX_PERF_COUNTER_H
 #include <linux/perf_counter.h>
+#define STRUCT_NAME perf_counter_attr
+
 #elif HAVE_LINUX_PERF_EVENT_H
 #include <linux/perf_event.h>
+#define STRUCT_NAME perf_event_attr
+
 #else
 #error Sorry, performance counters not supported on this system.
 #endif
 
 #include <sys/types.h>
 
-#ifdef KERNEL31
-#define STRUCT_NAME perf_counter_attr
-#else
-#define STRUCT_NAME perf_event_attr
-#endif
 
-/* Declare our own syscall */
+/* Declare the syscall with proper naming. */
 long sys_perf_counter_open(struct STRUCT_NAME *hw_event,
                            pid_t pid,
                            int cpu,
