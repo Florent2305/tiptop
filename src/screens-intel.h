@@ -2,7 +2,7 @@
  * This file is part of tiptop.
  *
  * Author: Erven ROHOU
- * Copyright (c) 2011 Inria
+ * Copyright (c) 2011, 2012 Inria
  *
  * License: GNU General Public License version 2.
  *
@@ -11,10 +11,16 @@
 #ifndef _SCREENS_INTEL_H
 #define _SCREENS_INTEL_H
 
+#include <config.h>
+
+#if TARGET_X86
+
 screen_t* intel_fp();
 screen_t* intel_branch();
 screen_t* intel_mem();
 screen_t* intel_imix();
 screen_t* intel_uop();
+
+#endif  /* TARGET_X86 */
 
 #endif  /* _SCREENS_INTEL_H */

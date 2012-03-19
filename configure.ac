@@ -1,5 +1,5 @@
 AC_PREREQ([2.68])
-AC_INIT([tiptop], [1.0], [erven.rohou@inria.fr])
+AC_INIT([tiptop], [1.0.1], [erven.rohou@inria.fr])
 
 AC_CONFIG_SRCDIR([src/tiptop.c])
 AC_CONFIG_HEADERS([config.h])
@@ -37,6 +37,29 @@ if test "x${have_perf_counter}" = xno -a "x${have_perf_event}" = xno; then
   ------------------------------------------------------------])
 fi
 
+
+# Check for hardware architecture
+no_target=yes
+AC_MSG_CHECKING([hardware])
+hw=`uname --hardware-platform`
+case $hw in
+  x86_64 | i386 ) :
+    AC_MSG_RESULT([x86])
+    AC_DEFINE([TARGET_X86], [1], [Define to 1 if the target is x86.])
+    no_target=no
+    ;;
+  unknown ) :
+    AC_MSG_RESULT([unknown])
+    AC_MSG_WARN([Could not detect architecture])
+    ;;
+  * ) :
+    AC_MSG_RESULT([$hw])
+    ;;
+esac
+
+if test x$no_target = xyes; then
+   AC_DEFINE([NOTARGET], [1], [Define to 1 when no specific target is supported.])
+fi
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_INLINE

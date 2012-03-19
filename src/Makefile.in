@@ -19,15 +19,9 @@ VPATH = @srcdir@
 
 CC =       @CC@
 LIBS =     @LIBS@
-CFLAGS =   @CFLAGS@
+CFLAGS =   @CFLAGS@ -I..
 CPPFLAGS = @CPPFLAGS@
 INSTALL  = @INSTALL@
-
-# Define one of the TARGET_xxx or NOTARGET
-# TARGET=-DNOTARGET
-TARGET=-DTARGET_X86
-
-CFLAGS+=$(TARGET) -I..
 
 OBJS=tiptop.o pmc.o process.o requisite.o conf.o screen.o \
      debug.o version.o helpwin.o options.o hash.o spawn.o \
@@ -68,7 +62,7 @@ clean:
 
 
 depend:
-	makedepend -Y -DDEBUG $(TARGET) *.c
+	makedepend -Y -DDEBUG *.c
 
 
 .PHONY: all clean depend install uninstall
