@@ -24,7 +24,6 @@
 #include "process.h"
 #include "screen.h"
 #include "spawn.h"
-#include "utils.h"
 
 extern int debug;
 

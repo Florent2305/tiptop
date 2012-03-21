@@ -96,8 +96,6 @@ $(distdir): FORCE
 	cp $(srcdir)/src/spawn.c $(distdir)/src
 	cp $(srcdir)/src/spawn.h $(distdir)/src
 	cp $(srcdir)/src/tiptop.c $(distdir)/src
-	cp $(srcdir)/src/utils.c $(distdir)/src
-	cp $(srcdir)/src/utils.h $(distdir)/src
 	cp $(srcdir)/src/version.c $(distdir)/src
 	cp $(srcdir)/src/version.h $(distdir)/src
 
