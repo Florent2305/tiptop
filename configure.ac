@@ -27,7 +27,7 @@ AC_CHECK_HEADERS([linux/perf_event.h], [have_perf_event=yes],
                                        [have_perf_event=no])
 
 if test "x${have_perf_counter}" = xno -a "x${have_perf_event}" = xno; then
-   os=`uname -o -r`
+   os=`uname -s -r`
    AC_MSG_FAILURE([
   ------------------------------------------------------------
    Could not locate linux/perf_count.h or linux/perf_event.h.
@@ -41,7 +41,7 @@ fi
 # Check for hardware architecture
 no_target=yes
 AC_MSG_CHECKING([hardware])
-hw=`uname --hardware-platform`
+hw=`uname -m`
 case $hw in
   x86_64 | i386 ) :
     AC_MSG_RESULT([x86])
