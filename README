@@ -11,6 +11,7 @@ comes from hardware counters.
 * Installation
 Tiptop is a single executable. It can be launched from any place in
 the filesystem. Documentation is in the man page tiptop.1.
+For installation instructions, check file INSTALL.
 
 
 * Requirements
