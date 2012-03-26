@@ -25,7 +25,11 @@
 static void usage(const char* name)
 {
   fprintf(stderr, "Usage: %s [option]\n", name);
+#if HAVE_LIBCURSES
   fprintf(stderr, "\t-b             run in batch mode\n");
+#else
+  fprintf(stderr, "\t-b             ignored, for compatibility with batch mode\n");
+#endif
   fprintf(stderr, "\t-c             use command line instead of process name\n");
   fprintf(stderr, "\t--cpu-min m    minimum %%CPU to display a process\n");
   fprintf(stderr, "\t-d delay       delay in seconds between refreshes\n");
@@ -89,7 +93,9 @@ void parse_command_line(int argc, char* argv[],
     }
 
     if (strcmp(argv[i], "-b") == 0) {
+#if HAVE_LIBCURSES
       options->batch = 1 - options->batch;
+#endif
       continue;
     }
 
