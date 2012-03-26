@@ -95,10 +95,11 @@ static int add_column_tmpl(screen_t* const s, enum comput_type typ,
   s->columns[n].header = header;
   s->columns[n].format = format;
 
-  /* setup an empty field with proper width */
   col_width = strlen(header);
+  /* setup an empty field with proper width */
   s->columns[n].empty_field = malloc(col_width + 1);
-  memset(s->columns[n].empty_field, ' ', col_width);
+  memset(s->columns[n].empty_field, ' ', col_width - 1);
+  s->columns[n].empty_field[col_width - 1] = '-';
   s->columns[n].empty_field[col_width] = '\0';
 
   /* setup an error field with proper width */
