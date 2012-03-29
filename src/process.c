@@ -2,7 +2,7 @@
  * This file is part of tiptop.
  *
  * Author: Erven ROHOU
- * Copyright (c) 2011 Inria
+ * Copyright (c) 2011, 2012 Inria
  *
  * License: GNU General Public License version 2.
  *
@@ -10,6 +10,7 @@
 
 #include <assert.h>
 #include <dirent.h>
+#include <errno.h>
 #include <inttypes.h>
 #include <pwd.h>
 #include <stdio.h>
@@ -18,14 +19,13 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "debug.h"
 #include "hash.h"
 #include "options.h"
 #include "pmc.h"
 #include "process.h"
 #include "screen.h"
 #include "spawn.h"
-
-extern int debug;
 
 static int num_files = 0;
 static int num_files_limit = 0;
@@ -228,7 +228,11 @@ void new_processes(struct process_list* const list,
       }
     }
     fclose(f);
-    assert(req_info == 0);
+
+    if (req_info != 0) {  /* could not read all 3 info. Process is gone? */
+      debug_printf("Could not read info for process %d (gone already?)\n", pid);
+      continue;
+    }
 
     /* my process, or somebody else's process and I am root (skip
        root's processes because they are too many. */
@@ -322,10 +326,21 @@ void new_processes(struct process_list* const list,
           events.type = screen->counters[zz].type;  /* eg PERF_TYPE_HARDWARE */
           events.config = screen->counters[zz].config;
 
-          if (num_files < num_files_limit)
+          if (num_files < num_files_limit) {
             fd = sys_perf_counter_open(&events, tid, cpu, grp, flags);
-          else
+            if (fd == -1) {
+              int err_code = errno;
+              debug_printf("Could not attach counter to PID %d (%s): %s\n",
+                           tid,
+                           ptr->name,
+                           errno < sys_nerr ? sys_errlist[errno] : "??");
+            }
+          }
+          else {
             fd = -1;
+            debug_printf("Files limit reached for PID %d (%s)\n",
+                         tid, ptr->name);
+          }
 
           if (fd == -1)
             fail++;

@@ -2,13 +2,15 @@
  * This file is part of tiptop.
  *
  * Author: Erven ROHOU
- * Copyright (c) 2011 Inria
+ * Copyright (c) 2011, 2012 Inria
  *
  * License: GNU General Public License version 2.
  *
  */
 
-#if defined(DEBUG)
+#include <config.h>
+
+#if ENABLE_DEBUG
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -19,6 +21,7 @@
 
 extern struct option options;
 
+static const char* const debug_file_name = "tiptop.debug";
 static FILE* debug_file = NULL;
 
 
@@ -31,7 +34,7 @@ void debug_printf(char* fmt, ...)
 
   /* open file the first time we get here. */
   if (!debug_file) {
-    debug_file = fopen("debug", "w");
+    debug_file = fopen(debug_file_name, "w");
     if (!debug_file) {
       perror("fopen");
       fprintf(stderr, "Cannot open debug file.\n");
@@ -44,4 +47,4 @@ void debug_printf(char* fmt, ...)
 }
 
 
-#endif  /* DEBUG */
+#endif  /* ENABLE_DEBUG */

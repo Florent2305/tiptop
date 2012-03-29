@@ -79,6 +79,9 @@ AC_CHECK_FUNCS([gettimeofday memset select strdup strerror strstr uname])
 AC_CONFIG_FILES([Makefile
                  src/Makefile])
 
+AC_ARG_ENABLE(debug, [  --enable-debug          enable support for debug],
+              [AC_DEFINE([ENABLE_DEBUG], [1], [Define to 1 to enable support for debug.])])
+
 
 if test "x${have_curses}" = xno; then
    AC_MSG_WARN([

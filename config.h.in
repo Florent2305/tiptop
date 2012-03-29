@@ -1,5 +1,8 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
+/* Define to 1 to enable support for debug. */
+#undef ENABLE_DEBUG
+
 /* Define to 1 if you have the `fork' function. */
 #undef HAVE_FORK
 

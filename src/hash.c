@@ -67,7 +67,7 @@ void hash_fini()
 }
 
 
-#if defined(DEBUG)
+#if ENABLE_DEBUG
 /* Dump all entries (skip NULL buckets). */
 void hash_dump()
 {
@@ -84,7 +84,7 @@ void hash_dump()
     printf("\n");
   }
 }
-#endif  /* DEBUG */
+#endif  /* ENABLE_DEBUG */
 
 
 /* Add a pair (key, process) to the table. If the key is already
