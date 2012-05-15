@@ -3689,7 +3689,7 @@ no_target=yes
 $as_echo_n "checking hardware... " >&6; }
 hw=`uname -m`
 case $hw in
-  x86_64 | i386 ) :
+  x86_64 | i386 | i686 ) :
     { $as_echo "$as_me:${as_lineno-$LINENO}: result: x86" >&5
 $as_echo "x86" >&6; }
 

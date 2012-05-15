@@ -43,7 +43,7 @@ no_target=yes
 AC_MSG_CHECKING([hardware])
 hw=`uname -m`
 case $hw in
-  x86_64 | i386 ) :
+  x86_64 | i386 | i686 ) :
     AC_MSG_RESULT([x86])
     AC_DEFINE([TARGET_X86], [1], [Define to 1 if the target is x86.])
     no_target=no
