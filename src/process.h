@@ -38,7 +38,7 @@ struct process {
   pid_t    pid;           /* process ID. For owning process, tip == pid */
   short    proc_id;       /* processor ID on which process was last seen */
   short    num_threads;   /* number of threads in brotherhood */
-  int       num_events;
+  int      num_events;
 
   double   cpu_percent;   /* %CPU as displayed by top */
   double   cpu_percent_s; /* %CPU system */

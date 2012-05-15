@@ -235,7 +235,7 @@ void new_processes(struct process_list* const list,
     }
 
     /* my process, or somebody else's process and I am root (skip
-       root's processes because they are too many. */
+       root's processes because they are too many). */
     my_uid = options->euid;
     if (((options->watch_uid != -1) && (uid == options->watch_uid)) ||
         ((options->watch_uid == -1) &&
