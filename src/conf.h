@@ -12,7 +12,7 @@
 #define _CONF_H
 
 #include "options.h"
-#include "topparser.h"
+#include "config-parser.h"
 
 
 
