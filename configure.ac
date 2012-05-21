@@ -43,7 +43,7 @@ no_target=yes
 AC_MSG_CHECKING([hardware])
 hw=`uname -m`
 case $hw in
-  x86_64 | i386 | i686 ) :
+  x86_64 | i386 ) :
     AC_MSG_RESULT([x86])
     AC_DEFINE([TARGET_X86], [1], [Define to 1 if the target is x86.])
     no_target=no
@@ -78,9 +78,6 @@ AC_CHECK_FUNCS([gettimeofday memset select strdup strerror strstr uname])
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile])
-
-AC_ARG_ENABLE(debug, [  --enable-debug          enable support for debug],
-              [AC_DEFINE([ENABLE_DEBUG], [1], [Define to 1 to enable support for debug.])])
 
 
 if test "x${have_curses}" = xno; then

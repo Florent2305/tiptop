@@ -18,14 +18,14 @@ VPATH = @srcdir@
 
 
 CC =       @CC@
-LIBS =     @LIBS@
-CFLAGS =   @CFLAGS@ -I..
+LIBS =     @LIBS@ -lxml2
+CFLAGS =   @CFLAGS@ -I.. -I/usr/include/libxml2
 CPPFLAGS = @CPPFLAGS@
 INSTALL  = @INSTALL@
 
 OBJS=tiptop.o pmc.o process.o requisite.o conf.o screen.o \
      debug.o version.o helpwin.o options.o hash.o spawn.o \
-     screens-intel.o
+     screens-intel.o config-parser.o
 
 
 all: tiptop

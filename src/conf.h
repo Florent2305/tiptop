@@ -12,6 +12,9 @@
 #define _CONF_H
 
 #include "options.h"
+#include "topparser.h"
+
+
 
 int read_config(struct option*);
 

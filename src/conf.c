@@ -23,51 +23,54 @@ static const char* const config_file = ".tiptoprc";
    variable, then the local directory, finally $HOME. */
 int read_config(struct option* options)
 {
+  /*
+    TODO : Argument determinant l'adresse du fichier de conf!
+  */
+
+  char* path = NULL;
   FILE* f = NULL;
+
+  /*
+  *Variable environnement $TIPTOP
+  */
   char* val = getenv("TIPTOP");
   if (val) {
-    f = fopen(val, "r");
+    path = strdup(val);
   }
-  if (!f) {
+  else {
+    /*
+     *Dossier courant
+     */
     f = fopen(config_file, "r");
-  }
-  if (!f) {
-    char* home = getenv("HOME");
-    if (home) {
-      char* path;
-      path = malloc(strlen(home) + strlen(config_file) + 2);
-      sprintf(path, "%s/%s", home, config_file);
-      f = fopen(path, "r");
-      free(path);
+    if (f != NULL) {
+      path = "";
+      fclose(f);
     }
+    else{  
+      /*
+       * Dans le home
+       */
+      char* home = getenv("HOME");
+      if (home){
+	path = strdup(home);
+      }
+    } 
   }
 
-  if (f) {
-    /* read config file */
+  if(path != NULL){
+    char* file;
 
-    /* ====== VERY PRELIMINARY ================== */
-
-    char line[LINE_SIZE];
-    while (fgets(line, LINE_SIZE, f)) {
-      if (line[0] == '#')  /* comment */
-        continue;
-
-      if (strncmp(line, "delay", 5) == 0)
-        sscanf(line, "delay: %f", &options->delay);
-
-      if (strncmp(line, "cpu-threshold", 13) == 0)
-        sscanf(line, "cpu_threshold: %f", &options->cpu_threshold);
-
-      if (strncmp(line, "show-threads", 12) == 0)
-        options->show_threads = 1;
-
-      if (strncmp(line, "show-idle", 9) == 0)
-        options->idle = 1;
-
-      if (strncmp(line, "sticky", 6) == 0)
-        options->sticky = 1;
+    if(strcmp(path,"") != 0 ){
+       file = malloc(strlen(path)+strlen(config_file)+2);
+       sprintf(file,"%s/%s",path,config_file);
+       free(path);
     }
-    fclose(f);
+    else file = strdup(config_file);
+ 
+    int res = parse_doc(file, options );      
+    free(file);
+    return res;	
   }
-  return 0;
+  else return -1;
+  return -1;
 }

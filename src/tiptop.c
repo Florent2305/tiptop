@@ -906,7 +906,9 @@ int main(int argc, char* argv[])
   check();
 
   init_options(&options);
-  read_config(&options);
+  int q = read_config(&options);
+if(q == 0) printf("Fichier de configuration parsé\n");
+else printf("Fichier de configuration non trouvé\n");
 
   /* Parse command line arguments. */
   parse_command_line(argc, argv, &options, &list_scr, &screen_num);
