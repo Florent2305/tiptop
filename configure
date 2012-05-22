@@ -3224,6 +3224,53 @@ else
 fi
 
 
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for xmlParseFile in -lxml2" >&5
+$as_echo_n "checking for xmlParseFile in -lxml2... " >&6; }
+if ${ac_cv_lib_xml2_xmlParseFile+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lxml2  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char xmlParseFile ();
+int
+main ()
+{
+return xmlParseFile ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_xml2_xmlParseFile=yes
+else
+  ac_cv_lib_xml2_xmlParseFile=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_xml2_xmlParseFile" >&5
+$as_echo "$ac_cv_lib_xml2_xmlParseFile" >&6; }
+if test "x$ac_cv_lib_xml2_xmlParseFile" = xyes; then :
+  have_xml2=yes;
+
+$as_echo "#define HAVE_LIBXML2 1" >>confdefs.h
+
+                  LIBS="-lxml2 $LIBS"
+else
+  have_xml2=no
+fi
+
+
 # Checks for header files.
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
@@ -4234,6 +4281,16 @@ $as_echo "$as_me: WARNING:
   -----------------------------------------------------" >&2;}
 fi
 
+if test "x${have_xml2}" = xno; then
+   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING:
+  -----------------------------------------------------
+   Library xml2 not found. Building without support.
+  -----------------------------------------------------" >&5
+$as_echo "$as_me: WARNING:
+  -----------------------------------------------------
+   Library xml2 not found. Building without support.
+  -----------------------------------------------------" >&2;}
+fi
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure

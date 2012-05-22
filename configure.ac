@@ -15,6 +15,12 @@ AC_CHECK_LIB([curses], [initscr],
                   LIBS="-lcurses $LIBS"],
              [have_curses=no])
 
+AC_CHECK_LIB([xml2], [xmlParseFile],
+                  [have_xml2=yes;
+                  AC_DEFINE([HAVE_LIBXML2], [1], [Define to 1 if you have the `libxml2' library (-lxml2).])
+                  LIBS="-lxml2 $LIBS"],
+             [have_xml2=no])
+
 # Checks for header files.
 AC_CHECK_HEADERS([inttypes.h stdint.h stdlib.h string.h sys/ioctl.h sys/time.h unistd.h])
 
@@ -43,7 +49,7 @@ no_target=yes
 AC_MSG_CHECKING([hardware])
 hw=`uname -m`
 case $hw in
-  x86_64 | i386 ) :
+  x86_64 | i386 | i686 ) :
     AC_MSG_RESULT([x86])
     AC_DEFINE([TARGET_X86], [1], [Define to 1 if the target is x86.])
     no_target=no
@@ -79,6 +85,9 @@ AC_CHECK_FUNCS([gettimeofday memset select strdup strerror strstr uname])
 AC_CONFIG_FILES([Makefile
                  src/Makefile])
 
+AC_ARG_ENABLE(debug, [  --enable-debug          enable support for debug],
+              [AC_DEFINE([ENABLE_DEBUG], [1], [Define to 1 to enable support for debug.])])
+
 
 if test "x${have_curses}" = xno; then
    AC_MSG_WARN([
@@ -87,5 +96,11 @@ if test "x${have_curses}" = xno; then
   -----------------------------------------------------])
 fi
 
+if test "x${have_xml2}" = xno; then
+   AC_MSG_WARN([
+  -----------------------------------------------------
+   Library xml2 not found. Building without support.
+  -----------------------------------------------------])
+fi
 
 AC_OUTPUT

@@ -1,4 +1,20 @@
-#include <assert.h>
+/*
+ * This file is part of tiptop.
+ *
+ * Author: Antoine NAUDIN
+ *
+ */
+
+#ifndef _CONFIG_PARSER_H
+#define _CONFIG_PARSER_H
+
+#include "config.h"
+
+int parse_doc(char* file, struct option* op);
+
+
+#if HAVE_LIBXML2
+
 #include <libxml/parser.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,7 +54,10 @@ void view_update(xmlChar* header, xmlChar* format, xmlChar* desc, xmlChar* expr)
 void screen_update(xmlChar *name);
 
 
-int parse_doc(char* file, struct option* op);
 void parse_screen(xmlDocPtr doc, xmlNodePtr cur);
 void parse_counters(xmlDocPtr doc, xmlNodePtr cur);
 /* void parse_options(xmlDocPtr doc, xmlNodePtr cur); */
+
+#endif  /* HAVE_LIBXML2 */
+
+#endif  /* _CONFIG_PARSER_H */

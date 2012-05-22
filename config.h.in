@@ -15,6 +15,9 @@
 /* Define to 1 if you have the `curses' library (-lcurses). */
 #undef HAVE_LIBCURSES
 
+/* Define to 1 if you have the `libxml2' library (-lxml2). */
+#undef HAVE_LIBXML2
+
 /* Define to 1 if you have the <linux/perf_counter.h> header file. */
 #undef HAVE_LINUX_PERF_COUNTER_H
 

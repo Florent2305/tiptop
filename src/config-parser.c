@@ -1,11 +1,27 @@
+/*
+ * This file is part of tiptop.
+ *
+ * Author: Antoine NAUDIN
+ *
+ */
+
+#include "config.h"
+#include "options.h"
+
+#ifndef HAVE_LIBXML2
+int parse_doc(char* path, struct option* op)
+{
+  return -1;
+}
+
+#else
+
 #include <libxml/parser.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "options.h"
 
 #include "config-parser.h"
-
 
 struct option* opt=NULL;
 
@@ -91,3 +107,5 @@ int parse_doc(char* path, struct option* op)
   xmlFreeDoc(doc);
   return 0;
 }
+
+#endif
