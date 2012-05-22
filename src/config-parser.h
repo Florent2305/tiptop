@@ -1,8 +1,8 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <libxml/parser.h>
 #include <assert.h>
+#include <libxml/parser.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 
 typedef struct conf_screen conf_screen;
@@ -32,7 +32,7 @@ struct conf_screen {
   int nbV;
 };
 
-void option_update(xmlChar* name, xmlChar* val);
+/* void option_update(xmlChar* name, xmlChar* val); */
 void counter_update(xmlChar* alias, xmlChar* name, xmlChar* value);
 void view_update(xmlChar* header, xmlChar* format, xmlChar* desc, xmlChar* expr);
 void screen_update(xmlChar *name);
@@ -41,4 +41,4 @@ void screen_update(xmlChar *name);
 int parse_doc(char* file, struct option* op);
 void parse_screen(xmlDocPtr doc, xmlNodePtr cur);
 void parse_counters(xmlDocPtr doc, xmlNodePtr cur);
-void parse_options(xmlDocPtr doc, xmlNodePtr cur);
+/* void parse_options(xmlDocPtr doc, xmlNodePtr cur); */

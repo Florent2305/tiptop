@@ -32,6 +32,7 @@
 #include <unistd.h>
 
 #include "conf.h"
+#include "debug.h"
 #include "helpwin.h"
 #include "options.h"
 #include "pmc.h"
@@ -901,14 +902,18 @@ int main(int argc, char* argv[])
   struct process_list* proc_list;
   screen_t* screen = NULL;
   int screen_num = 0;
+  int q;
 
   /* Check OS to make sure we can run. */
   check();
 
   init_options(&options);
-  int q = read_config(&options);
-if(q == 0) printf("Fichier de configuration parsé\n");
-else printf("Fichier de configuration non trouvé\n");
+  q = read_config(&options);
+
+  if (q == 0)
+    debug_printf("Config file successfully parsed.\n");
+  else
+    debug_printf("Could not parse config file.\n");
 
   /* Parse command line arguments. */
   parse_command_line(argc, argv, &options, &list_scr, &screen_num);
