@@ -2,7 +2,7 @@
  * This file is part of tiptop.
  *
  * Author: Erven ROHOU
- * Copyright (c) 2011 Inria
+ * Copyright (c) 2011, 2012 Inria
  *
  * License: GNU General Public License version 2.
  *
@@ -57,17 +57,19 @@ int read_config(struct option* options)
     } 
   }
 
-  if(path != NULL){
+  if (path != NULL) {
     char* file;
+    int res;
 
-    if(strcmp(path,"") != 0 ){
+    if (strcmp(path, "") != 0) {
        file = malloc(strlen(path)+strlen(config_file)+2);
-       sprintf(file,"%s/%s",path,config_file);
+       sprintf(file,"%s/%s", path, config_file);
        free(path);
     }
-    else file = strdup(config_file);
+    else
+      file = strdup(config_file);
  
-    int res = parse_doc(file, options );      
+    res = parse_doc(file, options);      
     free(file);
     return res;	
   }
