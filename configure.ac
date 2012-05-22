@@ -18,7 +18,8 @@ AC_CHECK_LIB([curses], [initscr],
 AC_CHECK_LIB([xml2], [xmlParseFile],
                   [have_xml2=yes;
                   AC_DEFINE([HAVE_LIBXML2], [1], [Define to 1 if you have the `libxml2' library (-lxml2).])
-                  LIBS="-lxml2 $LIBS"],
+                  LIBS="-lxml2 $LIBS"
+                  CFLAGS="$CFLAGS -I/usr/include/libxml2"],
              [have_xml2=no])
 
 # Checks for header files.

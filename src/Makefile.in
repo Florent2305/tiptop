@@ -18,8 +18,8 @@ VPATH = @srcdir@
 
 
 CC =       @CC@
-LIBS =     @LIBS@ -lxml2
-CFLAGS =   @CFLAGS@ -I.. -I/usr/include/libxml2
+LIBS =     @LIBS@
+CFLAGS =   @CFLAGS@ -I..
 CPPFLAGS = @CPPFLAGS@
 INSTALL  = @INSTALL@
 
