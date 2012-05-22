@@ -329,7 +329,6 @@ void new_processes(struct process_list* const list,
           if (num_files < num_files_limit) {
             fd = sys_perf_counter_open(&events, tid, cpu, grp, flags);
             if (fd == -1) {
-              int err_code = errno;
               debug_printf("Could not attach counter to PID %d (%s): %s\n",
                            tid,
                            ptr->name,
