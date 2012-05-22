@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "config.h"
 #include "hash.h"
 
 #define NUM_HASH_KEYS 16  /* must be a power of 2 */
