@@ -2,7 +2,7 @@
  * This file is part of tiptop.
  *
  * Author: Erven ROHOU
- * Copyright (c) 2011 Inria
+ * Copyright (c) 2011, 2012 Inria
  *
  * License: GNU General Public License version 2.
  *
@@ -17,6 +17,7 @@
 
 /* global state */
 struct option {
+  char*  path_conf_file;
   int    spawn_pos;
   float  delay;
   float  cpu_threshold;  /* CPU activity below which a thread is considered inactive */
@@ -26,12 +27,14 @@ struct option {
   char*  watch_name;
   pid_t  watch_pid;
   int    watch_uid;
-  
+
   uid_t  euid;  /* effective user ID of tiptop */
   FILE*  out;
 
+  unsigned int    default_screen : 1;
   unsigned int    batch : 1;
   unsigned int    command_done : 1;
+  unsigned int    config_file : 1;
   unsigned int    debug : 1;
   unsigned int    help : 1;
   unsigned int    idle : 1;
@@ -47,5 +50,6 @@ struct option {
 
 void init_options(struct option* opt);
 void parse_command_line(int argc, char* argv[], struct option* const,int*,int*);
+void free_options(struct option* options);
 
 #endif  /* _OPTIONS_H */

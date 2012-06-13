@@ -2,7 +2,7 @@
  * This file is part of tiptop.
  *
  * Author: Erven ROHOU
- * Copyright (c) 2011 Inria
+ * Copyright (c) 2011, 2012 Inria
  *
  * License: GNU General Public License version 2.
  *
@@ -13,33 +13,15 @@
 
 #include <inttypes.h>
 
+#include "formula-parser.h"
 #include "options.h"
 
 typedef struct {
   uint32_t  type;
-  uint64_t  config;
+  uint64_t  config;  /* Constant defined in configuration */
+  char* alias;
+  int used;
 } counter_t;
-
-
-enum comput_type {
-  CPU_TOT,       /* %cpu */
-  CPU_SYS,       /* %cpu spent in system */
-  CPU_USER,      /* %cpu spent in user land */
-  PROC_ID,       /* the processor ID on which this thread was last seen */
-  COMPUT_RAW,
-  COMPUT_RAW_M,  /* RAW, print in millions */
-  COMPUT_ABS,    /* absolute number, from the beginning */
-  COMPUT_ABS_M,  /* ABS, in millions */
-  COMPUT_RATIO,
-  COMPUT_PERCENT
-};
-
-
-typedef struct {
-  enum comput_type type : 8;
-  int  param1 : 8;
-  int  param2 : 8;
-} col_comput_t;
 
 
 typedef struct {
@@ -47,7 +29,7 @@ typedef struct {
   char* format;  /* as in printf */
   char* empty_field;
   char* error_field;
-  col_comput_t data;
+  expression* expression;
   char* description;
 } column_t;
 
@@ -55,6 +37,7 @@ typedef struct {
 typedef struct {
   int     id;
   char*   name;
+  char*   desc;
   int        num_counters;
   int        num_alloc_counters;
   counter_t* counters;
@@ -64,19 +47,19 @@ typedef struct {
 } screen_t;
 
 
-screen_t* new_screen(const char* const);
-int add_counter(screen_t* const, int32_t type, int64_t config);
-int add_column_cpu(screen_t* const, char*, char*);
-int add_column_cpu_s(screen_t* const, char*, char*);
-int add_column_cpu_u(screen_t* const, char*, char*);
-int add_column_proc_id(screen_t* const, char*, char*);
-int add_column_raw(screen_t* const, char*, char*, int, char*);
-int add_column_raw_m(screen_t* const, char*, char*, int, char*);
-int add_column_abs(screen_t* const, char*, char*, int, char*);
-int add_column_abs_m(screen_t* const, char*, char*, int, char*);
-int add_column_ratio(screen_t* const, char*, char*, int, int, char*);
-int add_column_percent(screen_t* const, char*, char*, int, int, char*);
+char* get_counter_config_name(uint64_t conf);
+char* get_counter_type_name(uint32_t type);
 
+screen_t* new_screen(const char* const name, const char* const desc);
+int add_counter(screen_t* const s, char* alias, char* config, char* type);
+
+int add_counter_by_value(screen_t* const s, char* alias,
+                         uint64_t config_val, uint32_t type_val);
+
+int add_column(screen_t* const s, char* header, char* format, char* desc,
+               char* expr);
+
+void tamp_counters();
 
 void init_screen();
 screen_t* get_screen(int);
@@ -92,5 +75,7 @@ void delete_screen(screen_t* s);
 void delete_screens();
 
 void screens_hook();  /* to be implemented by target specific files */
+
+int export_screens(struct option* o);
 
 #endif  /* _SCREEN_H */

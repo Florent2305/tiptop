@@ -25,7 +25,7 @@ INSTALL  = @INSTALL@
 
 OBJS=tiptop.o pmc.o process.o requisite.o conf.o screen.o \
      debug.o version.o helpwin.o options.o hash.o spawn.o \
-     screens-intel.o config-parser.o
+     xml-parser.o formula-parser.o target.o write-config.o utils-expression.o
 
 
 all: tiptop
@@ -62,7 +62,7 @@ clean:
 
 
 depend:
-	makedepend -Y -DDEBUG *.c
+	makedepend -Y *.c
 
 
 .PHONY: all clean depend install uninstall
@@ -79,8 +79,10 @@ pmc.o: pmc.h
 process.o: hash.h process.h screen.h options.h pmc.h spawn.h
 requisite.o: pmc.h requisite.h
 screen.o: options.h screen.h
-screens-intel.o: screen.h options.h screens-intel.h
 spawn.o: options.h process.h screen.h
 tiptop.o: conf.h options.h helpwin.h screen.h pmc.h process.h requisite.h
 tiptop.o: spawn.h
 version.o: version.h
+utils_expression.o: utils_expression.h process.h screen.h
+xml-parser.o: xml-parser.h screen.h
+formula-parser.o: formula-parser.h 

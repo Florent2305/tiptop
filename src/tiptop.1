@@ -54,7 +54,7 @@ interactive command is accepted. \*(Me will run forever, or until the
 number of iterations specified by \fB-n\fR.
 
 .TP 4
-\-\fBc\fR 
+\-\fBc\fR
 display the command line of the task instead of its name.
 
 .TP 4
@@ -151,6 +151,9 @@ reported. In live-mode, watched tasks are shown in a different color
 (when supported). In batch-mode, an ASCII arrow points to the watched
 tasks.
 
+.TP 4
+\-\fBW\fR VALUE
+Directory where the configuration file is located.
 
 .SH INTERACTIVE COMMANDS
 In live-mode, \*(Me accepts single-key commands.
@@ -232,16 +235,152 @@ Used to track a particular task. The user is asked for a PID or
 string. In case a string is entered, all tasks whose name or command
 line contain the string are highlighted.
 
+.TP 4
+\fBW\fR
+Writes a configuration file for the current state in the current
+directory.
 
 
 .SH FILES
 During startup, \*(ME attemps to read a configuration file. The file
 must be named \fB.tiptoprc\fR. This file is first searched in the
-directory defined by the environment variable \fBTIPTOP\fR if it
-exists, then in the current directory, finally in the user's home.
+current directory, then in the directory defined by the environment
+variable \fBTIPTOP\fR if it exists, finally in the user's home.
 
 .SS Syntax
-TBD
+The file is structured in XML. The syntax is as following.
+
+.IP "Root of tree"
+The root of the xml tree is tiptop.
+<tiptop> ... </tiptop>
+
+.IP "Options"
+Options can be specified on an <options> block.
+
+<options>
+  <option name="option1" value="value_option1"/>
+  <option name="option2" value="value_option2"/>
+       ...
+</options>
+
+Recognized options listed below, with their corresponding command line
+option.
+
+batch (-b), cpu_threshold (--cpu-min), debug (-g), delay (-d), idle
+(-i), max_iter (-n), show_cmdline (-c), show_epoch (--epoch),
+show_kernel (-K), show_timestamp (--timestamp), show_threads (-H),
+show_user (-U), watch_name (-w), sticky (--sticky), watch_uid (-w)
+
+.IP "Screens"
+Screens are defined inside a <screen> block. A screen is made of
+counters and columns. A screen has a name and an optional description.
+
+<screen name="my_screen" desc="what this screen is about">
+...
+</screen>
+
+Counters must provide an alias (used for further reference) and a
+configuration. The configuration is either a predefined value, or the
+actual value that must be provided to the perf_even_open system call
+(typically found in vendor architecture manuals).
+
+Predefined values are: CPU_CYCLES, INSTRUCTIONS, CACHE_REFERENCES,
+CACHE_MISSES, BRANCH_INSTRUCTIONS, BRANCH_MISSES, and BUS_CYCLES.
+
+.nf
+<counter alias="instr" config="INSTRUCTIONS" />
+.fi
+
+For non-predefined configs, a type must be provided. Currently, only
+RAW and HW_CACHE are supported.
+
+Optionally, a counter may be restricted to a specific architecture
+(such as "x86"), and a model. The definition of the model is
+architecture-dependent. For x86, it is defined as
+DisplayFamily_DisplayModel as computed by the instruction CPUID.  A
+counter for issued micro-ops on Sandy Bridge may look like the
+following:
+
+.nf
+<counter alias="uops_issued" config="0x010e"
+         type="RAW" arch="x86" model="06_2a" />
+.fi
+
+See also /usr/include/linux/perf_events.h for more on config and type.
+
+A column defines its header, the printf-like format for values, and an
+expression. Expressions evaluate as double precision. A description is
+optional.
+
+.nf
+<counter alias="instr" config="INSTRUCTIONS" />
+<counter alias="cycle" config="CPU_CYCLES" />
+<view header=" IPC" format="%4.2f"
+      desc="Total instructions per cycle"
+      expr="instr/cycle"/>
+<view header=" ipc" format="%4.2f"
+      desc="Total instructions per cycle"
+      expr="instr/cycle" />
+.fi
+
+The syntax of expressions supports basic arithmetic (+ - * /
+parentheses and constants). The special notation "delta(counter)"
+evaluates as the variation of the counter between refreshes.
+Expressions can also refer to predefined variables such as CPU_TOT
+(CPU usage), CPU_SYS (system CPU usage), CPU_USER (user CPU usage),
+PROC_ID (processor where the process was last seen).
+
+.nf
+<view header=" ipc" format="%4.2f"
+      desc="Instantaneaous IPC"
+      expr="delta(instr) / delta(cycle)" />
+.fi
+
+
+.IP "Sample config file"
+
+.nf
+<tiptop>
+
+  <options>
+    <option name="delay" value="2.0" />
+    <option name="stick" value="1" />
+  </options>
+
+  <screen name="example" desc="Sample config file">
+    <counter alias="cycle" config="CPU_CYCLES"  />
+    <counter alias="instr" config="INSTRUCTIONS" />
+    <counter alias="miss" config="CACHE_MISSES" />
+    <counter alias="br_miss" config="BRANCH_MISSES" />
+
+    <!-- Sandy Bridge only -->
+    <counter alias="uops_issued" config="0x010e"
+             type="RAW" arch="x86" model="06_2a" />
+
+    <view header=" %CPU" format="%5.1f" desc="CPU usage" expr="CPU_TOT" />
+    <view header="   P" format="  %2.0f"
+          desc="Processor where last seen" expr="PROC_ID" />
+    <view header="  Mcycle" format="%8.2f"
+          desc="Cycles (millions)"
+          expr="delta(cycle) / 1000000" />
+    <view header="  Minstr" format="%8.2f"
+          desc="Instructions (millions)"
+          expr="delta(instr) / 1000000" />
+    <view header=" IPC" format="%4.2f"
+          desc="Executed instructions per cycle"
+          expr="delta(instr) / delta(cycle)" />
+    <view header=" %MISS" format="%6.2f"
+          desc="Cache miss per instructions (in %)"
+          expr="100 * delta(miss) / delta(instr)" />
+    <view header=" %BMIS" format="%6.2f"
+          desc="Branch misprediction per instruction (in %)"
+          expr="100 * delta(br_miss) / delta(instr)" />
+    <view header="uops/inst" format="     %4.1f"
+          desc="Number of issued uops per instruction"
+          expr="delta(uops_issued) / delta(instr)" />
+  </screen>
+</tiptop>
+.fi
 
 .SH BUGS
 Send bug reports to:

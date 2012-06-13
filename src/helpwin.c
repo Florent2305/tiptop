@@ -54,9 +54,8 @@ void show_help_win(WINDOW* win, screen_t* screen)
   mvwprintw(win, 0, 10, " Help (h to close)");
 
   /* target-dependent message */
-#if !defined(NOTARGET)
   target_dep_string(msg, sizeof(msg));
-#endif
+
   if (has_colors())
     wattron(win, COLOR_PAIR(1));
   mvwprintw(win, 1, 1, "%s", msg);
@@ -74,6 +73,7 @@ void show_help_win(WINDOW* win, screen_t* screen)
   }
   /* generate sprintf format for headers */
   snprintf(fmt, sizeof(fmt) - 1, "%%-%ds: %%s", header_width);
+
   for(i = 0; i < n; i++) {
     /* strip leading spaces */
     char* ptr = screen->columns[i].header;

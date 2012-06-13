@@ -170,7 +170,7 @@ void target_dep_string(char* buf, int size)
 
 screen_t* intel_fp()
 {
-  int cycle, insn, x87, sp, dp, assist, assist_cnt;
+  int assist_cnt;
   screen_t* s;
 
   enum tables tab = table();
@@ -178,35 +178,32 @@ screen_t* intel_fp()
   if ((tab != A_2) && (tab != A_4) && (tab != A_6))
     return NULL;
 
-  s = new_screen("floating point");
+  s = new_screen("floating point","");
 
   /* setup counters */
-  cycle = add_counter(s, PERF_TYPE_HARDWARE, PERF_COUNT_HW_CPU_CYCLES);
-  insn =  add_counter(s, PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS);
-  x87 =   add_counter(s, PERF_TYPE_RAW, FP_COMP_OPS_EXE_X87);
-  sp =    add_counter(s, PERF_TYPE_RAW, FP_COMP_OPS_EXE_SSE_SINGLE_PRECISION);
-  dp =    add_counter(s, PERF_TYPE_RAW, FP_COMP_OPS_EXE_SSE_DOUBLE_PRECISION);
+  add_counter_by_value(s, "CYCLE", (uint64_t) PERF_COUNT_HW_CPU_CYCLES, (uint32_t) PERF_TYPE_HARDWARE);
+  add_counter_by_value(s, "INSN", (uint64_t) PERF_COUNT_HW_INSTRUCTIONS, (uint32_t) PERF_TYPE_HARDWARE);
+  add_counter_by_value(s, "X87", (uint64_t) FP_COMP_OPS_EXE_X87, (uint32_t) PERF_TYPE_RAW);
+  add_counter_by_value(s, "SP",  (uint64_t) FP_COMP_OPS_EXE_SSE_SINGLE_PRECISION, (uint32_t) PERF_TYPE_RAW);
+  add_counter_by_value(s, "DP",  (uint64_t) FP_COMP_OPS_EXE_SSE_DOUBLE_PRECISION, (uint32_t) PERF_TYPE_RAW);
 
   if (tab == A_2)
     assist_cnt = FP_ASSIST_1;
   else
     assist_cnt = FP_ASSIST_2;
-  assist =  add_counter(s, PERF_TYPE_RAW, assist_cnt);
+
+  add_counter_by_value(s, "Assist", (uint64_t) assist_cnt, (uint32_t) PERF_TYPE_RAW);
 
   /* add columns */
-  add_column_cpu(s, " %CPU", "%5.1f");
-  add_column_raw_m(s, "  Mcycle", "%8.2f", cycle, "Cycles (millions)");
-  add_column_raw_m(s, "  Minstr", "%8.2f", insn,  "Instructions (millions)");
-  add_column_ratio(s, " IPC", "%4.2f", insn, cycle,
-                   "Executed instructions per cycle");
-  add_column_percent(s, " %x87", "%5.1f", x87, insn,
-                     "FP computational uops (FP_COMP_OPS_EXE.X87) per insn");
-  add_column_percent(s, "%SSES", "%5.1f", sp, insn,
-                     "SSE* FP single precision uops per insn");
-  add_column_percent(s, "%SSED", "%5.1f", dp, insn,
-                     "SSE* FP double precision uops per insn");
-  add_column_percent(s, "%assist", "  %5.1f", assist, insn,
-                     "FP op that required micro-code assist per instruction");
+  add_column(s, " %CPU"    , "%5.1f"  ,  NULL, "CPU_TOT");
+  add_column(s, "  Mcycle", "%8.2f", "Cycles (millions)"  , "delta(CYCLE) / 1000000");
+  add_column(s, "  Minstr", "%8.2f", "Instructions (millions)", "delta(INSN) / 1000000");
+  add_column(s, " IPC",     "%4.2f", "Executed instructions per cycle", "delta(INSN)/delta(CYCLE)");
+  add_column(s," %x87", "%5.1f", "FP computational uops (FP_COMP_OPS_EXE.X87) per insn", "100*delta(X87)/delta(INSN)");
+  add_column(s, "%SSES", "%5.1f", "SSE* FP single precision uops per insn", "100*delta(SP)/delta(INSN)");
+
+  add_column(s, "%SSED", "%5.1f", "SSE* FP double precision uops per insn", "100*delta(DP)/delta(INSN)");
+  add_column(s, "%assist", "  %5.1f", "FP op that required micro-code assist per instruction", "100*delta(Assist)/delta(INSN)");
 
   return s;
 }
@@ -214,35 +211,32 @@ screen_t* intel_fp()
 
 screen_t* intel_imix()
 {
-  int cycle, insn, ld, st, x87, br;
   screen_t* s;
   enum tables tab = table();
 
   if ((tab != A_4) && (tab != A_6))
     return NULL;
 
-  s = new_screen("instruction mix");
+  s = new_screen("instruction mix","");
 
   /* setup counters */
-  cycle = add_counter(s, PERF_TYPE_HARDWARE, PERF_COUNT_HW_CPU_CYCLES);
-  insn =  add_counter(s, PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS);
+  add_counter_by_value(s, "CYCLE", (uint64_t)PERF_COUNT_HW_CPU_CYCLES, (uint32_t) PERF_TYPE_HARDWARE);
+  add_counter_by_value(s, "INSN", (uint64_t) PERF_COUNT_HW_INSTRUCTIONS, (uint32_t)PERF_TYPE_HARDWARE);
 
-  ld =  add_counter(s, PERF_TYPE_RAW, MEM_INST_RETIRED_LOADS);
-  st =  add_counter(s, PERF_TYPE_RAW, MEM_INST_RETIRED_STORES);
-  x87 = add_counter(s, PERF_TYPE_RAW, INST_RETIRED_X87);
-  br =  add_counter(s, PERF_TYPE_RAW, BR_INST_RETIRED_ALL_BRANCHES);
+  add_counter_by_value(s, "LD",  (uint64_t)MEM_INST_RETIRED_LOADS, (uint32_t) PERF_TYPE_RAW);
+  add_counter_by_value(s, "ST",  (uint64_t)MEM_INST_RETIRED_STORES,(uint32_t) PERF_TYPE_RAW);
+  add_counter_by_value(s, "X87", (uint64_t)INST_RETIRED_X87, (uint32_t)PERF_TYPE_RAW);
+  add_counter_by_value(s, "BR",  (uint64_t)BR_INST_RETIRED_ALL_BRANCHES,(uint32_t) PERF_TYPE_RAW);
 
   /* add columns */
-  add_column_cpu(s, " %CPU", "%5.1f");
-  add_column_raw_m(s, "  Mcycle", "%8.2f", cycle, "Cycles (millions)");
-  add_column_raw_m(s, "  Minstr", "%8.2f", insn, "Instructions (millions)");
-  add_column_ratio(s, " IPC", "%4.2f", insn, cycle, 
-                   "Executed instructions per cycle");
-  add_column_percent(s, "%LD/I", " %4.1f", ld, insn, "Fraction of loads");
-  add_column_percent(s, "%ST/I", " %4.1f", st, insn, "Fraction of stores");
-  add_column_percent(s, "%FP/I", " %4.1f", x87, insn, "Fraction of x87");
-  add_column_percent(s, "%BR/I", " %4.1f", br, insn,
-                     "Fraction of branch instructions");
+  add_column(s, " %CPU"    , "%5.1f"  ,  NULL, "CPU_TOT");
+  add_column(s, "  Mcycle", "%8.2f", "Cycles (millions)"  , "delta(CYCLE) / 1000000");
+  add_column(s, "  Minstr", "%8.2f", "Instructions (millions)", "delta(INSN) / 1000000");
+  add_column(s, " IPC",     "%4.2f", "Executed instructions per cycle", "delta(INSN)/delta(CYCLE)");
+  add_column(s, "%LD/I", " %4.1f", "Fraction of loads","100*delta(LD)/delta(INSN)");
+  add_column(s, "%ST/I", " %4.1f", "Fraction of stores","100*delta(ST)/delta(INSN)");
+  add_column(s, "%FP/I", " %4.1f", "Fraction of x87","100*delta(X87)/delta(INSN)");
+  add_column(s, "%BR/I", " %4.1f", "Fraction of branch instructions","100*delta(BR)/delta(INSN)");
 
   return s;
 }
@@ -250,58 +244,48 @@ screen_t* intel_imix()
 
 screen_t* intel_mem()
 {
-  int insn, l1miss_i, l2miss_d, l2miss_i, l3miss;
   screen_t* s;
   enum tables tab = table();
 
   if ((tab != A_2) && (tab != A_4) && (tab != A_6))
     return NULL;
 
-  s = new_screen("memory hierarchy");
+  s = new_screen("memory hierarchy","");
 
   /* setup counters */
-  insn =  add_counter(s, PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS);
-
+  add_counter_by_value(s, "INSN", (uint64_t)PERF_COUNT_HW_INSTRUCTIONS, (uint32_t)PERF_TYPE_HARDWARE);
   /* L1I accesses */
   if (tab == A_2)
-    l1miss_i = add_counter(s, PERF_TYPE_RAW, ICACHE_MISSES_1);
+    add_counter_by_value(s, "L1MissI", (uint64_t) ICACHE_MISSES_1, (uint32_t)PERF_TYPE_RAW);
   else
-    l1miss_i = add_counter(s, PERF_TYPE_RAW, L1I_MISSES);
+    add_counter_by_value(s, "L1MissI", (uint64_t) L1I_MISSES, (uint32_t) PERF_TYPE_RAW);
 
   /* L2 loads */
   if (tab == A_2) {
-    l2miss_d = -1; /* no support for L2 data miss in Table A-2 */
-    l2miss_i = add_counter(s, PERF_TYPE_RAW, L2_RQSTS_CODE_RD_MISS);
+    /* no support for L2 data miss in Table A-2 */
+    add_counter_by_value(s, "L2MissI", (uint64_t) L2_RQSTS_CODE_RD_MISS,(uint32_t)PERF_TYPE_RAW);
   }
   else {
-    l2miss_d = add_counter(s, PERF_TYPE_RAW, L2_RQSTS_LD_MISS);
-    l2miss_i = add_counter(s, PERF_TYPE_RAW, L2_RQSTS_IFETCH_MISS);
+    add_counter_by_value(s, "L2MissD", (uint64_t)L2_RQSTS_LD_MISS,  (uint32_t)PERF_TYPE_RAW);
+    add_counter_by_value(s, "L2MissI", (uint64_t)L2_RQSTS_IFETCH_MISS,  (uint32_t)PERF_TYPE_RAW);
   }
 
-  l3miss = add_counter(s, PERF_TYPE_HARDWARE, PERF_COUNT_HW_CACHE_MISSES);
+  add_counter_by_value(s, "L3Miss", (uint64_t)PERF_COUNT_HW_CACHE_MISSES, (uint32_t) PERF_TYPE_HARDWARE);
 
   /* add columns */
-  add_column_cpu(s, " %CPU", "%5.1f");
-  add_column_raw(s, " miss L1I", "%9" PRIu64, l1miss_i,
-                 "Instruction fetches that miss in L1I (L1I.MISSES)");
-  add_column_percent(s, " L1I", "%4.1f", l1miss_i, insn,
-                     "   same, per instruction");
-
-  add_column_raw(s, " miss L2I", "%9" PRIu64, l2miss_i,
-                 "Insn fetches that miss L2 cache (L2_RQSTS.IFETCH_MISS)");
-  add_column_percent(s, " L2I", "%4.1f", l2miss_i, insn,
-                     "   same, per instruction");
+  add_column(s, " %CPU"    , "%5.2f"  ,  NULL, "CPU_TOT");
+  add_column(s, " L1iMiss", "   %5.1" PRIu64, "Instruction fetches that miss in L1I (L1I.MISSES) In Million","delta(L1MissI)");
+  add_column(s, "   L1i", "  %4.1f", "Same L1iMiss per instruction", "100*delta(L1MissI)/delta(INSN)");
+  add_column(s, " L2iMiss", " %7" PRIu64,"Insn fetches that miss L2 cache (L2_RQSTS.IFETCH_MISS) In Million", "delta(L2MissI)");
+  add_column(s, "   L2i", "  %4.1f", "same L2iMiss per instruction", "100*delta(L2MissI)/delta(INSN)");
 
   if (tab != A_2) {
-    add_column_raw(s, " miss L2D", "%9" PRIu64, l2miss_d,
-                   "Loads that miss L2 cache");
-    add_column_percent(s, " L2D", "%4.1f", l2miss_d, insn,
-                       "   same, per instruction");
+    add_column(s, "  L2dMiss", "%9" PRIu64, "Loads that miss L2 cache", "delta(L2MissD)");
+    add_column(s, "  L2d", " %4.1f", "   same L2dMiss, per instruction","100*delta(L2MissD)/delta(INSN)");
   }
 
-  add_column_raw(s, "   miss L3", " %9" PRIu64, l3miss, "LLC Misses");
-  add_column_percent(s, "   L3", " %4.1f", l3miss, insn,
-                     "   same, per instruction");
+  add_column(s, "    L3Miss", " %9" PRIu64, "LLC Misses", "delta(L3Miss)");
+  add_column(s, "   L3", " %4.1f","same L3Miss, per instruction","100*delta(L3Miss)/delta(INSN)");
 
   return s;
 }
@@ -309,7 +293,6 @@ screen_t* intel_mem()
 
 screen_t* intel_branch()
 {
-  int insn, br, misp;
   screen_t* s;
   enum tables tab = table();
 
@@ -317,19 +300,18 @@ screen_t* intel_branch()
       (tab != A_10) && (tab != A_11) && (tab != A_12) && (tab != A_22))
     return NULL;
 
-  s = new_screen("branch instructions");
+  s = new_screen("branch instructions","");
 
   /* setup counters */
-  insn = add_counter(s, PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS);
-  br =   add_counter(s, PERF_TYPE_RAW,  BR_INST_RETIRED_ALL_BRANCHES);
-  misp = add_counter(s, PERF_TYPE_HARDWARE, PERF_COUNT_HW_BRANCH_MISSES);
+
+  add_counter_by_value(s, "INSN", (uint64_t) PERF_COUNT_HW_INSTRUCTIONS, PERF_TYPE_HARDWARE);
+  add_counter_by_value(s, "MISS", (uint64_t) PERF_COUNT_HW_CACHE_MISSES, PERF_TYPE_HARDWARE);
+  add_counter_by_value(s, "BR", (uint64_t) PERF_COUNT_HW_BRANCH_MISSES, PERF_TYPE_HARDWARE);
 
   /* add columns */
-  add_column_cpu(s, " %CPU", "%5.1f");
-  add_column_percent(s, " %MISP", " %5.2f", misp, br,
-                     "Mispredictions per 100 branch instructions");
-  add_column_percent(s, " %MIS/I", "  %5.2f", misp, insn,
-                     "Mispredictions per 100 instructions");
+  add_column(s, " %CPU"    , "%5.1f"  ,  NULL, "CPU_TOT");
+  add_column(s, "  %MISP"  , "  %5.2f", "Mispredictions per 100 branch instructions", "100*delta(MISS)/delta(BR)");
+  add_column(s, "  %MIS/I ", "  %5.2f", "Mispredictions per 100 branch instructions", "100*delta(MISS)/delta(INSN)");
 
   return s;
 }
@@ -337,53 +319,48 @@ screen_t* intel_branch()
 
 screen_t* intel_uop()
 {
-  int cycle, insn, uop, fused, macrof;
+  int fused, macrof;
   screen_t* s = NULL;
   enum tables tab = table();
 
   if ((tab != A_2) && (tab != A_4) && (tab != A_6) && (tab != A_10))
     return NULL;
 
-  s = new_screen("micro operations");
+  s = new_screen("micro operations","");
 
   /* setup counters */
-  cycle =  add_counter(s, PERF_TYPE_HARDWARE, PERF_COUNT_HW_CPU_CYCLES);
-  insn =   add_counter(s, PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS);
+  add_counter_by_value(s, "CYCLE", (uint64_t)PERF_COUNT_HW_CPU_CYCLES, PERF_TYPE_HARDWARE);
+  add_counter_by_value(s, "INSN", (uint64_t) PERF_COUNT_HW_INSTRUCTIONS, PERF_TYPE_HARDWARE);
 
   if (tab == A_10)
-    uop =    add_counter(s, PERF_TYPE_RAW, UOPS_RETIRED_ALL_2);
+    add_counter_by_value(s, "UOP",(uint64_t) UOPS_RETIRED_ALL_2, (uint32_t)PERF_TYPE_RAW);
   else
-    uop =    add_counter(s, PERF_TYPE_RAW, UOPS_RETIRED_ALL_1);
+    add_counter_by_value(s, "UOP", (uint64_t)UOPS_RETIRED_ALL_1, (uint32_t)PERF_TYPE_RAW);
 
   if (tab == A_10)
-    fused =  add_counter(s, PERF_TYPE_RAW, UOPS_RETIRED_FUSED);
+    fused =  add_counter_by_value(s, "FUSE", (uint64_t) UOPS_RETIRED_FUSED,(uint32_t) PERF_TYPE_RAW);
   else
     fused = -1;
 
   if ((tab == A_4) || (tab == A_6))
-    macrof = add_counter(s, PERF_TYPE_RAW, UOPS_RETIRED_MACRO_FUSED);
+    macrof = add_counter_by_value(s, "MACROF", (uint64_t)UOPS_RETIRED_MACRO_FUSED, (uint32_t)PERF_TYPE_RAW);
   else
     macrof = -1;
 
   /* add columns */
-  add_column_cpu(s, " %CPU", "%5.1f");
-  add_column_cpu_s(s, " %SYS", "%5.1f");
-  add_column_raw_m(s, "  Mcycle", "%8.2f", cycle, "Cycles (millions)");
-  add_column_raw_m(s, "   Muops", "%8.2f", uop, "Retired uops (millions)");
-  add_column_raw_m(s, "  Minstr", "%8.2f", insn,
-                   "Retired instructions (millions)");
+  add_column(s, " %CPU",    "%5.1f", NULL, "CPU_TOT");
+  add_column(s, " %SYS",    "%5.1f", NULL, "CPU_SYS");
+  add_column(s, "  Mcycle", "%8.2f", "Cycles (millions)"  , "delta(CYCLE) / 1000000");
+  add_column(s, "  Minstr", "%8.2f", "Instructions (millions)", "delta(INSN) / 1000000");
+  add_column(s, " IPC",     "%4.2f", "Executed instructions per cycle", "delta(INSN)/delta(CYCLE)");
+  add_column(s, "   Muops", "%8.2f", "Retired uops (millions)", "delta(UOP)/1000000");
 
-  add_column_ratio(s, "  IPC", " %4.2f", insn, cycle,
-                   "Retired instructions per cycle");
-  add_column_ratio(s, "  uPI", " %4.2f", uop, insn,
-                   "Retired uops per instruction");
+  add_column(s, "  uPI", " %4.2f", "Retired uops per instruction", "delta(UOP)/delta(INSN)");
   if (fused != -1)
-    add_column_ratio(s, " fused", "  %4.2f", fused, insn,
-                     "Fused uops (UOPS_RETIRED.FUSED) per instruction");
+    add_column(s, " fused", "  %4.2f", "Fused uops (UOPS_RETIRED.FUSED) per instruction",  "delta(FUSE)/delta(INSN)");
 
   if (macrof != -1)
-    add_column_ratio(s, " macrof", "   %4.2f", macrof, insn,
-                 "Macro fused uops (UOPS_RETIRED.MACRO_FUSED) per instruction");
+    add_column(s, " macrof", "   %4.2f", "Macro fused uops (UOPS_RETIRED.MACRO_FUSED) per instruction", "delta(MACROF)/delta(INSN)");
 
   return s;
 }

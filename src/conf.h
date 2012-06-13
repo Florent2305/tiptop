@@ -2,7 +2,7 @@
  * This file is part of tiptop.
  *
  * Author: Erven ROHOU
- * Copyright (c) 2011 Inria
+ * Copyright (c) 2011, 2012 Inria
  *
  * License: GNU General Public License version 2.
  *
@@ -12,10 +12,7 @@
 #define _CONF_H
 
 #include "options.h"
-#include "config-parser.h"
 
-
-
-int read_config(struct option*);
+int read_config(struct option* options);
 
 #endif  /* _CONF_H */

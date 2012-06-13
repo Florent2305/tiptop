@@ -40,7 +40,7 @@
 #include "requisite.h"
 #include "screen.h"
 #include "spawn.h"
-
+#include "utils-expression.h"
 
 struct option options;
 
@@ -54,7 +54,7 @@ static int active_col = 0;
 static enum sorting_order {
   DESCENDING,
   ASCENDING
-}  sorting_order = DESCENDING;
+} sorting_order = DESCENDING;
 
 static int (*sorting_fun)(const void *, const void *);
 
@@ -95,6 +95,8 @@ static int cmp_int(const void* p1, const void* p2)
     return -res;
 }
 
+#if 0
+/* unused for now */
 static int cmp_long(const void* p1, const void* p2)
 {
   struct process* proc1 = *(struct process**)p1;
@@ -111,6 +113,7 @@ static int cmp_long(const void* p1, const void* p2)
   else
     return -res;
 }
+#endif
 
 static int cmp_string(const void* p1, const void* p2)
 {
@@ -147,15 +150,12 @@ static void build_rows(struct process_list* proc_list, screen_t* s, int width)
      column "num_columns" is the task name. */
 
   /* select appropriate sorting function */
-  if (active_col == s->num_columns)
+  if (active_col == s->num_columns)  /* proc name or command */
     sorting_fun = cmp_string;
-  else if ((active_col == -1) || (s->columns[active_col].data.type == PROC_ID))
+  else if ((active_col == -1))  /* PID */
     sorting_fun = cmp_int;
-  else if (s->columns[active_col].data.type == COMPUT_ABS)
-    sorting_fun = cmp_long;
   else
-    sorting_fun = cmp_double;
-
+    sorting_fun = cmp_double;  /* (computed) expression */
 
   /* For all processes/threads */
   for(p = proc_list->processes; p; p = p->next) {
@@ -202,6 +202,7 @@ static void build_rows(struct process_list* proc_list, screen_t* s, int width)
     remaining -= written;
 
     for(col = 0; col < s->num_columns; col++) {
+      double res = 0;
       int error = 0;  /* used to track error situations requiring an
                          error_field (code 1) or an empty_field (code 2) */
       const char* const fmt = s->columns[col].format;
@@ -210,137 +211,20 @@ static void build_rows(struct process_list* proc_list, screen_t* s, int width)
       if (active_col == col)
         p->u.d = 0.0;
 
-      switch(s->columns[col].data.type) {
-      case CPU_TOT:
-        written = snprintf(row, remaining, fmt, p->cpu_percent);
-        if (active_col == col)
-          p->u.d = p->cpu_percent;
-        break;
-
-      case CPU_SYS:
-        written = snprintf(row, remaining, fmt, p->cpu_percent_s);
-        if (active_col == col)
-          p->u.d = p->cpu_percent_s;
-        break;
-
-      case CPU_USER:
-        written = snprintf(row, remaining, fmt, p->cpu_percent_u);
-        if (active_col == col)
-          p->u.d = p->cpu_percent_u;
-        break;
-
-      case PROC_ID:
-        if (p->proc_id != -1) {
-          written = snprintf(row, remaining, fmt, p->proc_id);
-          if (active_col == col) {
-            p->u.i = p->proc_id;
-          }
-        }
-        else
-          error = 1;
-        break;
-
-      case COMPUT_RAW: {
-        int counter = s->columns[col].data.param1;
-        if (p->values[counter] == 0xffffffff)
-          error = 1;
-        else {
-          uint64_t delta = p->values[counter] - p->prev_values[counter];
-          written = snprintf(row, remaining, fmt, delta);
-          if (active_col == col)
-            p->u.d = delta;
-        }
-      }
-        break;
-
-      case COMPUT_RAW_M: {
-        int counter = s->columns[col].data.param1;
-        if (p->values[counter] == 0xffffffff)
-          error = 1;
-        else {
-          uint64_t delta = p->values[counter] - p->prev_values[counter];
-          written = snprintf(row, remaining, fmt, delta / 1000000.0);
-          if (active_col == col)
-            p->u.d = delta;
-        }
-      }
-        break;
-
-      case COMPUT_ABS: {
-        int counter = s->columns[col].data.param1;
-        if (p->values[counter] == 0xffffffff)
-          error = 1;
-        else {
-          written = snprintf(row, remaining, fmt, p->values[counter]);
-          if (active_col == col)
-            p->u.l = p->values[counter];
-        }
-      }
-        break;
-
-      case COMPUT_ABS_M: {
-        int counter = s->columns[col].data.param1;
-        if (p->values[counter] == 0xffffffff)
-          error = 1;
-        else {
-          written = snprintf(row, remaining,fmt,p->values[counter]/1000000.0);
-          if (active_col == col)
-            p->u.d = p->values[counter]/1000000.0;
-        }
-      }
-        break;
-
-      case COMPUT_RATIO: {
-        int counter1 = s->columns[col].data.param1;
-        int counter2 = s->columns[col].data.param2;
-
-        if ((p->values[counter1] == 0xffffffff) ||
-            (p->values[counter2] == 0xffffffff))
-          error = 1;
-        else {
-          uint64_t delta1 = p->values[counter1] - p->prev_values[counter1];
-          uint64_t delta2 = p->values[counter2] - p->prev_values[counter2];
-          if (delta2 != 0) {
-            written = snprintf(row, remaining, fmt, 1.0*delta1/delta2);
-            if (active_col == col)
-              p->u.d = 1.0*delta1/delta2;
-          }
-          else
-            error = 2;
-        }
-      }
-        break;
-
-      case COMPUT_PERCENT: {
-        int counter1 = s->columns[col].data.param1;
-        int counter2 = s->columns[col].data.param2;
-        if ((p->values[counter1] == 0xffffffff) ||
-            (p->values[counter2] == 0xffffffff))
-          error = 1;
-        else {
-          uint64_t delta1 = p->values[counter1] - p->prev_values[counter1];
-          uint64_t delta2 = p->values[counter2] - p->prev_values[counter2];
-          if (delta2 != 0) {
-            written = snprintf(row, remaining, fmt, 100.0*delta1/delta2);
-            if (active_col == col)
-              p->u.d = 100.0*delta1/delta2;
-          }
-          else
-            error = 2;
-        }
-      }
-        break;
-
-      default:
-        fprintf(stderr, "Internal error: unknown column type.\n");
-        exit(EXIT_FAILURE);
-      }
+      res = evaluate_expression(s->columns[col].expression,
+                                s->counters,
+                                s->num_counters,
+                                p, &error);
 
       if (error == 1)
         written = snprintf(row, remaining, "%s", s->columns[col].error_field);
       else if (error == 2)
         written = snprintf(row, remaining, "%s", s->columns[col].empty_field);
-
+      else {
+        written = snprintf(row, remaining, fmt, res);
+      }
+      if (active_col == col)
+        p->u.d = res;
 
       /* man snprintf: The functions snprintf() and vsnprintf() do not
        write more than size bytes (including the trailing '\0').  If
@@ -675,6 +559,13 @@ static int handle_key()
   else if (c == 'h')
     options.help = 1 - options.help;
 
+  else if (c == 'W') {
+    if (export_screens(&options) < 0)
+      message = ".tiptoprc not written: already exists in current directory?";
+    else
+      message = ".tiptoprc written";
+  }
+
   return c;
 }
 
@@ -724,6 +615,8 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
     erase();
     mvprintw(0, 0, "tiptop -");
 
+    if ((options.config_file == 1) && (COLS >= 60))
+      mvprintw(0, COLS-54, "[conf]");
     if ((options.euid == 0) && (COLS >= 54))
       mvprintw(0, COLS-54, "[root]");
     if ((options.watch_uid != -1) && (COLS >= 48))
@@ -908,20 +801,29 @@ int main(int argc, char* argv[])
   check();
 
   init_options(&options);
-  q = read_config(&options);
-
-  if (q == 0)
-    debug_printf("Config file successfully parsed.\n");
-  else
-    debug_printf("Could not parse config file.\n");
 
   /* Parse command line arguments. */
   parse_command_line(argc, argv, &options, &list_scr, &screen_num);
 
-  init_screen();
+  q = read_config(&options);
+
+  if (q == 0) {
+    debug_printf("Config file successfully parsed.\n");
+    options.config_file = 1;
+  }
+  else
+    debug_printf("Could not parse config file.\n");
+
+  /* Add default screens */
+  if(options.default_screen == 1)
+    init_screen();
+
+  /* Remove unused but declared counters */
+  tamp_counters();
 
   if (list_scr) {
     list_screens();
+    delete_screens();
     exit(0);
   }
 
@@ -974,8 +876,6 @@ int main(int argc, char* argv[])
   /* done, free memory (makes valgrind happy) */
   delete_screens();
   done_proc_list(proc_list);
-  if (options.watch_name)
-    free(options.watch_name);
-
+  free_options(&options);
   return 0;
 }

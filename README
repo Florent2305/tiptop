@@ -16,7 +16,7 @@ For installation instructions, check file INSTALL.
 
 * Requirements
 Linux 2.6.31+, /proc filesystem. For live-mode, the ncurses library is
-needed.
+needed. libxml2 is required to parse the configuration file.
 
 
 * Common command lines:
@@ -37,3 +37,6 @@ tiptop -i
 
 tiptop -H
   also show threads
+
+tiptop -W
+  specify the location of the configuration file

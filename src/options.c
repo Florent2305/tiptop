@@ -44,6 +44,7 @@ static void usage(const char* name)
   fprintf(stderr, "\t--list-screens display list of available screens\n");
   fprintf(stderr, "\t-n num         max number of refreshes\n");
   fprintf(stderr, "\t-o outfile     output file in batch mode\n");
+  fprintf(stderr, "\t--only-conf    Disable default screen, only configuration\n");
   fprintf(stderr, "\t-p --pid pid|name  only display task with this PID/name\n");
   fprintf(stderr, "\t-S num         screen number to display\n");
   fprintf(stderr, "\t--sticky       keep final status of dead processes\n");
@@ -52,6 +53,7 @@ static void usage(const char* name)
   fprintf(stderr, "\t-U             show user name\n");
   fprintf(stderr, "\t-v             print version and exit\n");
   fprintf(stderr, "\t--version      print legalese and exit\n");
+  fprintf(stderr, "\t-W path        Used configuration file pointed by path\n");
   fprintf(stderr, "\t-w pid|name    watch this process (highlighted)\n");
   return;
 }
@@ -66,12 +68,22 @@ void init_options(struct option* opt)
   opt->batch = 1;
 #endif
   opt->cpu_threshold = 0.00001;
+  opt->default_screen = 1;
   opt->delay = 2;
   opt->euid = geteuid();
   opt->out = stdout;
   opt->watch_uid = -1;
 }
 
+void free_options(struct option* options)
+{
+  if (options->path_conf_file)
+    free(options->path_conf_file);
+  if (options->watch_name)
+    free(options->watch_name);
+  if (options->only_name)
+    free(options->only_name);
+}
 
 void parse_command_line(int argc, char* argv[],
                         struct option* const options,
@@ -215,6 +227,11 @@ void parse_command_line(int argc, char* argv[],
       }
     }
 
+    if (strcmp(argv[i], "--only-conf") == 0) {
+      options->default_screen = 0;
+      continue;
+    }
+
     if ((strcmp(argv[i], "-p") == 0) || (strcmp(argv[i], "--pid") == 0)) {
       if (i+1 < argc) {
         options->only_pid = atoi(argv[i+1]);
@@ -298,6 +315,18 @@ void parse_command_line(int argc, char* argv[],
       }
       else {
         fprintf(stderr, "Missing pid/name after -w.\n");
+        exit(EXIT_FAILURE);
+      }
+    }
+
+    if (strcmp(argv[i], "-W") == 0) {
+      if (i+1 < argc) {
+        options->path_conf_file = strdup(argv[i+1]);
+        i++;
+        continue;
+      }
+      else {
+        fprintf(stderr, "Missing file name after -W.\n");
         exit(EXIT_FAILURE);
       }
     }

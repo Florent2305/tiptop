@@ -38,13 +38,14 @@ static int   clk_tck;
  */
 struct process_list* init_proc_list()
 {
+  struct process_list* l;
   char  name[100] = { 0 };  /* needs to fit the name /proc/xxxx/limits */
   char  line[100];
   FILE* f;
 
   clk_tck = sysconf(_SC_CLK_TCK);
 
-  struct process_list* l = malloc(sizeof(struct process_list));
+  l = malloc(sizeof(struct process_list));
   l->processes = NULL;
   l->num_alloc = 20;
   l->proc_ptrs = malloc(l->num_alloc * sizeof(struct process*));
