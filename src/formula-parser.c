@@ -49,13 +49,6 @@ static int here = 0;
 #define is_char(c) (c >= 'a' && c <= 'z' && c >= 'A' && c <= 'Z')
 
 
-static void error_output(char* txt)
-{
-  fprintf(stderr, "[Column Expression][ERROR while parsing]=>%s\n", txt);
-  exit(1);
-}
-
-
 static int number_is(char* txt)
 {
   int lg = strlen(txt);
@@ -249,6 +242,7 @@ static expression* SimpleExpression(char* txt)
 {
   expression* tmp = NULL;
   operation* op = NULL;
+  expression* exp;
 
   debug_printf("[Formula-parser]SimpleExpression: %s", &txt[here]);
 
@@ -262,7 +256,7 @@ static expression* SimpleExpression(char* txt)
 
   op = FollowingElement(txt);
 
-  expression* exp = alloc_expression();
+  exp = alloc_expression();
 
   if (op != NULL && op->operateur == 'E') {
     if (op != NULL)
@@ -431,5 +425,4 @@ static unit* Unit(char* txt)
     free(buf);
     return res;
   }
-  return NULL;
 }

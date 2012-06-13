@@ -122,7 +122,7 @@ int build_expression(expression* e, FILE* fd)
 
 
 /* Remove every kind of NOP char: space tabulation and new ligne*/
-char* remove_space(char* txt)
+static char* remove_space(char* txt)
 {
   int i,nb=0, j=0, lg = strlen(txt);
   char* res = malloc(lg+1);
@@ -150,7 +150,7 @@ expression* parser_expression (char* txt)
 
 
 /* Tools to find counters's ID */
-int get_counter_id(char* alias, counter_t* tab, int nbc)
+static int get_counter_id(char* alias, counter_t* tab, int nbc)
 {
   int i;
   for(i=0 ;i<nbc; i++)
@@ -161,8 +161,8 @@ int get_counter_id(char* alias, counter_t* tab, int nbc)
 
 
 /* Tools to get counter value */
-double get_counter_value(unit* e, counter_t* tab, int nbc, char delta,
-                         struct process* p, int* error)
+static double get_counter_value(unit* e, counter_t* tab, int nbc, char delta,
+                                struct process* p, int* error)
 {
   int id;
   if (strcmp(e->alias, "CPU_TOT") == 0)

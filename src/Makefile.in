@@ -70,19 +70,24 @@ depend:
 
 # DO NOT DELETE
 
-conf.o: conf.h options.h
-debug.o: debug.h options.h
-hash.o: hash.h process.h screen.h options.h
-helpwin.o: helpwin.h screen.h options.h
+conf.o: conf.h options.h xml-parser.h
+config-parser.o: options.h
+formula-parser.o: debug.h formula-parser.h utils-expression.h process.h
+formula-parser.o: screen.h options.h
+hash.o: hash.h process.h screen.h formula-parser.h options.h
 options.o: options.h version.h
 pmc.o: pmc.h
-process.o: hash.h process.h screen.h options.h pmc.h spawn.h
+process.o: debug.h hash.h process.h screen.h formula-parser.h options.h pmc.h
+process.o: spawn.h
 requisite.o: pmc.h requisite.h
-screen.o: options.h screen.h
-spawn.o: options.h process.h screen.h
-tiptop.o: conf.h options.h helpwin.h screen.h pmc.h process.h requisite.h
-tiptop.o: spawn.h
+screen.o: options.h process.h screen.h formula-parser.h utils-expression.h
+screen.o: write-config.h
+spawn.o: options.h process.h screen.h formula-parser.h
+target-x86.o: screen.h formula-parser.h options.h target.h
+tiptop.o: conf.h options.h debug.h helpwin.h pmc.h process.h screen.h
+tiptop.o: formula-parser.h requisite.h spawn.h utils-expression.h
+utils-expression.o: formula-parser.h process.h screen.h options.h
+utils-expression.o: utils-expression.h
 version.o: version.h
-utils_expression.o: utils_expression.h process.h screen.h
-xml-parser.o: xml-parser.h screen.h
-formula-parser.o: formula-parser.h 
+write-config.o: screen.h formula-parser.h options.h utils-expression.h
+write-config.o: process.h write-config.h

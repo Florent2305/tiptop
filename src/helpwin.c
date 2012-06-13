@@ -17,9 +17,7 @@
 
 #include "helpwin.h"
 #include "screen.h"
-
-
-void target_dep_string(char*, int);
+#include "target.h"
 
 
 /* One line for screen column, 2 lines for the borders, 1 line for the

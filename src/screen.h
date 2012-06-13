@@ -48,6 +48,7 @@ typedef struct {
 
 
 char* get_counter_config_name(uint64_t conf);
+int get_counter_config(char* config, uint64_t* result);
 char* get_counter_type_name(uint32_t type);
 
 screen_t* new_screen(const char* const name, const char* const desc);

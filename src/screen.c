@@ -47,7 +47,7 @@ static screen_t** screens = NULL;
  */
 
 /* Navigate into expression to check used counters */
-void check_counters_used(expression* e, screen_t* s)
+static void check_counters_used(expression* e, screen_t* s)
 {
   int i = 0;
   if (e->type == ELEM && e->ele->type == COUNT) {
@@ -62,7 +62,7 @@ void check_counters_used(expression* e, screen_t* s)
 }
 
 
-void delete_and_shift_counters(int sc, int co)
+static void delete_and_shift_counters(int sc, int co)
 {
   int i;
   int nbc = screens[sc]->num_counters;
@@ -105,7 +105,7 @@ void tamp_counters ()
  *
  */
 
-screen_t* alloc_screen()
+static screen_t* alloc_screen()
 {
   screen_t* s = malloc(sizeof(screen_t));
   s->name = NULL;
@@ -123,7 +123,7 @@ screen_t* alloc_screen()
 }
 
 
-void init_column(column_t* c)
+static void init_column(column_t* c)
 {
   c->header = NULL;
   c->format = NULL;
@@ -285,7 +285,7 @@ int get_counter_config(char* config, uint64_t* result)
 }
 
 
-uint32_t get_counter_type(char* type, int* error)
+static uint32_t get_counter_type(char* type, int* error)
 
 {
   int i = 0;
@@ -585,14 +585,14 @@ void list_screens()
 }
 
 
-void delete_counter(counter_t c)
+static void delete_counter(counter_t c)
 {
   if (c.alias)
     free(c.alias);
 }
 
 
-void delete_counters (counter_t* c, int nbc)
+static void delete_counters (counter_t* c, int nbc)
 {
   int i;
   for(i=0;i<nbc;i++)
@@ -601,7 +601,7 @@ void delete_counters (counter_t* c, int nbc)
 }
 
 
-void delete_column(column_t* t)
+static void delete_column(column_t* t)
 {
   if(t->expression)
     free_expression(t->expression);
@@ -616,7 +616,7 @@ void delete_column(column_t* t)
 }
 
 
-void delete_columns (column_t* t, int nbc)
+static void delete_columns (column_t* t, int nbc)
 {
   int i;
   for(i=0;i<nbc;i++)

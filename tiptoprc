@@ -1,8 +1,8 @@
 <!-- tiptop configuration file -->
 
-<!-- Rename this file to .tiptoprc                                         -->
-<!-- and place it either in your current directory, the location specified -->
-<!-- in $TIPTOP, or in your $HOME.                                         -->
+<!-- Rename this file to .tiptoprc,                                       -->
+<!-- and place it either in your current directory, the location          -->
+<!-- specified in $TIPTOP, or in your $HOME.                              -->
 
 <tiptop>
   <options>

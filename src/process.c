@@ -196,7 +196,6 @@ void new_processes(struct process_list* const list,
   while ((pid_dirent = readdir(pid_dir))) {
     int   uid, pid, num_threads, req_info;
     char  name[50] = { 0 }; /* needs to fit /proc/xxxx/{status,cmdline} */
-    FILE* f;
     char  line[100]; /* line of /proc/xxxx/status */
     char  proc_name[100];
 

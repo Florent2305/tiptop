@@ -31,19 +31,19 @@ static const char* const tok_opt_sta = "\t\t<option name=\"";
 static const char* const tok_opt_mid = "\" value=\"";
 static const char* const tok_opt_end ="\" />";
 
-int build_option_string(char * name, char* value)
+static int build_option_string(char * name, char* value)
 {
   if (value == NULL)
     return 0;
   return fprintf(out , "%s%s%s%s%s\n",tok_opt_sta, name, tok_opt_mid, value, tok_opt_end);
 }
 
-int build_option_int(char * name, int value)
+static int build_option_int(char * name, int value)
 {
   return fprintf(out, "%s%s%s%d%s\n",tok_opt_sta, name, tok_opt_mid, value, tok_opt_end);
 }
 
-int build_option_float(char * name, float value)
+static int build_option_float(char * name, float value)
 {
   return fprintf(out, "%s%s%s%f%s\n",tok_opt_sta, name, tok_opt_mid, value, tok_opt_end);
 }
@@ -51,7 +51,7 @@ int build_option_float(char * name, float value)
 static const char* const opt_sta = "\t<options>";
 static const char* const opt_clo = "\t</options>";
 
-int build_options(struct option* opt)
+static int build_options(struct option* opt)
 {
   if (fprintf(out, "%s\n", opt_sta) < 0)
     return -1;
@@ -81,13 +81,13 @@ int build_options(struct option* opt)
 static const char* const cou_sta  = "\t\t<counter alias=\"";
 static const char* const cou_mid1 = "\" config=\"";
 static const char* const cou_mid2 = "\" type=\"";
-static const char* const cou_arch = "\" arch=\"";
-static const char* const cou_model = "\" model=\"";
+/* static const char* const cou_arch = "\" arch=\""; */
+/* static const char* const cou_model = "\" model=\""; */
 static const char* const cou_clo  = "\" />";
 static const char* const default_type  = "PERF_TYPE_HW";
 
 
-int build_counter(counter_t* c)
+static int build_counter(counter_t* c)
 {
   int alloc_c=0, alloc_t=0;
   char* config = NULL;
@@ -136,7 +136,7 @@ static const char* const col_desc = "\" desc=\"";
 static const char* const col_expr = "\" expr=\"";
 static const char* const col_clo  = "\" />";
 
-int build_view(column_t* c)
+static int build_view(column_t* c)
 {
   if (fprintf(out, "%s%s%s%s%s%s%s", col_sta, c->header, col_format,c->format, col_desc, c->description, col_expr) < 0)
     return -1;
@@ -152,7 +152,7 @@ static const char* const screen_mid = "\" desc=\"";
 static const char* const screen_clo = "\">";
 static const char* const screen_end = "\t</screen>";
 
-int build_screen(screen_t* s)
+static int build_screen(screen_t* s)
 {
   int i;
 
@@ -179,7 +179,7 @@ int build_screen(screen_t* s)
 }
 
 
-int build_screens(screen_t** s, int nbs)
+static int build_screens(screen_t** s, int nbs)
 {
   int i;
 
@@ -195,9 +195,13 @@ int build_screens(screen_t** s, int nbs)
 
 static const char* const tip_sta ="<tiptop>";
 static const char* const tip_clo = "</tiptop>";
-static const char* const undefined = "<Undefined/>";
-static const char* const introduction = "<!-- Welcome to the TipTop Configuration File -->\n<!-- This file have to be in your $HOME, your current directory or your $TIPTOP environment variable to be find and exploit by tiptop -->\n";
-
+static const char* const introduction =
+"<!-- tiptop configuration file -->\n"
+"\n"
+"<!-- Rename this file to .tiptoprc,                                       -->\n"
+"<!-- and place it either in your current directory, the location          -->\n"
+"<!-- specified in $TIPTOP, or in your $HOME.                              -->\n"
+;
 
 /* Main function to export a configuration file */
 int build_configuration(screen_t** sc, int num_screens, struct option* o,
