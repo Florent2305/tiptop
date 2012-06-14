@@ -148,9 +148,11 @@ screen_t* screen_fp()
   add_counter(s, "C", "CPU_CYCLES", "HARDWARE");
   add_counter(s, "I", "INSTRUCTIONS",  "HARDWARE");
 
-  add_counter_by_value(s, "x87",(uint64_t) FP_COMP_OPS_EXE_X87,(uint32_t) PERF_TYPE_RAW);
-  add_counter_by_value(s, "sp", (uint64_t) FP_COMP_OPS_EXE_SSE_SINGLE_PRECISION,(uint32_t) PERF_TYPE_RAW);
-  add_counter_by_value(s, "dp",  (uint64_t) FP_COMP_OPS_EXE_SSE_DOUBLE_PRECISION,(uint32_t) PERF_TYPE_RAW);
+  add_counter_by_value(s, "x87", FP_COMP_OPS_EXE_X87, PERF_TYPE_RAW);
+  add_counter_by_value(s, "sp",  FP_COMP_OPS_EXE_SSE_SINGLE_PRECISION,
+                                                        PERF_TYPE_RAW);
+  add_counter_by_value(s, "dp",  FP_COMP_OPS_EXE_SSE_DOUBLE_PRECISION,
+                                                        PERF_TYPE_RAW);
 
   if (tab == A_2)
     assist_cnt = FP_ASSIST_1;
@@ -207,10 +209,10 @@ screen_t* screen_imix()
   /* setup counters */
   add_counter(s, "C", "CPU_CYCLES", "HARDWARE");
   add_counter(s, "I", "INSTRUCTIONS",  "HARDWARE");
-  add_counter_by_value(s, "LD", (uint64_t)  MEM_INST_RETIRED_LOADS,(uint32_t) PERF_TYPE_RAW);
-  add_counter_by_value(s, "ST",(uint64_t)  MEM_INST_RETIRED_STORES,(uint32_t) PERF_TYPE_RAW);
-  add_counter_by_value(s, "x87",(uint64_t) INST_RETIRED_X87,(uint32_t) PERF_TYPE_RAW);
-  add_counter_by_value(s, "brr",(uint64_t) BR_INST_RETIRED_ALL_BRANCHES, (uint32_t)PERF_TYPE_RAW);
+  add_counter_by_value(s, "LD",  MEM_INST_RETIRED_LOADS,       PERF_TYPE_RAW);
+  add_counter_by_value(s, "ST",  MEM_INST_RETIRED_STORES,      PERF_TYPE_RAW);
+  add_counter_by_value(s, "x87", INST_RETIRED_X87,             PERF_TYPE_RAW);
+  add_counter_by_value(s, "brr", BR_INST_RETIRED_ALL_BRANCHES, PERF_TYPE_RAW);
 
   /* add columns */
   add_column(s, " %CPU", "%5.1f", "CPU usage", "CPU_TOT");
@@ -271,7 +273,7 @@ screen_t* screen_mem()
   /* L2 loads */
   if (tab == A_2) {
     /* no support for L2 data miss in Table A-2 */
-    add_counter_by_value(s, "L2MissI",L2_RQSTS_CODE_RD_MISS, PERF_TYPE_RAW);
+    add_counter_by_value(s, "L2MissI", L2_RQSTS_CODE_RD_MISS, PERF_TYPE_RAW);
   }
   else {
     add_counter_by_value(s, "L2MissD", L2_RQSTS_LD_MISS, PERF_TYPE_RAW);
@@ -338,17 +340,17 @@ screen_t* screen_uop()
   add_counter(s, "I", "INSTRUCTIONS",  "HARDWARE");
 
   if (tab == A_10)
-    add_counter_by_value(s, "UOP", (uint64_t) UOPS_RETIRED_ALL_2,(uint32_t)  PERF_TYPE_RAW);
+    add_counter_by_value(s, "UOP", UOPS_RETIRED_ALL_2, PERF_TYPE_RAW);
   else
-    add_counter_by_value(s, "UOP",(uint64_t) UOPS_RETIRED_ALL_1,(uint32_t)  PERF_TYPE_RAW);
+    add_counter_by_value(s, "UOP", UOPS_RETIRED_ALL_1, PERF_TYPE_RAW);
 
   if (tab == A_10)
-    fused =  add_counter_by_value(s, "FUSE", (uint64_t) UOPS_RETIRED_FUSED, (uint32_t) PERF_TYPE_RAW);
+    fused =  add_counter_by_value(s, "FUSE", UOPS_RETIRED_FUSED, PERF_TYPE_RAW);
   else
     fused = -1;
 
   if ((tab == A_4) || (tab == A_6))
-    macrof = add_counter_by_value(s, "MACROF",(uint64_t) UOPS_RETIRED_MACRO_FUSED,(uint32_t) PERF_TYPE_RAW);
+    macrof = add_counter_by_value(s, "MACROF", UOPS_RETIRED_MACRO_FUSED, PERF_TYPE_RAW);
   else
     macrof = -1;
 
