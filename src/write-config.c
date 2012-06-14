@@ -84,7 +84,7 @@ static const char* const cou_mid2 = "\" type=\"";
 /* static const char* const cou_arch = "\" arch=\""; */
 /* static const char* const cou_model = "\" model=\""; */
 static const char* const cou_clo  = "\" />";
-static const char* const default_type  = "PERF_TYPE_HW";
+static char* const default_type  = "PERF_TYPE_HW";
 
 
 static int build_counter(counter_t* c)
