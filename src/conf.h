@@ -12,7 +12,10 @@
 #define _CONF_H
 
 #include "options.h"
+#include "screen.h"
+
 
 int read_config(struct option* options);
+int dump_configuration(screen_t** sc, int num_screens, struct option* o);
 
 #endif  /* _CONF_H */

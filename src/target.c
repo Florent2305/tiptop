@@ -13,7 +13,7 @@
 #include "config.h"
 #include "target.h"
 
-#if TARGET_X86
+#ifdef TARGET_X86
 #include "target-x86.c"
 #else
 

@@ -30,11 +30,12 @@
 #include <unistd.h>
 #include <errno.h>
 
+#include "conf.h"
 #include "options.h"
 #include "process.h"
 #include "screen.h"
 #include "utils-expression.h"
-#include "write-config.h"
+
 
 static const int alloc_chunk = 10;
 
@@ -661,22 +662,6 @@ void delete_screens()
 
 int export_screens(struct option* opt)
 {
-  char* config_file = ".tiptoprc";
-  FILE* fd = NULL;
-
- /* Don't return the wanted value : if a file doesn't exist, return 0 */
-  if (access(config_file, F_OK) != -1)
-    return -1;
-
-  fd = fopen(config_file,"w+");
-  if (fd == NULL)
-    return -1;
-  else {
-    int res = 0;
-    res = build_configuration(screens, num_screens, opt, fd);
-    fclose(fd);
-    if (res < 0 )
-      return -1;
-    return 0;
-  }
+  dump_configuration(screens, num_screens, opt);
+  return 0;
 }

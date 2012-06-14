@@ -25,7 +25,7 @@
 static void usage(const char* name)
 {
   fprintf(stderr, "Usage: %s [option]\n", name);
-#if HAVE_LIBCURSES
+#ifdef HAVE_LIBCURSES
   fprintf(stderr, "\t-b             run in batch mode\n");
 #else
   fprintf(stderr, "\t-b             ignored, for compatibility with batch mode\n");
@@ -63,7 +63,7 @@ void init_options(struct option* opt)
 {
   /* default status for options */
   memset(opt, 0, sizeof(*opt));
-#if !HAVE_LIBCURSES
+#ifndef HAVE_LIBCURSES
   /* make batch mode default if curses is not available */
   opt->batch = 1;
 #endif
@@ -107,7 +107,7 @@ void parse_command_line(int argc, char* argv[],
     }
 
     if (strcmp(argv[i], "-b") == 0) {
-#if HAVE_LIBCURSES
+#ifdef HAVE_LIBCURSES
       options->batch = 1 - options->batch;
 #endif
       continue;

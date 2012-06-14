@@ -25,7 +25,7 @@ INSTALL  = @INSTALL@
 
 OBJS=tiptop.o pmc.o process.o requisite.o conf.o screen.o \
      debug.o version.o helpwin.o options.o hash.o spawn.o \
-     xml-parser.o formula-parser.o target.o write-config.o utils-expression.o
+     xml-parser.o formula-parser.o target.o utils-expression.o
 
 
 all: tiptop
@@ -81,7 +81,6 @@ process.o: debug.h hash.h process.h screen.h formula-parser.h options.h pmc.h
 process.o: spawn.h
 requisite.o: pmc.h requisite.h
 screen.o: options.h process.h screen.h formula-parser.h utils-expression.h
-screen.o: write-config.h
 spawn.o: options.h process.h screen.h formula-parser.h
 target-x86.o: screen.h formula-parser.h options.h target.h
 tiptop.o: conf.h options.h debug.h helpwin.h pmc.h process.h screen.h
@@ -89,5 +88,3 @@ tiptop.o: formula-parser.h requisite.h spawn.h utils-expression.h
 utils-expression.o: formula-parser.h process.h screen.h options.h
 utils-expression.o: utils-expression.h
 version.o: version.h
-write-config.o: screen.h formula-parser.h options.h utils-expression.h
-write-config.o: process.h write-config.h

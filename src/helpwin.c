@@ -10,7 +10,7 @@
 
 #include <config.h>
 
-#if HAVE_LIBCURSES
+#ifdef HAVE_LIBCURSES
 
 #include <curses.h>
 #include <string.h>
