@@ -11,6 +11,7 @@
 #include <stdio.h>
 
 #include "config.h"
+#include "target.h"
 
 #if TARGET_X86
 #include "target-x86.c"
