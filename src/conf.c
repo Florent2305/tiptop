@@ -32,11 +32,11 @@ static const char* const config_file = ".tiptoprc";
 
 int read_config(struct option* options)
 {
+#ifdef HAVE_LIBXML2
   char* path = NULL;
   char* file = NULL;
   int   res;
 
-#ifdef HAVE_LIBXML2
   /* Check path with '-W' in tiptop options */
   if (options->path_conf_file != NULL) {
       path = options->path_conf_file;
