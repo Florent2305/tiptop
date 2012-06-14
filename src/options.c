@@ -34,7 +34,7 @@ static void usage(const char* name)
   fprintf(stderr, "\t--cpu-min m    minimum %%CPU to display a process\n");
   fprintf(stderr, "\t-d delay       delay in seconds between refreshes\n");
   fprintf(stderr, "\t--epoch        add epoch at beginning of each line\n");
-#if ENABLE_DEBUG
+#ifdef ENABLE_DEBUG
   fprintf(stderr, "\t-g             debug\n");
 #endif
   fprintf(stderr, "\t-h --help      print this message\n");
@@ -150,7 +150,7 @@ void parse_command_line(int argc, char* argv[],
     }
 
     if (strcmp(argv[i], "-g") == 0) {
-#if ENABLE_DEBUG
+#ifdef ENABLE_DEBUG
       options->debug = 1 - options->debug;
       continue;
 #else

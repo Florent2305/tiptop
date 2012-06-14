@@ -13,7 +13,7 @@
 int parse_doc(char* file, struct option* op);
 
 
-#if HAVE_LIBXML2
+#ifdef HAVE_LIBXML2
 
 #include <libxml/parser.h>
 #include <stdio.h>

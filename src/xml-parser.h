@@ -13,7 +13,7 @@
 
 #include "config.h"
 
-#if HAVE_LIBXML2
+#ifdef HAVE_LIBXML2
 
 #include <libxml/parser.h>
 

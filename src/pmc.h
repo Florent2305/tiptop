@@ -15,7 +15,7 @@
 /*
  * The sys_perf_counter_open syscall and header files changed names
  * between Linux 2.6.31 and 2.6.32. Do the mangling here. */
-#if HAVE_LINUX_PERF_COUNTER_H
+#ifdef HAVE_LINUX_PERF_COUNTER_H
 #include <linux/perf_counter.h>
 #define STRUCT_NAME perf_counter_attr
 

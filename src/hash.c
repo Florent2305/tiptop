@@ -68,7 +68,7 @@ void hash_fini()
 }
 
 
-#if ENABLE_DEBUG
+#ifdef ENABLE_DEBUG
 /* Dump all entries (skip NULL buckets). */
 void hash_dump()
 {

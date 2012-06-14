@@ -10,9 +10,9 @@
 
 #include "config.h"
 
-#if HAVE_LINUX_PERF_COUNTER_H
+#ifdef HAVE_LINUX_PERF_COUNTER_H
 #include <linux/perf_counter.h>
-#elif HAVE_LINUX_PERF_EVENT_H
+#elif defined(HAVE_LINUX_PERF_EVENT_H)
 #include <linux/perf_event.h>
 #else
 #error Sorry, performance counters not supported on this system.

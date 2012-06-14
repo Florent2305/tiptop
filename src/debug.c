@@ -10,7 +10,7 @@
 
 #include <config.h>
 
-#if ENABLE_DEBUG
+#ifdef ENABLE_DEBUG
 
 #include <stdarg.h>
 #include <stdio.h>

@@ -13,7 +13,7 @@
 
 #include <config.h>
 
-#if ENABLE_DEBUG
+#ifdef ENABLE_DEBUG
 void debug_printf(char* fmt, ...);
 #else
 #define debug_printf(...)
