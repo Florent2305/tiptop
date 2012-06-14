@@ -437,11 +437,11 @@ static screen_t* default_screen()
   screen_t* s = new_screen("default", "Screen by default");
 
   /* setup counters */
-  add_counter_by_value(s, "CYCLE",PERF_COUNT_HW_CPU_CYCLES, PERF_TYPE_HARDWARE);
-  add_counter_by_value(s, "INSN",  PERF_COUNT_HW_INSTRUCTIONS, PERF_TYPE_HARDWARE);
-  add_counter_by_value(s, "MISS",  PERF_COUNT_HW_CACHE_MISSES, PERF_TYPE_HARDWARE);
-  add_counter_by_value(s, "BR",  PERF_COUNT_HW_BRANCH_MISSES, PERF_TYPE_HARDWARE);
-  add_counter_by_value(s, "BUS", PERF_COUNT_HW_BUS_CYCLES, PERF_TYPE_HARDWARE);
+  add_counter_by_value(s, "CYCLE", PERF_COUNT_HW_CPU_CYCLES,    PERF_TYPE_HARDWARE);
+  add_counter_by_value(s, "INSN",  PERF_COUNT_HW_INSTRUCTIONS,  PERF_TYPE_HARDWARE);
+  add_counter_by_value(s, "MISS",  PERF_COUNT_HW_CACHE_MISSES,  PERF_TYPE_HARDWARE);
+  add_counter_by_value(s, "BR",    PERF_COUNT_HW_BRANCH_MISSES, PERF_TYPE_HARDWARE);
+  add_counter_by_value(s, "BUS",   PERF_COUNT_HW_BUS_CYCLES,    PERF_TYPE_HARDWARE);
 
   /* add columns */
   add_column(s, " %CPU", "%5.1f", NULL, "CPU_TOT");
@@ -465,18 +465,26 @@ static screen_t* default_screen()
 
 static screen_t* branch_pred_screen()
 {
-  screen_t* s = new_screen("branch prediction", "Branch prediction statistics");
+  screen_t* s = new_screen("branch", "Branch prediction statistics");
 
   /* setup counters */
-  add_counter_by_value(s, "INSN",  PERF_COUNT_HW_INSTRUCTIONS, PERF_TYPE_HARDWARE);
-  add_counter_by_value(s, "MISS",  PERF_COUNT_HW_CACHE_MISSES, PERF_TYPE_HARDWARE);
-  add_counter_by_value(s, "BR", PERF_COUNT_HW_BRANCH_MISSES, PERF_TYPE_HARDWARE);
+  add_counter_by_value(s, "INSTR", PERF_COUNT_HW_INSTRUCTIONS, PERF_TYPE_HARDWARE);
+  add_counter_by_value(s, "BR", PERF_COUNT_HW_BRANCH_INSTRUCTIONS, PERF_TYPE_HARDWARE);
+  add_counter_by_value(s, "BMISS", PERF_COUNT_HW_BRANCH_MISSES, PERF_TYPE_HARDWARE);
 
   /* add columns */
-  add_column(s, "  %CPU"    , " %5.1f"  ,  NULL, "CPU_TOT");
-  add_column(s, "    %MISP"  , "   %6.2f", "Mispredictions per 100 branch instructions", "100*delta(MISS)/delta(BR)");
-  add_column(s, "  %MIS/I", "   %5.2f", "Mispredictions per 100 branch instructions", "100*delta(MISS)/delta(INSN)");
-  add_column(s, "  %BR/I", "  %5.2f", "Fraction of branch instructions", "100*delta(BR)/delta(INSN)");
+  add_column(s, "  %CPU", " %5.1f", "CPU usage", "CPU_TOT");
+  add_column(s, "    %MISP", "   %6.2f",
+             "Mispredictions per 100 branch instructions",
+             "100 * delta(BMISS) / delta(INSTR)");
+
+  add_column(s, "  %MIS/I", "   %5.2f",
+             "Mispredictions per 100 branch instructions",
+             "100 * delta(BMISS) / delta(BR)");
+
+  add_column(s, "  %BR/I", "  %5.2f",
+             "Fraction of branch instructions",
+             "100 * delta(BR) / delta(INSTR)");
   return s;
 }
 
