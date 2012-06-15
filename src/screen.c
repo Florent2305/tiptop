@@ -51,11 +51,22 @@ static screen_t** screens = NULL;
 static void check_counters_used(expression* e, screen_t* s)
 {
   int i = 0;
+  int find = -1;
   if (e->type == ELEM && e->ele->type == COUNT) {
     for(i=0; i<s->num_counters; i++)
       if (strcmp(e->ele->alias, s->counters[i].alias) == 0)
-        s->counters[i].used++;
-  }
+        find = i;
+
+    /* Check if the counter is declared or is a software counter : CPU_... and PROC_ID */
+    if(strcmp(e->ele->alias, "CPU_TOT") == 0 || 
+       strcmp(e->ele->alias, "CPU_SYS") == 0 || 
+       strcmp(e->ele->alias, "CPU_USER") == 0 || 
+       strcmp(e->ele->alias, "PROC_ID") == 0 )
+      return ;
+    else if(find >= 0) 
+      s->counters[find].used++;
+    else fprintf(stderr, "[TIPTOP] Error: counter %s undeclared in screen %s!\n", e->ele->alias, s->name);
+  }  
   else if (e->type == OPER && e->op != NULL) {
     check_counters_used(e->op->exp1, s);
     check_counters_used(e->op->exp2, s);
@@ -476,15 +487,15 @@ static screen_t* branch_pred_screen()
   /* add columns */
   add_column(s, "  %CPU", " %5.1f", "CPU usage", "CPU_TOT");
   add_column(s, "    %MISP", "   %6.2f",
-             "Mispredictions per 100 branch instructions",
+             "Mispredictions per 100 instructions",
              "100 * delta(BMISS) / delta(INSTR)");
 
   add_column(s, "  %MIS/I", "   %5.2f",
-             "Mispredictions per 100 branch instructions",
+             "Mispredictions per 100 branch instructions retired",
              "100 * delta(BMISS) / delta(BR)");
 
   add_column(s, "  %BR/I", "  %5.2f",
-             "Fraction of branch instructions",
+             "Fraction of branch instructions retired per instructions",
              "100 * delta(BR) / delta(INSTR)");
   return s;
 }

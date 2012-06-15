@@ -39,6 +39,7 @@ static expression* SimpleExpression(char* txt);
 
 static int here = 0;
 
+
 #define is_sep(c) (c=='(' || c==')'   || c=='+'   || c=='/'   || c=='-'  || c=='*'   || c=='<'   || c=='>'  || c == '&'   || c == '|')
 
 #define is_op1(c) (c=='+' || c=='-'|| c=='<'   || c=='>'  || c == '&'   || c == '|' )
@@ -47,6 +48,7 @@ static int here = 0;
 #define is_number(c) (c >= '0' && c <= '9')
 #define is_dot(c) (c == '.' || c == ',')
 #define is_char(c) (c >= 'a' && c <= 'z' && c >= 'A' && c <= 'Z')
+
 
 
 static int number_is(char* txt)
@@ -198,16 +200,16 @@ expression* Expression(char* txt, int init)
 
     e = SimpleExpression(txt);
 
-    if (e->type == 'E')
+    if (e->type == ERROR)
       return e;
 
     se = FollowingExpression(txt);
 
     res = alloc_expression();
 
-    if (se != NULL && se->operateur == 'E') {
+    if (se != NULL && se->operateur == ERROR) {
       free_expression(e);
-      res->type = 'E';
+      res->type = ERROR;
       return res;
     }
 
@@ -233,7 +235,7 @@ expression* Expression(char* txt, int init)
 
   free(buf);
   res = alloc_expression();
-  res->type = 'E';
+  res->type = ERROR;
   return res;
 }
 
@@ -251,18 +253,18 @@ static expression* SimpleExpression(char* txt)
 
   tmp = Element(txt);
 
-  if (tmp->type == 'E')
+  if (tmp->type == ERROR)
     return tmp;
 
   op = FollowingElement(txt);
 
   exp = alloc_expression();
 
-  if (op != NULL && op->operateur == 'E') {
+  if (op != NULL && op->operateur == ERROR) {
     if (op != NULL)
       free_operation(op);
     free_expression(tmp);
-    exp->type = 'E';
+    exp->type = ERROR;
     return exp;
   }
   if (op != NULL) {
@@ -290,8 +292,8 @@ static operation* FollowingExpression(char* txt)
       op->operateur = buf[0];
       free(buf);
       op->exp2 = Expression(txt, 1);
-      if (op->exp2 == NULL || op->exp2->type == 'E') {
-        op->operateur = 'E';
+      if (op->exp2 == NULL || op->exp2->type == ERROR) {
+        op->operateur = ERROR;
       }
       return op;
     }
@@ -313,7 +315,7 @@ static expression* Element(char* txt)
       debug_printf("[Formula-parser]Elem parenthesis\n");
       here++;
       exp = Expression(txt, 1);
-      if (txt[here] != ')' || exp->type == 'E') {
+      if (txt[here] != ')' || exp->type == ERROR) {
         if (!exp)
           exp = alloc_expression();
         goto error;
@@ -342,7 +344,7 @@ static expression* Element(char* txt)
 
       un = Unit(txt);
 
-      if(un->type == 'E'){
+      if(un->type == ERROR){
         free_unit(un);
         goto error;
       }
@@ -353,7 +355,7 @@ static expression* Element(char* txt)
           free_unit(un);
           goto error;
         }
-        un->delta = 'D';
+        un->delta = ERROR;
         here++;
       }
       exp->type = ELEM;
@@ -380,10 +382,10 @@ static operation* FollowingElement(char* txt)
 
     op = alloc_operation();
 
-    if (exp == NULL || exp->type == 'E') {
+    if (exp == NULL || exp->type == ERROR) {
       /* Syntaxe Error */
       free_expression(exp);
-      op->operateur = 'E';
+      op->operateur = ERROR;
       return op;
     }
 
@@ -414,14 +416,14 @@ static unit* Unit(char* txt)
   }
   else if (is_unit(buf) == 0) {
     res->type = COUNT;
+    
     res->alias = strdup(buf);
     here += strlen(buf);
     free(buf);
     return res;
   }
   else {
-    res->type = 'E';
-
+    res->type = ERROR;
     free(buf);
     return res;
   }

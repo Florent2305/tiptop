@@ -12,12 +12,13 @@
 #define _FORMULA_PARSER_H
 
 
-#define CONST   0
-#define COUNT   1
-
-#define OPER    10
-#define ELEM    11
-
+typedef enum{
+  COUNT,
+  CONST,
+  OPER,
+  ELEM,
+  ERROR
+} t_op;
 typedef struct operation operation;
 typedef struct expression expression;
 typedef struct unit unit;
