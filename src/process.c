@@ -119,38 +119,39 @@ void done_proc_list(struct process_list* list)
 
 
 /* Retrieve the command line of the process from
-   /proc/PID/cmdline. The subtletiy comes from the fact that args are
+   /proc/PID/cmdline. The subtlety comes from the fact that args are
    separated by '\0', the command line itself by two consecutive '\0'
-   (see man proc). Some processes have no command line: first
+   (see "man proc"). Some processes have no command line: first
    character is '\0'. */
-static char* get_cmdline(int pid)
+static char* get_cmdline(int pid, char* result, int size)
 {
   FILE* f;
   char  name[50] = { 0 };  /* needs to fit /proc/xxxx/cmdline */
-  char  buffer[100] = { 0 };
   char* res = NULL;
 
   snprintf(name, sizeof(name) - 1, "/proc/%d/cmdline", pid);
   f = fopen(name, "r");
   if (f) {    
-    res = fgets(buffer, sizeof(buffer), f);
+    res = fgets(result, size, f);
     if (res && res[0]) {
       int j;
-      for(j=0; j < sizeof(buffer)-1; j++) {
-        if (buffer[j] == '\0') {
-          if (buffer[j+1] == '\0')  /* two zeroes in a row, stop */
+      for(j=0; j < size-1; j++) {
+        if (result[j] == '\0') {
+          if (result[j+1] == '\0')  /* two zeroes in a row, stop */
             break;
           else
-            buffer[j] = ' '; /* only one, a separator, it becomes ' ' */
+            result[j] = ' '; /* only one, it is a separator, it becomes ' ' */
         }
       }
     }
     fclose(f);
   }
-  if (!res)
-    res = "[null]";
+  if (!res) {
+    strncpy(result, "[null]", size-1);
+    result[size-1] = '\0';
+  }
 
-  return strdup(res);
+  return result;
 }
 
 
@@ -198,6 +199,8 @@ void new_processes(struct process_list* const list,
     char  name[50] = { 0 }; /* needs to fit /proc/xxxx/{status,cmdline} */
     char  line[100]; /* line of /proc/xxxx/status */
     char  proc_name[100];
+    int   skip_by_pid, skip_by_user;
+    char  cmdline[100];
 
     if (pid_dirent->d_type != DT_DIR)  /* not a directory */
       continue;
@@ -234,14 +237,34 @@ void new_processes(struct process_list* const list,
       continue;
     }
 
+    cmdline[0] = '\0';
+    skip_by_pid = 0;
+    /* if "only" filter is set */
+    if (options->only_pid && (pid != options->only_pid))
+      skip_by_pid = 1;
+
+    if (options->only_name) {
+      if (options->show_cmdline) {  /* show_cmdline is on */
+        get_cmdline(pid, cmdline, sizeof(cmdline));
+        if (strstr(cmdline, options->only_name) == NULL) {
+          skip_by_pid = 1;
+        }
+      }
+      else {  /* show_cmdline is off */
+        if (strstr(proc_name, options->only_name) == NULL)
+          skip_by_pid = 1;
+      }
+    }
+
     /* my process, or somebody else's process and I am root (skip
        root's processes because they are too many). */
+    skip_by_user = 1;
     my_uid = options->euid;
-    if (((options->watch_uid != -1) && (uid == options->watch_uid)) ||
-        ((options->watch_uid == -1) &&
-         (((my_uid != 0) && (uid == my_uid)) ||  /* not root, monitor mine */
-          ((my_uid == 0) && (uid != 0)))))  /* I am root, monitor all others */
-    {
+    if (((my_uid != 0) && (uid == my_uid)) ||  /* not root, monitor mine */
+        ((my_uid == 0) && (uid != 0)))         /* I am root, monitor all others */
+      skip_by_user = 0;
+
+    if ((skip_by_user == 0) && (skip_by_pid == 0)) {
       DIR* thr_dir;
       struct dirent* thr_dirent;
       int  tid;
@@ -302,7 +325,9 @@ void new_processes(struct process_list* const list,
           ptr->username = NULL;
 
         ptr->num_threads = num_threads;
-        ptr->cmdline = get_cmdline(pid);
+        if (cmdline[0] == '\0')
+          get_cmdline(pid, cmdline, sizeof(cmdline));
+        ptr->cmdline = strdup(cmdline);
         ptr->name = strdup(proc_name);
         ptr->timestamp.tv_sec = 0;
         ptr->timestamp.tv_usec = 0;
@@ -600,6 +625,7 @@ void update_name_cmdline(int pid)
   char  name[50] = { 0 };  /* needs to fit /proc/xxxx/{status,cmdline} */
   char  line[100];  /* line of /proc/xxxx/status */
   char  proc_name[100];
+  char  buffer[100];
 
   struct process* p = hash_get(pid);
   if (!p)  /* gone? */
@@ -624,5 +650,7 @@ void update_name_cmdline(int pid)
   /* update command line */
   if (p->cmdline)
     free(p->cmdline);
-  p->cmdline = get_cmdline(pid);
+
+  get_cmdline(pid, buffer, sizeof(buffer));
+  p->cmdline = strdup(buffer);
 }

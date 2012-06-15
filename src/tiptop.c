@@ -771,7 +771,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
       if ((c == '+') || (c == '-') || (c == KEY_LEFT) || (c == KEY_RIGHT))
         return c;
 
-      if ((c == 'u') || (c == 'K')) /* need to rebuild list of tasks */
+      if ((c == 'u') || (c == 'K') || (c == 'p')) /* need to rebuild tasks list */
         return c;
     }
 
@@ -866,7 +866,7 @@ int main(int argc, char* argv[])
         done_proc_list(proc_list);
         free(header);
       }
-      if ((key == 'u') || (key == 'K')) {
+      if ((key == 'u') || (key == 'K') || (key == 'p')) {
         done_proc_list(proc_list);
       }
     }

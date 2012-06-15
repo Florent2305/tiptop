@@ -103,12 +103,12 @@ Specify the filename for the output of batch mode.
 
 .TP 4
 \-\-\fBonly\-conf\fR
-Only defined screens in configuration file displayed.
+Only screens defined in configuration file displayed (no default).
 
 .TP 4
 \-\fBp --pid\fR VALUE
-Only display selected tasks. VALUE can be either the numeric value
-PID, or a string. In case of a string, all tasks whose names or
+Filters processes according to VALUE. VALUE can be either the numeric
+value PID, or a string. In case of a string, all tasks whose names or
 command lines (depending on the display, see -c) contain VALUE are
 reported.
 
@@ -156,7 +156,7 @@ reported. In live-mode, watched tasks are shown in a different color
 tasks.
 
 .TP 4
-\-\fBW\fR VALUE
+\-\fBW\fR PATH
 Directory where the configuration file is located.
 
 .SH INTERACTIVE COMMANDS
@@ -195,7 +195,8 @@ Toggle between showing only active tasks and showing also idle tasks.
 .TP 4
 \fBK\fR
 Toggle between showing kernel activity and only user activity. Kernel
-mode is only available to root.
+mode is only available to root. Switching to and from kernel mode
+resets all counters.
 
 .TP 4
 \fBk\fR
@@ -203,9 +204,10 @@ Kill a process. The user is asked for the PID, and the signal to send.
 
 .TP 4
 \fBp\fR
-Used to display only selected task. The user is asked for a PID or
-string. In case a string is entered, only the tasks whose name or command
-line contain the string are displayed.
+Filter tasks by name or PID. The user is asked for a PID or string. In
+case a string is entered, only the tasks whose name or command line
+contain the string are displayed. Changing the filter resets all
+counters.
 
 .TP 4
 \fBq\fR
@@ -225,9 +227,9 @@ Same as d.
 
 .TP 4
 \fBu\fR
-Only show tasks owned by a given user. The user name or PID is
-queried. Note that, unless \*(Me is run by root or setuid root, tasks
-owned by somebody else cannot be monitored.
+Filter tasks by user. The user name or PID is queried. Note that,
+unless \*(Me is run by root or setuid root, tasks owned by somebody
+else cannot be monitored. Changing the filter resets all counters.
 
 .TP 4
 \fBU\fR
@@ -252,7 +254,7 @@ current directory, then in the directory defined by the environment
 variable \fBTIPTOP\fR if it exists, finally in the user's home.
 
 .SS Syntax
-The file is structured in XML. The syntax is as following.
+The file is structured in XML. The syntax is as follows.
 
 .IP "Root of tree"
 The root of the xml tree is tiptop.
@@ -361,7 +363,8 @@ PROC_ID (processor where the process was last seen).
     <counter alias="uops_issued" config="0x010e"
              type="RAW" arch="x86" model="06_2a" />
 
-    <view header=" %CPU" format="%5.1f" desc="CPU usage" expr="CPU_TOT" />
+    <view header=" %CPU" format="%5.1f"
+          desc="CPU usage" expr="CPU_TOT" />
     <view header="   P" format="  %2.0f"
           desc="Processor where last seen" expr="PROC_ID" />
     <view header="  Mcycle" format="%8.2f"
@@ -385,6 +388,17 @@ PROC_ID (processor where the process was last seen).
   </screen>
 </tiptop>
 .fi
+
+
+.SH CAVEATS
+\*(Me does not seem to work within a virtualized environment.
+
+Attaching counters to processes may fail for various reasons, such as
+asking for more than available in hardware (sampling is not
+implemented), or reaching the maximum number of open files. In these
+cases, you may consider filtering the processes (see flags -u, -p,
+-K).
+
 
 .SH BUGS
 Send bug reports to:
