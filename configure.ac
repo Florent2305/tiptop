@@ -1,5 +1,5 @@
 AC_PREREQ([2.68])
-AC_INIT([tiptop], [1.0.1], [erven.rohou@inria.fr])
+AC_INIT([tiptop], [1.1], [erven.rohou@inria.fr])
 
 AC_CONFIG_SRCDIR([src/tiptop.c])
 AC_CONFIG_HEADERS([config.h])
