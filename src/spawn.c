@@ -2,7 +2,7 @@
  * This file is part of tiptop.
  *
  * Author: Erven ROHOU
- * Copyright (c) 2011 Inria
+ * Copyright (c) 2011, 2012 Inria
  *
  * License: GNU General Public License version 2.
  *
@@ -23,17 +23,29 @@
 
 static int pipefd[2];
 static pid_t my_child = 0;
+static int updated = 0;
 
 
 static void alarm_handler(int sig)
 {
   assert(sig == SIGALRM);
-  update_name_cmdline(my_child);
+  if (!updated) {
+    update_name_cmdline(my_child, 0);
+    updated = 1;
+  }
 }
 
 static void child_handler(int sig)
 {
   assert(sig == SIGCHLD);
+  /* Short running processes may terminate before the timer
+     expires. We attempt to update the name now. The command line is
+     no longer available for zombies (see man proc). */
+  if (!updated) {
+    update_name_cmdline(my_child, 1);
+    updated = 1;
+  }
+
   /* Do nothing special. We only want the signal to be delivered. It
      will interrupt the 'select' in the main loop (batch/live mode),
      and force an immediate refresh. If 'sticky' mode is on, we also

@@ -91,6 +91,6 @@ void compact_proc_list(struct process_list* const);
 void accumulate_stats(const struct process_list* const);
 void reset_values(const struct process_list* const);
 
-void update_name_cmdline(int pid);
+void update_name_cmdline(int pid, int name_only);
 
 #endif  /* _PROCESS_H */

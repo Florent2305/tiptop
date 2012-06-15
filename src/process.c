@@ -619,13 +619,12 @@ void reset_values(const struct process_list* const list)
    the fork, the process name and command line are tiptop's. They are
    correct after exec. update_name_cmdline is invoked a little while
    after exec to fix these fields. */
-void update_name_cmdline(int pid)
+void update_name_cmdline(int pid, int name_only)
 {
   FILE* f;
   char  name[50] = { 0 };  /* needs to fit /proc/xxxx/{status,cmdline} */
   char  line[100];  /* line of /proc/xxxx/status */
   char  proc_name[100];
-  char  buffer[100];
 
   struct process* p = hash_get(pid);
   if (!p)  /* gone? */
@@ -647,10 +646,12 @@ void update_name_cmdline(int pid)
     fclose(f);
   }
 
-  /* update command line */
-  if (p->cmdline)
-    free(p->cmdline);
+  if (!name_only) {  /* update command line */
+    char  buffer[100];
+    if (p->cmdline)
+      free(p->cmdline);
 
-  get_cmdline(pid, buffer, sizeof(buffer));
-  p->cmdline = strdup(buffer);
+    get_cmdline(pid, buffer, sizeof(buffer));
+    p->cmdline = strdup(buffer);
+  }
 }
