@@ -32,6 +32,7 @@ all: tiptop
 
 tiptop: $(OBJS)
 	$(CC) -o tiptop $(OBJS) $(LIBS)
+	ln tiptop ptiptop
 
 
 Makefile: Makefile.in ../config.status
@@ -58,7 +59,7 @@ uninstall:
 	-rm $(DESTDIR)$(man1dir)/tiptop.1
 
 clean:
-	/bin/rm -f $(OBJS) tiptop
+	/bin/rm -f $(OBJS) tiptop ptiptop
 
 
 depend:

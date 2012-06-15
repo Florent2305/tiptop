@@ -331,7 +331,15 @@ void parse_command_line(int argc, char* argv[],
       }
     }
 
-    fprintf(stderr, "Unknown flag: '%s'\n", argv[i]);
-    exit(EXIT_FAILURE);
+    if (strstr(argv[0], "ptiptop")) {
+      /* in case we are ptiptop, handle this argument as in tiptop's -p */
+      options->only_pid = atoi(argv[i]);
+      if (options->only_pid == 0)
+        options->only_name = strdup(argv[i]);
+    }
+    else {
+      fprintf(stderr, "Unknown flag: '%s'\n", argv[i]);
+      exit(EXIT_FAILURE);
+    }
   }
 }
