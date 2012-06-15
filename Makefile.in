@@ -77,6 +77,8 @@ $(distdir): FORCE
 	cp $(srcdir)/src/conf.h $(distdir)/src
 	cp $(srcdir)/src/debug.c $(distdir)/src
 	cp $(srcdir)/src/debug.h $(distdir)/src
+	cp $(srcdir)/src/formula-parser.c $(distdir)/src
+	cp $(srcdir)/src/formula-parser.h $(distdir)/src
 	cp $(srcdir)/src/hash.c $(distdir)/src
 	cp $(srcdir)/src/hash.h $(distdir)/src
 	cp $(srcdir)/src/helpwin.c $(distdir)/src
@@ -91,13 +93,18 @@ $(distdir): FORCE
 	cp $(srcdir)/src/requisite.h $(distdir)/src
 	cp $(srcdir)/src/screen.c $(distdir)/src
 	cp $(srcdir)/src/screen.h $(distdir)/src
-	cp $(srcdir)/src/screens-intel.c $(distdir)/src
-	cp $(srcdir)/src/screens-intel.h $(distdir)/src
 	cp $(srcdir)/src/spawn.c $(distdir)/src
 	cp $(srcdir)/src/spawn.h $(distdir)/src
+	cp $(srcdir)/src/target.c $(distdir)/src
+	cp $(srcdir)/src/target.h $(distdir)/src
+	cp $(srcdir)/src/target-x86.c $(distdir)/src
 	cp $(srcdir)/src/tiptop.c $(distdir)/src
+	cp $(srcdir)/src/utils-expression.c $(distdir)/src
+	cp $(srcdir)/src/utils-expression.h $(distdir)/src
 	cp $(srcdir)/src/version.c $(distdir)/src
 	cp $(srcdir)/src/version.h $(distdir)/src
+	cp $(srcdir)/src/xml-parser.c $(distdir)/src
+	cp $(srcdir)/src/xml-parser.h $(distdir)/src
 
 FORCE:
 	-rm $(distdir).tar.gz > /dev/null 2>&1
