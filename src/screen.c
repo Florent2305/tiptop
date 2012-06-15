@@ -50,20 +50,25 @@ static screen_t** screens = NULL;
 /* Navigate into expression to check used counters */
 static void check_counters_used(expression* e, screen_t* s)
 {
-  int i = 0;
-  int find = -1;
-  if (e->type == ELEM && e->ele->type == COUNT) {
-    for(i=0; i<s->num_counters; i++)
-      if (strcmp(e->ele->alias, s->counters[i].alias) == 0)
-        find = i;
 
-    /* Check if the counter is declared or is a software counter : CPU_... and PROC_ID */
+  int i = 0;
+  int find;
+
+ if (e->type == ELEM && e->ele->type == COUNT) {
+    find = -1;
     if(strcmp(e->ele->alias, "CPU_TOT") == 0 || 
        strcmp(e->ele->alias, "CPU_SYS") == 0 || 
        strcmp(e->ele->alias, "CPU_USER") == 0 || 
        strcmp(e->ele->alias, "PROC_ID") == 0 )
       return ;
-    else if(find >= 0) 
+    
+    for(i=0; (s->counters[i].alias != NULL && i < s->num_counters); i++)
+      if (strcmp(e->ele->alias, s->counters[i].alias) == 0)
+        find = i;
+    
+
+
+    if(find >= 0) 
       s->counters[find].used++;
     else fprintf(stderr, "[TIPTOP] Error: counter %s undeclared in screen %s!\n", e->ele->alias, s->name);
   }  
@@ -334,23 +339,23 @@ int add_counter(screen_t* const s, char* alias, char* config, char* type)
 {
   uint64_t int_conf = 0;
   uint32_t int_type = 0;
-  int rc=0, rt=0;
+  int err=0;
   int n;
   expression* expr = NULL;
 
   /* Parse the configuration */
   expr = parser_expression(config);
+  int_type = get_counter_type(type, &err);
 
-  int_type = get_counter_type(type, &rt);
-  int_conf = evaluate_counter_expression(expr, &rc);
-
-  free_expression(expr);
-  if (rt > 0) {
+  if (err > 0) {
     /* error*/
     fprintf(stderr, "[TIPTOP] Warning: could not add counter '%s' ( %s is a bad type)\n", alias, type);
     return -1;
   }
-  if (rc > 0) {
+  err = 0;
+  int_conf = evaluate_counter_expression(expr, &err);
+  free_expression(expr);
+  if (err > 0) {
     /* error*/
     fprintf(stderr, "[TIPTOP] Warning: could not add counter '%s' ( %s is a bad config)\n", alias, config);
     return -1;
@@ -360,8 +365,9 @@ int add_counter(screen_t* const s, char* alias, char* config, char* type)
   /* check max available hw counter */
   if (n == s->num_alloc_counters) {
     s->counters = realloc(s->counters, sizeof(counter_t) * (n + alloc_chunk));
-    n += alloc_chunk;
-    s->num_counters += alloc_chunk;
+    //    n += alloc_chunk;
+    // s->num_counters += alloc_chunk;
+    s->num_alloc_counters += alloc_chunk;
   }
   /* initialisation */
   s->counters[n].used = 0;
@@ -381,8 +387,9 @@ int add_counter_by_value(screen_t* const s, char* alias,
   /* check max available hw counter */
   if (n == s->num_alloc_counters) {
     s->counters = realloc(s->counters, sizeof(counter_t) * (n + alloc_chunk));
-    n += alloc_chunk;
-    s->num_counters += alloc_chunk;
+    //n += alloc_chunk;
+    // s->num_counters += alloc_chunk;
+    s->num_alloc_counters += alloc_chunk;
   }
   /* initialisation */
   s->counters[n].used = 0;
@@ -401,9 +408,10 @@ int add_column(screen_t* const s, char* header, char* format, char* desc,
   int n = s->num_columns;
 
   expression* e = parser_expression(expr);
-  if (e->type == 'E') {
+
+  if (e == NULL || e->type == ERROR) {
     free_expression(e);
-    fprintf(stderr, "error: invalid expression in screen '%s', column '%s'\n",
+    fprintf(stderr, "[TIPTOP] Error: invalid expression in screen '%s', column '%s'\n",
             s->name, header);
     return -1;
   }

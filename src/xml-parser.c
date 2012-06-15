@@ -97,11 +97,9 @@ static void parse_screen( xmlDocPtr doc, xmlNodePtr cur)
   desc = xmlGetProp(cur,(xmlChar*) "desc");
 
   if (name == NULL)
-    s = new_screen( "(Unknown)", (char*)desc);
+    s = new_screen("(Unknown)", (char*)desc);
   else
     s = new_screen((char*)name, (char*)desc);
-
-  
 
   cur = cur->xmlChildrenNode;
 

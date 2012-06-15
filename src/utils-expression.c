@@ -254,7 +254,7 @@ double evaluate_column_expression(expression* e, counter_t* c, int nbc,
 uint64_t evaluate_counter_expression(expression* e, int* error)
 {
   uint64_t val = 0;
-  if (e == NULL) {
+  if (e == NULL  || e->type == ERROR) {
     (*error)++;
     return 0;
   }

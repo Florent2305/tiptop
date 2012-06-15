@@ -185,13 +185,17 @@ expression* Expression(char* txt, int init)
   operation* se = NULL;
   expression* res;
 
+  debug_printf("[Formula-parser]Expression: %s", &txt[here]);
+
+
+  res = alloc_expression();
+
+
   if (init == 0)
     here = 0;
   if (txt == NULL)
     return NULL;
-
-  debug_printf("[Formula-parser]Expression: %s", &txt[here]);
-
+  
   buf = get_next_word(txt);
   if (buf[0] == '(' || strcmp(buf, "delta") == 0 || is_unit(buf) == 0 ||
       strlen(buf) == 0)
@@ -205,7 +209,6 @@ expression* Expression(char* txt, int init)
 
     se = FollowingExpression(txt);
 
-    res = alloc_expression();
 
     if (se != NULL && se->operateur == ERROR) {
       free_expression(e);
@@ -364,7 +367,7 @@ static expression* Element(char* txt)
   return exp;
 
  error:
-  exp->type = 'E';
+  exp->type = ERROR;
   return exp;
 }
 
