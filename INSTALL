@@ -16,6 +16,6 @@ Tiptop can be built in two ways:
 
 1.  mkdir build-dir
 2.  cd build-dir
-3.  /path/to/tiptop/configure  [--prefix=/some/where]
+3.  /where/you/unpacked/tiptop-x.y/configure  [--prefix=/some/where]
 4.  make
 (5. optional)  make install
