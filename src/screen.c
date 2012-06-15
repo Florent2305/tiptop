@@ -486,11 +486,11 @@ static screen_t* branch_pred_screen()
 
   /* add columns */
   add_column(s, "  %CPU", " %5.1f", "CPU usage", "CPU_TOT");
-  add_column(s, "    %MISP", "   %6.2f",
+  add_column(s, "   %MIS/I", "   %6.2f",
              "Mispredictions per 100 instructions",
              "100 * delta(BMISS) / delta(INSTR)");
 
-  add_column(s, "  %MIS/I", "   %5.2f",
+  add_column(s, "   %MISP", "   %5.2f",
              "Mispredictions per 100 branch instructions retired",
              "100 * delta(BMISS) / delta(BR)");
 
