@@ -71,7 +71,6 @@ depend:
 # DO NOT DELETE
 
 conf.o: conf.h options.h xml-parser.h
-config-parser.o: options.h
 formula-parser.o: debug.h formula-parser.h utils-expression.h process.h
 formula-parser.o: screen.h options.h
 hash.o: hash.h process.h screen.h formula-parser.h options.h
