@@ -342,19 +342,17 @@ int add_counter(screen_t* const s, char* alias, char* config, char* type)
   expr = parser_expression(config);
 
   int_type = get_counter_type(type, &rt);
-  int_conf = evaluate_expression_configuration(expr, &rc);
+  int_conf = evaluate_counter_expression(expr, &rc);
 
   free_expression(expr);
-
-  if (rt == 1) {
+  if (rt > 0) {
     /* error*/
-    fprintf(stderr, "warning: could not add counter '%s' (Bad type)\n", alias);
+    fprintf(stderr, "[TIPTOP] Warning: could not add counter '%s' ( %s is a bad type)\n", alias, type);
     return -1;
   }
-
-  if (rc == 1) {
+  if (rc > 0) {
     /* error*/
-    fprintf(stderr, "warning: could not add counter '%s' (Bad config)\n", alias);
+    fprintf(stderr, "[TIPTOP] Warning: could not add counter '%s' ( %s is a bad config)\n", alias, config);
     return -1;
   }
 

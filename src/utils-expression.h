@@ -27,8 +27,8 @@ int build_expression(expression* e, FILE* fd);
 
 expression* parser_expression (char* txt);
 
-double evaluate_expression(expression* e, counter_t* c, int nbc,
+double evaluate_column_expression(expression* e, counter_t* c, int nbc,
                            struct process* p, int* error);
-uint64_t evaluate_expression_configuration(expression* e, int* error);
+uint64_t evaluate_counter_expression(expression* e, int* error);
 
 #endif  /* _UTILS_EXPRESSION_H */

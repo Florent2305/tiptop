@@ -96,13 +96,12 @@ static void parse_screen( xmlDocPtr doc, xmlNodePtr cur)
   name = xmlGetProp(cur,(xmlChar*) "name");
   desc = xmlGetProp(cur,(xmlChar*) "desc");
 
-  if (name == NULL) {
-    xmlFree(desc);
-    xmlFree(name);
-    exit(-1);
-  }
+  if (name == NULL)
+    s = new_screen( "(Unknown)", (char*)desc);
+  else
+    s = new_screen((char*)name, (char*)desc);
 
-  s = new_screen((char*)name, (char*)desc);
+  
 
   cur = cur->xmlChildrenNode;
 
@@ -243,7 +242,6 @@ int parse_doc(char* file, struct option* opt)
 
     cur = cur->next;
   }
-
   xmlFreeDoc(doc);
   return 0;
 }

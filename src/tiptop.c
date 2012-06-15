@@ -211,7 +211,7 @@ static void build_rows(struct process_list* proc_list, screen_t* s, int width)
       if (active_col == col)
         p->u.d = 0.0;
 
-      res = evaluate_expression(s->columns[col].expression,
+      res = evaluate_column_expression(s->columns[col].expression,
                                 s->counters,
                                 s->num_counters,
                                 p, &error);

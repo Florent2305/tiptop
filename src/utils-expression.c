@@ -203,7 +203,7 @@ static double get_counter_value(unit* e, counter_t* tab, int nbc, char delta,
  *      1 => Invalid Counter
  *      2 => Divide per zero (also if it is double)
  */
-double evaluate_expression(expression* e, counter_t* c, int nbc,
+double evaluate_column_expression(expression* e, counter_t* c, int nbc,
                            struct process* p, int* error)
 {
   if (e == NULL) {
@@ -221,26 +221,26 @@ double evaluate_expression(expression* e, counter_t* c, int nbc,
 
     switch(e->op->operateur) {
     case '+':
-      return evaluate_expression(e->op->exp1, c, nbc, p, error) +
-             evaluate_expression(e->op->exp2, c, nbc, p, error);
+      return evaluate_column_expression(e->op->exp1, c, nbc, p, error) +
+             evaluate_column_expression(e->op->exp2, c, nbc, p, error);
       break;
 
     case '-':
-      return evaluate_expression(e->op->exp1, c, nbc, p, error) -
-             evaluate_expression(e->op->exp2, c, nbc, p, error);
+      return evaluate_column_expression(e->op->exp1, c, nbc, p, error) -
+             evaluate_column_expression(e->op->exp2, c, nbc, p, error);
       break;
 
     case '*':
-      return evaluate_expression(e->op->exp1, c, nbc, p, error) *
-             evaluate_expression(e->op->exp2, c, nbc, p, error);
+      return evaluate_column_expression(e->op->exp1, c, nbc, p, error) *
+             evaluate_column_expression(e->op->exp2, c, nbc, p, error);
       break;
     case '/': {
-      double tmp = evaluate_expression(e->op->exp2, c, nbc, p, error);
+      double tmp = evaluate_column_expression(e->op->exp2, c, nbc, p, error);
       if (tmp == 0) {
         *error = 2;
         return 0;
       }
-      return evaluate_expression(e->op->exp1, c, nbc, p, error) / tmp;
+      return evaluate_column_expression(e->op->exp1, c, nbc, p, error) / tmp;
       break;
     }
     default:
@@ -251,42 +251,38 @@ double evaluate_expression(expression* e, counter_t* c, int nbc,
 }
 
 
-uint64_t evaluate_expression_configuration(expression* e, int* error)
+uint64_t evaluate_counter_expression(expression* e, int* error)
 {
   uint64_t val = 0;
   if (e == NULL) {
-    *error = 1;
+    (*error)++;
     return 0;
   }
-  *error = 0;
   if (e->type == ELEM) {
     if (e->ele->type == COUNT){
       if (get_counter_config(e->ele->alias, &val) < 0)
-        *error = 1;
+        (*error)++;
       return val;
     }
     else return (uint64_t) e->ele->val;
   }
   else if ((e->type == OPER) && (e->op != NULL)) {
-
     switch(e->op->operateur) {
     case '<':
-      return evaluate_expression_configuration(e->op->exp1, error) <<
-             evaluate_expression_configuration(e->op->exp2, error);
+      return evaluate_counter_expression(e->op->exp1, error) <<
+	evaluate_counter_expression(e->op->exp2, error);
       break;
-
     case '>':
-      return evaluate_expression_configuration(e->op->exp1, error) >>
-             evaluate_expression_configuration(e->op->exp2, error);
+      return evaluate_counter_expression(e->op->exp1, error) >>
+	evaluate_counter_expression(e->op->exp2, error);
       break;
-
     case '&':
-      return evaluate_expression_configuration(e->op->exp1, error) &
-             evaluate_expression_configuration(e->op->exp2, error);
+      return evaluate_counter_expression(e->op->exp1, error) &
+	evaluate_counter_expression(e->op->exp2, error);
       break;
     case '|':
-      return evaluate_expression_configuration(e->op->exp1, error) |
-             evaluate_expression_configuration(e->op->exp2, error);
+      return evaluate_counter_expression(e->op->exp1, error) |
+	evaluate_counter_expression(e->op->exp2, error);
       break;
     default:
       assert(0);
