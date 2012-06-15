@@ -189,13 +189,13 @@ static int dump_counter(FILE* out, counter_t* c)
 }
 
 
-static const char* const col_sta  = "\t\t<view header=\"";
+static const char* const col_sta  = "\t\t<column header=\"";
 static const char* const col_format = "\" format=\"";
 static const char* const col_desc = "\" desc=\"";
 static const char* const col_expr = "\" expr=\"";
 static const char* const col_clo  = "\" />";
 
-static int dump_view(FILE* out, column_t* c)
+static int dump_column(FILE* out, column_t* c)
 {
   if (fprintf(out, "%s%s%s%s%s%s%s",
               col_sta, c->header, col_format, c->format, col_desc,
@@ -230,9 +230,9 @@ static int dump_screen(FILE* out, screen_t* s)
   for(i=0;i<s->num_counters;i++)
     if (dump_counter(out, &s->counters[i]) < 0)
       return -1;
-  /* Print Views or Columns */
+  /* Print Columns */
   for(i=0;i<s->num_columns;i++)
-    if (dump_view(out, &s->columns[i]) < 0)
+    if (dump_column(out, &s->columns[i]) < 0)
       return -1;
 
   if (fprintf(out, "%s\n", screen_end) < 0)

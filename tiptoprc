@@ -20,39 +20,39 @@
     <counter alias="BR" config="BRANCH_MISSES" type="HARDWARE" />
     <counter alias="BUS" config="BUS_CYCLES" type="HARDWARE" />
     <counter alias="TEST_L1" config="0x00000" type="HW_CACHE" />
-    <view header=" %CPU" format="%5.1f" desc="(unknown)" expr="CPU_TOT" />
-    <view header=" %SYS" format="%5.1f" desc="(unknown)" expr="CPU_SYS" />
-    <view header="   P" format="  %2.0f" desc="(unknown)" expr="PROC_ID" />
-    <view header="  Mcycle" format="%8.2f" desc="Cycles (millions)" expr="(delta(CYCLE) / 1000000.000000)" />
-    <view header=" TEST_L1" format="%5.1f" desc="(unknown)" expr="TEST_L1" />
-    <view header="  Minstr" format="%8.2f" desc="Instructions (millions)" expr="(delta(INSN) / 1000000.000000)" />
-    <view header=" IPC" format="%4.2f" desc="Executed instructions per cycle" expr="(delta(INSN) / delta(CYCLE))" />
-    <view header=" %MISS" format="%6.2f" desc="Cache miss per instruction" expr="(100.000000 * (delta(MISS) / delta(INSN)))" />
-    <view header=" %BMIS" format="%6.2f" desc="Branch misprediction per instruction" expr="(100.000000 * (delta(BR) / delta(INSN)))" />
-    <view header=" %BUS" format="%5.1f" desc="Bus cycles per executed instruction" expr="(delta(BUS) / delta(INSN))" />
+    <column header=" %CPU" format="%5.1f" desc="(unknown)" expr="CPU_TOT" />
+    <column header=" %SYS" format="%5.1f" desc="(unknown)" expr="CPU_SYS" />
+    <column header="   P" format="  %2.0f" desc="(unknown)" expr="PROC_ID" />
+    <column header="  Mcycle" format="%8.2f" desc="Cycles (millions)" expr="(delta(CYCLE) / 1000000.000000)" />
+    <column header=" TEST_L1" format="%8.1f" desc="(unknown)" expr="TEST_L1" />
+    <column header="  Minstr" format="%8.2f" desc="Instructions (millions)" expr="(delta(INSN) / 1000000.000000)" />
+    <column header=" IPC" format="%4.2f" desc="Executed instructions per cycle" expr="(delta(INSN) / delta(CYCLE))" />
+    <column header=" %MISS" format="%6.2f" desc="Cache miss per instruction" expr="(100.000000 * (delta(MISS) / delta(INSN)))" />
+    <column header=" %BMIS" format="%6.2f" desc="Branch misprediction per instruction" expr="(100.000000 * (delta(BR) / delta(INSN)))" />
+    <column header=" %BUS" format="%5.1f" desc="Bus cycles per executed instruction" expr="(delta(BUS) / delta(INSN))" />
   </screen>
   <screen name="branch prediction" desc="Branch prediction statistics">
     <counter alias="INSN" config="INSTRUCTIONS" type="HARDWARE" />
     <counter alias="MISS" config="CACHE_MISSES" type="HARDWARE" />
     <counter alias="BR" config="BRANCH_MISSES" type="HARDWARE" />
-    <view header="  %CPU" format=" %5.1f" desc="(unknown)" expr="CPU_TOT" />
-    <view header="    %MISP" format="   %6.2f" desc="Mispredictions per 100 branch instructions" expr="(100.000000 * (delta(MISS) / delta(BR)))" />
-    <view header="  %MIS/I" format="   %5.2f" desc="Mispredictions per 100 branch instructions" expr="(100.000000 * (delta(MISS) / delta(INSN)))" />
-    <view header="  %BR/I" format="  %5.2f" desc="Fraction of branch instructions" expr="(100.000000 * (delta(BR) / delta(INSN)))" />
+    <column header="  %CPU" format=" %5.1f" desc="(unknown)" expr="CPU_TOT" />
+    <column header="    %MISP" format="   %6.2f" desc="Mispredictions per 100 branch instructions" expr="(100.000000 * (delta(MISS) / delta(BR)))" />
+    <column header="  %MIS/I" format="   %5.2f" desc="Mispredictions per 100 branch instructions" expr="(100.000000 * (delta(MISS) / delta(INSN)))" />
+    <column header="  %BR/I" format="  %5.2f" desc="Fraction of branch instructions" expr="(100.000000 * (delta(BR) / delta(INSN)))" />
   </screen>
   <screen name="uOps" desc="micro operations">
     <counter alias="C" config="CPU_CYCLES" type="HARDWARE" />
     <counter alias="I" config="INSTRUCTIONS" type="HARDWARE" />
     <counter alias="UOP" config="0x1c2" type="RAW" />
     <counter alias="MACROF" config="0x4c2" type="RAW" />
-    <view header=" %CPU" format="%5.1f" desc="CPU usage" expr="CPU_TOT" />
-    <view header=" %SYS" format="%5.1f" desc="CPU sys" expr="CPU_SYS" />
-    <view header="  Mcycle" format="%8.2f" desc="Cycles (millions)" expr="(delta(C) / 1000000.000000)" />
-    <view header="  Minstr" format="%8.2f" desc="Instructions (millions)" expr="(delta(I) / 1000000.000000)" />
-    <view header=" IPC" format="%4.2f" desc="Executed instructions per cycle" expr="(delta(I) / delta(C))" />
-    <view header="   Muops" format="%8.2f" desc="Retired uops (millions)" expr="(delta(UOP) / 1000000.000000)" />
-    <view header="  uPI" format=" %4.2f" desc="Retired uops per instruction" expr="(delta(UOP) / delta(I))" />
-    <view header=" macrof" format="   %4.2f" desc="Macro fused uops (UOPS_RETIRED.MACRO_FUSED) per instruction" expr="(delta(MACROF) / delta(I))" />
+    <column header=" %CPU" format="%5.1f" desc="CPU usage" expr="CPU_TOT" />
+    <column header=" %SYS" format="%5.1f" desc="CPU sys" expr="CPU_SYS" />
+    <column header="  Mcycle" format="%8.2f" desc="Cycles (millions)" expr="(delta(C) / 1000000.000000)" />
+    <column header="  Minstr" format="%8.2f" desc="Instructions (millions)" expr="(delta(I) / 1000000.000000)" />
+    <column header=" IPC" format="%4.2f" desc="Executed instructions per cycle" expr="(delta(I) / delta(C))" />
+    <column header="   Muops" format="%8.2f" desc="Retired uops (millions)" expr="(delta(UOP) / 1000000.000000)" />
+    <column header="  uPI" format=" %4.2f" desc="Retired uops per instruction" expr="(delta(UOP) / delta(I))" />
+    <column header=" macrof" format="   %4.2f" desc="Macro fused uops (UOPS_RETIRED.MACRO_FUSED) per instruction" expr="(delta(MACROF) / delta(I))" />
   </screen>
   <screen name="FP" desc="Floating point instructions">
     <counter alias="C" config="CPU_CYCLES" type="HARDWARE" />
@@ -61,14 +61,14 @@
     <counter alias="sp" config="0x4010" type="RAW" />
     <counter alias="dp" config="0x8010" type="RAW" />
     <counter alias="Assist" config="0x1f7" type="RAW" />
-    <view header=" %CPU" format="%5.1f" desc="CPU usage" expr="CPU_TOT" />
-    <view header="  Mcycle" format="%8.2f" desc="Cycles (millions)" expr="(delta(C) / 1000000.000000)" />
-    <view header="  Minstr" format="%8.2f" desc="Instructions (millions)" expr="(delta(I) / 1000000.000000)" />
-    <view header=" IPC" format="%4.2f" desc="Executed instructions per cycle" expr="(delta(I) / delta(C))" />
-    <view header=" %x87" format="%5.1f" desc="FP computational uops (FP_COMP_OPS_EXE.X87) per insn" expr="(100.000000 * (delta(x87) / delta(I)))" />
-    <view header="       SSES" format="   %8.1f" desc="SSE* FP single precision uops per insn per 1000" expr="(100.000000 * (delta(sp) / delta(I)))" />
-    <view header="       SSED" format="   %8.1f" desc="SSE* FP double precision uops per insn per 1000" expr="(100.000000 * (delta(dp) / delta(I)))" />
-    <view header="%assist" format="  %5.1f" desc="FP op that required micro-code assist per instruction" expr="(100.000000 * (delta(Assist) / delta(I)))" />
+    <column header=" %CPU" format="%5.1f" desc="CPU usage" expr="CPU_TOT" />
+    <column header="  Mcycle" format="%8.2f" desc="Cycles (millions)" expr="(delta(C) / 1000000.000000)" />
+    <column header="  Minstr" format="%8.2f" desc="Instructions (millions)" expr="(delta(I) / 1000000.000000)" />
+    <column header=" IPC" format="%4.2f" desc="Executed instructions per cycle" expr="(delta(I) / delta(C))" />
+    <column header=" %x87" format="%5.1f" desc="FP computational uops (FP_COMP_OPS_EXE.X87) per insn" expr="(100.000000 * (delta(x87) / delta(I)))" />
+    <column header="       SSES" format="   %8.1f" desc="SSE* FP single precision uops per insn per 1000" expr="(100.000000 * (delta(sp) / delta(I)))" />
+    <column header="       SSED" format="   %8.1f" desc="SSE* FP double precision uops per insn per 1000" expr="(100.000000 * (delta(dp) / delta(I)))" />
+    <column header="%assist" format="  %5.1f" desc="FP op that required micro-code assist per instruction" expr="(100.000000 * (delta(Assist) / delta(I)))" />
   </screen>
   <screen name="mem" desc="Memory hierarchy">
     <counter alias="I" config="INSTRUCTIONS" type="HARDWARE" />
@@ -76,16 +76,16 @@
     <counter alias="L2MissD" config="0x224" type="RAW" />
     <counter alias="L2MissI" config="0x2024" type="RAW" />
     <counter alias="L3Miss" config="CACHE_MISSES" type="HARDWARE" />
-    <view header=" %CPU" format="%5.2f" desc="CPU usage" expr="CPU_TOT" />
-    <view header="   I(M)" format="%7.2f" desc="Instruction per Million" expr="(delta(I) / 1000000.000000)" />
-    <view header=" L1iMiss" format="   %5.1f" desc="Instruction fetches that miss in L1I (L1I.MISSES) (million)" expr="delta(L1MissI)" />
-    <view header="   L1i" format="  %4.1f" desc="Same L1iMiss per instruction" expr="(100.000000 * (delta(L1MissI) / delta(I)))" />
-    <view header=" L2iMiss" format=" %7.1f" desc="Insn fetches that miss L2 cache (L2_RQSTS.IFETCH_MISS) (million)" expr="delta(L2MissI)" />
-    <view header="   L2i" format="  %4.1f" desc="same L2iMiss per instruction" expr="(100.000000 * (delta(L2MissI) / delta(I)))" />
-    <view header="  L2dMiss" format="%9.1f" desc="Loads that miss L2 cache" expr="delta(L2MissD)" />
-    <view header="  L2d" format=" %4.1f" desc="   same L2dMiss, per instruction" expr="(100.000000 * (delta(L2MissD) / delta(I)))" />
-    <view header="    L3Miss" format=" %9.1f" desc="LLC Misses" expr="delta(L3Miss)" />
-    <view header="   L3" format=" %4.1f" desc="same L3Miss, per instruction" expr="(100.000000 * (delta(L3Miss) / delta(I)))" />
+    <column header=" %CPU" format="%5.2f" desc="CPU usage" expr="CPU_TOT" />
+    <column header="   I(M)" format="%7.2f" desc="Instruction per Million" expr="(delta(I) / 1000000.000000)" />
+    <column header=" L1iMiss" format="   %5.1f" desc="Instruction fetches that miss in L1I (L1I.MISSES) (million)" expr="delta(L1MissI)" />
+    <column header="   L1i" format="  %4.1f" desc="Same L1iMiss per instruction" expr="(100.000000 * (delta(L1MissI) / delta(I)))" />
+    <column header=" L2iMiss" format=" %7.1f" desc="Insn fetches that miss L2 cache (L2_RQSTS.IFETCH_MISS) (million)" expr="delta(L2MissI)" />
+    <column header="   L2i" format="  %4.1f" desc="same L2iMiss per instruction" expr="(100.000000 * (delta(L2MissI) / delta(I)))" />
+    <column header="  L2dMiss" format="%9.1f" desc="Loads that miss L2 cache" expr="delta(L2MissD)" />
+    <column header="  L2d" format=" %4.1f" desc="   same L2dMiss, per instruction" expr="(100.000000 * (delta(L2MissD) / delta(I)))" />
+    <column header="    L3Miss" format=" %9.1f" desc="LLC Misses" expr="delta(L3Miss)" />
+    <column header="   L3" format=" %4.1f" desc="same L3Miss, per instruction" expr="(100.000000 * (delta(L3Miss) / delta(I)))" />
   </screen>
   <screen name="imix" desc="Instruction mix">
     <counter alias="C" config="CPU_CYCLES" type="HARDWARE" />
@@ -94,13 +94,13 @@
     <counter alias="ST" config="0x20b" type="RAW" />
     <counter alias="x87" config="0x2c0" type="RAW" />
     <counter alias="brr" config="0xc4" type="RAW" />
-    <view header=" %CPU" format="%5.1f" desc="CPU usage" expr="CPU_TOT" />
-    <view header="  Mcycle" format="%8.2f" desc="Cycles (millions)" expr="(delta(C) / 1000000.000000)" />
-    <view header="  Minstr" format="%8.2f" desc="Instructions (millions)" expr="(delta(I) / 1000000.000000)" />
-    <view header=" IPC" format="%4.2f" desc="Executed instructions per cycle" expr="(delta(I) / delta(C))" />
-    <view header="     %LD/I" format="  %8.1f" desc="Fraction of load" expr="(100.000000 * (delta(LD) / delta(I)))" />
-    <view header="    %ST/I" format="  %7.1f" desc="Fraction of stores" expr="(100.000000 * (delta(ST) / delta(I)))" />
-    <view header=" %FP/I" format="  %4.1f" desc="Fraction of x87" expr="(100.000000 * (delta(x87) / delta(I)))" />
-    <view header="     %BR/I" format="  %8.1f" desc="Fraction of branch instructions" expr="(100.000000 * (delta(brr) / delta(I)))" />
+    <column header=" %CPU" format="%5.1f" desc="CPU usage" expr="CPU_TOT" />
+    <column header="  Mcycle" format="%8.2f" desc="Cycles (millions)" expr="(delta(C) / 1000000.000000)" />
+    <column header="  Minstr" format="%8.2f" desc="Instructions (millions)" expr="(delta(I) / 1000000.000000)" />
+    <column header=" IPC" format="%4.2f" desc="Executed instructions per cycle" expr="(delta(I) / delta(C))" />
+    <column header="     %LD/I" format="  %8.1f" desc="Fraction of load" expr="(100.000000 * (delta(LD) / delta(I)))" />
+    <column header="    %ST/I" format="  %7.1f" desc="Fraction of stores" expr="(100.000000 * (delta(ST) / delta(I)))" />
+    <column header=" %FP/I" format="  %4.1f" desc="Fraction of x87" expr="(100.000000 * (delta(x87) / delta(I)))" />
+    <column header="     %BR/I" format="  %8.1f" desc="Fraction of branch instructions" expr="(100.000000 * (delta(brr) / delta(I)))" />
   </screen>
 </tiptop>

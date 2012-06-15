@@ -30,25 +30,12 @@ static void option_update(xmlChar* name, xmlChar* val, struct option* opt);
 static void parse_options(xmlDocPtr doc, xmlNodePtr cur, struct option* opt);
 static void parse_screen(xmlDocPtr doc, xmlNodePtr cur);
 static void parse_counters(screen_t* s, xmlDocPtr doc, xmlNodePtr cur);
-static void parse_views(screen_t* s, xmlDocPtr doc, xmlNodePtr cur);
-
-
-#if 0
-/*
-*	Fonction d'affichage
-*/
-
-static void print_option(struct option op)
-{
-  printf("Option:\n\tdelay:%lf\n\tcpu_threshold:%lf\n",
-         op.delay, op.cpu_threshold);
-}
-#endif
+static void parse_columns(screen_t* s, xmlDocPtr doc, xmlNodePtr cur);
 
 
 /*
-*	Remplissage des structures
-*/
+ *	Remplissage des structures
+ */
 
 static void option_update(xmlChar* name, xmlChar* val, struct option* opt)
 {
@@ -121,8 +108,8 @@ static void parse_screen( xmlDocPtr doc, xmlNodePtr cur)
 
   while (cur != NULL) {
 
-    if ((!xmlStrcmp(cur->name, (const xmlChar *)"view")))
-      parse_views(s, doc, cur);
+    if ((!xmlStrcmp(cur->name, (const xmlChar *)"column")))
+      parse_columns(s, doc, cur);
     else if ((!xmlStrcmp(cur->name, (const xmlChar *)"counter")))
       parse_counters(s, doc, cur);
 
@@ -133,7 +120,7 @@ static void parse_screen( xmlDocPtr doc, xmlNodePtr cur)
 }
 
 
-static void parse_views(screen_t* s, xmlDocPtr doc, xmlNodePtr cur)
+static void parse_columns(screen_t* s, xmlDocPtr doc, xmlNodePtr cur)
 {
   xmlChar *header=NULL, *format=NULL, *desc=NULL, *expr=NULL;
   header = xmlGetProp(cur, (xmlChar*) "header");

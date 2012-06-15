@@ -405,7 +405,7 @@ int add_column(screen_t* const s, char* header, char* format, char* desc,
   expression* e = parser_expression(expr);
   if (e->type == 'E') {
     free_expression(e);
-    fprintf(stderr, "error: invalid expression in screen '%s', view '%s'\n",
+    fprintf(stderr, "error: invalid expression in screen '%s', column '%s'\n",
             s->name, header);
     return -1;
   }
