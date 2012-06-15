@@ -344,6 +344,8 @@ int add_counter(screen_t* const s, char* alias, char* config, char* type)
   int_type = get_counter_type(type, &rt);
   int_conf = evaluate_expression_configuration(expr, &rc);
 
+  free_expression(expr);
+
   if (rt == 1) {
     /* error*/
     fprintf(stderr, "warning: could not add counter '%s' (Bad type)\n", alias);
