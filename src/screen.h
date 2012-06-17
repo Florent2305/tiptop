@@ -35,7 +35,6 @@ typedef struct {
 
 
 typedef struct {
-  int     id;
   char*   name;
   char*   desc;
   int        num_counters;
@@ -51,7 +50,8 @@ char* get_counter_config_name(uint64_t conf);
 int get_counter_config(char* config, uint64_t* result);
 char* get_counter_type_name(uint32_t type);
 
-screen_t* new_screen(const char* const name, const char* const desc);
+int screen_pos(const screen_t* s);
+screen_t* new_screen(char* name, char* desc, int prepend);
 int add_counter(screen_t* const s, char* alias, char* config, char* type);
 
 int add_counter_by_value(screen_t* const s, char* alias,
@@ -60,14 +60,14 @@ int add_counter_by_value(screen_t* const s, char* alias,
 int add_column(screen_t* const s, char* header, char* format, char* desc,
                char* expr);
 
-void tamp_counters();
+void tamp_counters(void);
 
-void init_screen();
+void init_screen(void);
 screen_t* get_screen(int);
 
 int get_num_screens();
 
-void list_screens();
+void list_screens(void);
 
 char* gen_header(const screen_t* const s, const struct option* const,
                  int width, int active_col);
@@ -75,7 +75,7 @@ char* gen_header(const screen_t* const s, const struct option* const,
 void delete_screen(screen_t* s);
 void delete_screens();
 
-void screens_hook();  /* to be implemented by target specific files */
+void screens_hook(void);  /* to be implemented by target specific files */
 
 int export_screens(struct option* o);
 

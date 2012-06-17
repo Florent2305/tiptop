@@ -65,13 +65,14 @@ static void check_counters_used(expression* e, screen_t* s)
     for(i=0; (s->counters[i].alias != NULL && i < s->num_counters); i++)
       if (strcmp(e->ele->alias, s->counters[i].alias) == 0)
         find = i;
-    
-
 
     if(find >= 0) 
       s->counters[find].used++;
-    else fprintf(stderr, "[TIPTOP] Error: counter %s undeclared in screen %s!\n", e->ele->alias, s->name);
-  }  
+    else
+      fprintf(stderr,
+              "[TIPTOP] Error: counter %s undeclared in screen %s!\n",
+              e->ele->alias, s->name);
+  }
   else if (e->type == OPER && e->op != NULL) {
     check_counters_used(e->op->exp1, s);
     check_counters_used(e->op->exp2, s);
@@ -130,7 +131,6 @@ static screen_t* alloc_screen()
   s->counters = NULL;
   s->columns = NULL;
 
-  s->id = -1;
   s->num_counters = 0;
   s->num_alloc_counters = 0;
   s->num_columns = 0;
@@ -151,13 +151,24 @@ static void init_column(column_t* c)
 }
 
 
-screen_t* new_screen(const char* const name, const char* const desc)
+int screen_pos(const screen_t* s)
+{
+  int i;
+  for(i=0; i < num_screens; i++) {
+    if (screens[i] == s)
+      return i;
+  }
+  assert(0);
+  return -1;
+}
+
+
+screen_t* new_screen(char* name, char* desc, int prepend)
 {
   screen_t* the_screen = alloc_screen();
-  the_screen->id = num_screens;
   the_screen->name = strdup(name);
   if (desc == NULL || strlen(desc) == 0)
-    the_screen->desc = strdup("(Unknown)");
+    the_screen->desc = strdup("(no name)");
   else
     the_screen->desc = strdup(desc);
   the_screen->num_counters = 0;
@@ -171,7 +182,14 @@ screen_t* new_screen(const char* const name, const char* const desc)
     num_alloc_screens += alloc_chunk;
     screens = realloc(screens, num_alloc_screens * sizeof(screen_t*));
   }
-  screens[num_screens] = the_screen;
+  if (prepend) {
+    /* shift existing screens by 1 */
+    memmove(&screens[1], &screens[0], num_screens * sizeof(screen_t*));
+    screens[0] = the_screen;
+  }
+  else {
+    screens[num_screens] = the_screen;
+  }
 
   num_screens++;
   return the_screen;
@@ -454,7 +472,7 @@ int add_column(screen_t* const s, char* header, char* format, char* desc,
    counters defined in the Linux header file. */
 static screen_t* default_screen()
 {
-  screen_t* s = new_screen("default", "Screen by default");
+  screen_t* s = new_screen("default", "Screen by default", 1);
 
   /* setup counters */
   add_counter_by_value(s, "CYCLE", PERF_COUNT_HW_CPU_CYCLES,    PERF_TYPE_HARDWARE);
@@ -464,18 +482,18 @@ static screen_t* default_screen()
   add_counter_by_value(s, "BUS",   PERF_COUNT_HW_BUS_CYCLES,    PERF_TYPE_HARDWARE);
 
   /* add columns */
-  add_column(s, " %CPU", "%5.1f", NULL, "CPU_TOT");
-  add_column(s, " %SYS", "%5.1f", NULL, "CPU_SYS");
-  add_column(s, "   P", "  %2.0f", NULL, "PROC_ID");
+  add_column(s, " %CPU", "%5.1f", "Total CPU usage", "CPU_TOT");
+  add_column(s, " %SYS", "%5.1f", "System CPU usage", "CPU_SYS");
+  add_column(s, "   P", "  %2.0f", "Processor where last seen", "PROC_ID");
   add_column(s, "  Mcycle", "%8.2f", "Cycles (millions)",
              "delta(CYCLE) / 1000000");
   add_column(s, "  Minstr", "%8.2f", "Instructions (millions)",
              "delta(INSN) / 1000000");
-  add_column(s, " IPC",     "%4.2f", "Executed instructions per cycle",
+  add_column(s, "  IPC",     " %4.2f", "Executed instructions per cycle",
              "delta(INSN)/delta(CYCLE)");
-  add_column(s, " %MISS",   "%6.2f", "Cache miss per instruction",
+  add_column(s, " %MISS",   "%6.2f", "Cache miss per 100 instructions",
              "100*delta(MISS)/delta(INSN)");
-  add_column(s, " %BMIS",   "%6.2f", "Branch misprediction per instruction",
+  add_column(s, " %BMIS",   "%6.2f", "Mispredicted branches per 100 instructions",
              "100*delta(BR)/delta(INSN)");
   add_column(s, " %BUS",    "%5.1f", "Bus cycles per executed instruction",
              "delta(BUS)/delta(INSN)");
@@ -485,7 +503,7 @@ static screen_t* default_screen()
 
 static screen_t* branch_pred_screen()
 {
-  screen_t* s = new_screen("branch", "Branch prediction statistics");
+  screen_t* s = new_screen("branch", "Branch prediction statistics", 1);
 
   /* setup counters */
   add_counter_by_value(s, "INSTR", PERF_COUNT_HW_INSTRUCTIONS, PERF_TYPE_HARDWARE);
@@ -499,11 +517,11 @@ static screen_t* branch_pred_screen()
              "100 * delta(BMISS) / delta(INSTR)");
 
   add_column(s, "   %MISP", "   %5.2f",
-             "Mispredictions per 100 branch instructions retired",
+             "Mispredictions per 100 branch instructions",
              "100 * delta(BMISS) / delta(BR)");
 
-  add_column(s, "  %BR/I", "  %5.2f",
-             "Fraction of branch instructions retired per instructions",
+  add_column(s, "  %BR/I", "  %5.1f",
+             "Proportion of branch instructions",
              "100 * delta(BR) / delta(INSTR)");
   return s;
 }
@@ -511,8 +529,8 @@ static screen_t* branch_pred_screen()
 
 void init_screen()
 {
-  default_screen();
   branch_pred_screen();
+  default_screen();
 
   screens_hook();  /* target dependent screens, if any */
 }

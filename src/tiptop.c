@@ -270,8 +270,10 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
 {
   int   num_iter = 0;
   int   num_printed;
+  int   pos;
   FILE* out = options.out;
   struct process** p;
+
   tv.tv_sec = 0;
   tv.tv_usec = 200000;  /* 200 ms for first iteration */
 
@@ -310,6 +312,7 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
     }
   }
 
+  pos = screen_pos(screen);
 
   fprintf(out, "delay: %.2f  idle: %d  threads: %d\n",
           options.delay, (int)options.idle, (int)options.show_threads);
@@ -331,7 +334,7 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
 
   header = gen_header(screen, &options, TXT_LEN - 1, active_col);
 
-  fprintf(out, "Screen %d: %s\n", screen->id, screen->name);
+  fprintf(out, "Screen %d: %s\n", pos, screen->name);
   fprintf(out, "\n%s\n", header);
 
   for(num_iter=0; !options.max_iter || num_iter<options.max_iter; num_iter++) {
@@ -581,6 +584,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
   struct process** p;
   int             num_iter = 0;
   int             with_colors = 0;
+  int             pos;
 
   /* start curses */
   initscr();
@@ -607,6 +611,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
   tv.tv_usec = 200000; /* 200 ms for first iteration */
 
   header = gen_header(screen, &options, COLS - 1, active_col);
+  pos = screen_pos(screen);
 
   for(num_iter=0; !options.max_iter || num_iter<options.max_iter; num_iter++) {
     int  i, zz, printed, num_fd, num_dead;
@@ -710,13 +715,13 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
       attron(COLOR_PAIR(4));
     if (35 + 20 + 11 + strlen(screen->name) < COLS) {
       mvprintw(1, COLS - 11 - strlen(screen->name),
-               "screen %2d: %s\n", screen->id, screen->name);
+               "screen %2d: %s\n", pos, screen->name);
     }
     else if (COLS >= 35 + 20 + 11) {
       char screen_str[50] = { 0 };
       snprintf(screen_str, sizeof(screen_str) - 1, "%s\n", screen->name);
       screen_str[COLS - 35 - 20 - 11] = '\0';  /* truncate */
-      mvprintw(1, 35+20, "screen %2d: %s", screen->id, screen_str);
+      mvprintw(1, 35+20, "screen %2d: %s", pos, screen_str);
     }
     if (with_colors)
       attroff(COLOR_PAIR(4));
@@ -815,7 +820,7 @@ int main(int argc, char* argv[])
     debug_printf("Could not parse config file.\n");
 
   /* Add default screens */
-  if(options.default_screen == 1)
+  if (options.default_screen == 1)
     init_screen();
 
   /* Remove unused but declared counters */

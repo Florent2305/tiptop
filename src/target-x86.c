@@ -106,7 +106,7 @@ void target_dep_string(char* buf, int size)
   enum tables tab = table();
   int disp_fam = disp_family_model();
 
-  snprintf(buf, size, "Processor: x86, display_family = %02X_%02X (table %s)",
+  snprintf(buf, size, "Target: x86, model = %02X_%02X (table %s)",
            disp_fam >> 8, disp_fam & 0xff,
            table_names[tab]);
 }
@@ -121,9 +121,9 @@ void screens_hook()
 }
 
 
-#define FP_COMP_OPS_EXE_X87                   0x0110 /* A-2, A-4, A-6 */
-#define FP_COMP_OPS_EXE_SSE_SINGLE_PRECISION  0x4010 /* A-2, A-4, A-6 */
-#define FP_COMP_OPS_EXE_SSE_DOUBLE_PRECISION  0x8010 /* A-2, A-4, A-6 */
+#define FP_COMP_OPS_EXE_X87                   0x0110  /* A-2, A-4, A-6 */
+#define FP_COMP_OPS_EXE_SSE_SINGLE_PRECISION  0x4010  /* A-2, A-4, A-6 */
+#define FP_COMP_OPS_EXE_SSE_DOUBLE_PRECISION  0x8010  /* A-2, A-4, A-6 */
 #define FP_ASSIST_1                           0x1eca  /* A-2 */
 #define FP_ASSIST_2                           0x01f7  /* A-4, A-6 */
 
@@ -141,7 +141,7 @@ screen_t* screen_fp()
   if ((tab != A_2) && (tab != A_4) && (tab != A_6))
     return NULL;
 
-  s = new_screen("FP", "Floating point instructions");
+  s = new_screen("FP", "Floating point instructions", 0);
 
   /* setup counters */
 
@@ -204,7 +204,7 @@ screen_t* screen_imix()
   if ((tab != A_4) && (tab != A_6))
     return NULL;
 
-  s = new_screen("imix","Instruction mix");
+  s = new_screen("imix","Instruction mix", 0);
 
   /* setup counters */
   add_counter(s, "C", "CPU_CYCLES", "HARDWARE");
@@ -259,7 +259,7 @@ screen_t* screen_mem()
   if ((tab != A_2) && (tab != A_4) && (tab != A_6))
     return NULL;
 
-  s = new_screen("mem", "Memory hierarchy");
+  s = new_screen("mem", "Memory hierarchy", 0);
 
   /* setup counters */
   add_counter(s, "I", "INSTRUCTIONS",  "HARDWARE");
@@ -333,7 +333,7 @@ screen_t* screen_uop()
   if ((tab != A_2) && (tab != A_4) && (tab != A_6) && (tab != A_10))
     return NULL;
 
-  s = new_screen("uOps","micro operations");
+  s = new_screen("uOps","micro operations", 0);
 
   /* setup counters */
   add_counter(s, "C", "CPU_CYCLES", "HARDWARE");

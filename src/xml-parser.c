@@ -97,9 +97,9 @@ static void parse_screen( xmlDocPtr doc, xmlNodePtr cur)
   desc = xmlGetProp(cur,(xmlChar*) "desc");
 
   if (name == NULL)
-    s = new_screen("(Unknown)", (char*)desc);
+    s = new_screen( "(no name)", (char*)desc, 0);
   else
-    s = new_screen((char*)name, (char*)desc);
+    s = new_screen((char*)name, (char*)desc, 0);
 
   cur = cur->xmlChildrenNode;
 
@@ -167,9 +167,7 @@ static void parse_counters(screen_t* s, xmlDocPtr doc, xmlNodePtr cur)
 
   type = (char*)xmlGetProp(cur, (xmlChar*) "type");
 
-
   add_counter(s, alias, config,  type);
-
 
  end:
   if (alias)
@@ -201,7 +199,6 @@ static void parse_options(xmlDocPtr doc, xmlNodePtr cur, struct option* opt)
 
     cur = cur->next;
   }
-
 }
 
 
