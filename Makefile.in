@@ -71,6 +71,7 @@ $(distdir): FORCE
 	cp $(srcdir)/README $(distdir)
 	cp $(srcdir)/INSTALL $(distdir)
 	cp $(srcdir)/Makefile.in $(distdir)
+	cp $(srcdir)/tiptoprc $(distdir)
 	cp $(srcdir)/src/Makefile.in $(distdir)/src
 	cp $(srcdir)/src/tiptop.1 $(distdir)/src
 	cp $(srcdir)/src/conf.c $(distdir)/src
