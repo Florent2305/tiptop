@@ -41,7 +41,7 @@ void show_help_win(WINDOW* win, screen_t* screen)
 {
   int  i, header_width = 0;
   char fmt[20] = { 0 };
-  char msg[100] = { "Unknown" };
+  char msg[100] = { 0 };
   int  n = screen->num_columns;
 
   /* in case we have more lines than rows on the display... */
