@@ -62,7 +62,7 @@ static void check_counters_used(expression* e, screen_t* s)
        strcmp(e->ele->alias, "PROC_ID") == 0 )
       return ;
     
-    for(i=0; (s->counters[i].alias != NULL && i < s->num_counters); i++)
+    for(i=0; (i < s->num_counters && s->counters[i].alias != NULL); i++)
       if (strcmp(e->ele->alias, s->counters[i].alias) == 0)
         find = i;
 
