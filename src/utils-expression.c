@@ -59,7 +59,7 @@ void parcours_expression(expression* e)
 {
   if (e->type == ELEM){
     if (e->ele->type == COUNT) {
-      if (e->ele->delta == 'D')
+      if (e->ele->delta == DELTA)
         printf("delta(%s)", e->ele->alias);
       else
         printf("%s",e->ele->alias);
@@ -83,7 +83,7 @@ int build_expression(expression* e, FILE* fd)
 {
   if (e->type == ELEM) {
     if (e->ele->type == COUNT) {
-      if (e->ele->delta == 'D')
+      if (e->ele->delta == DELTA)
         return fprintf(fd, "delta(%s)", e->ele->alias);
       else
         return fprintf(fd, "%s", e->ele->alias);
@@ -189,7 +189,7 @@ static double get_counter_value(unit* e, counter_t* tab, int nbc, char delta,
     return 1;
   }
 
-  if (delta == 'D')
+  if (delta == DELTA)
     return (double) (p->values[id] - p->prev_values[id]);
 
   return (double) p->values[id];

@@ -44,7 +44,7 @@ static int num_alloc_screens = 0;
 static screen_t** screens = NULL;
 
 /*
- * To reduce number of opened counter
+ * To reduce number of opened counters
  */
 
 /* Navigate into expression to check used counters */
@@ -62,9 +62,11 @@ static void check_counters_used(expression* e, screen_t* s)
        strcmp(e->ele->alias, "PROC_ID") == 0 )
       return ;
     
-    for(i=0; (i < s->num_counters && s->counters[i].alias != NULL); i++)
+    for(i=0; i < s->num_counters; i++){
+      assert(s->counters[i].alias != NULL);
       if (strcmp(e->ele->alias, s->counters[i].alias) == 0)
         find = i;
+    }
 
     if(find >= 0) 
       s->counters[find].used++;

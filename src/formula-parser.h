@@ -17,6 +17,7 @@ typedef enum{
   CONST,
   OPER,
   ELEM,
+  DELTA,
   ERROR
 } t_op;
 typedef struct operation operation;

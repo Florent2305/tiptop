@@ -358,7 +358,7 @@ static expression* Element(char* txt)
           free_unit(un);
           goto error;
         }
-        un->delta = ERROR;
+        un->delta = DELTA;
         here++;
       }
       exp->type = ELEM;
