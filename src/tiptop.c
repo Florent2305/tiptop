@@ -166,6 +166,7 @@ static void build_rows(struct process_list* proc_list, screen_t* s, int width)
 
     p->skip = 1;  /* first, assume not ready */
 
+
     /* dead, not changing anymore, the row should be up-to-date. */
     if ((p->dead) && (!options.sticky))
       continue;
@@ -832,6 +833,7 @@ int main(int argc, char* argv[])
     exit(0);
   }
 
+
   if (options.spawn_pos)
     spawn(argv + options.spawn_pos);
 
@@ -851,6 +853,7 @@ int main(int argc, char* argv[])
       start_child();
     }
 
+   
     if (options.batch) {
       batch_mode(proc_list, screen);
       key = 'q';

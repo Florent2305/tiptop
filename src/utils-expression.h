@@ -21,6 +21,7 @@ void free_expression (expression* e);
 void free_unit(unit* u);
 void free_operation(operation* p);
 
+
 void parcours_expression(expression* e);
 
 int build_expression(expression* e, FILE* fd);

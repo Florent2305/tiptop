@@ -26,11 +26,23 @@
 #include "xml-parser.h"
 #include "screen.h"
 
+
 static void option_update(xmlChar* name, xmlChar* val, struct option* opt);
 static void parse_options(xmlDocPtr doc, xmlNodePtr cur, struct option* opt);
 static void parse_screen(xmlDocPtr doc, xmlNodePtr cur);
 static void parse_counters(screen_t* s, xmlDocPtr doc, xmlNodePtr cur);
 static void parse_columns(screen_t* s, xmlDocPtr doc, xmlNodePtr cur);
+
+
+static int is_blank(char* t){
+  if(t==NULL) return -1;
+  int lg = strlen(t), i=0;
+  while(i < lg && t[i] == '\n') 
+    i++;
+  if(i == lg) return 0;
+  else return -1;
+}
+
 
 
 /*
@@ -117,44 +129,52 @@ static void parse_screen( xmlDocPtr doc, xmlNodePtr cur)
 }
 
 
+
 static void parse_columns(screen_t* s, xmlDocPtr doc, xmlNodePtr cur)
 {
-  xmlChar *header=NULL, *format=NULL, *desc=NULL, *expr=NULL;
-  header = xmlGetProp(cur, (xmlChar*) "header");
-  format = xmlGetProp(cur, (xmlChar*) "format");
-  desc = xmlGetProp(cur, (xmlChar*) "desc");
-  expr = xmlGetProp(cur, (xmlChar*) "expr");
+  char *header=NULL, *format=NULL, *desc=NULL, *expr=NULL;
 
-  if (header != NULL
-      && format != NULL
-      && desc != NULL
-      && expr != NULL
-      && strlen((char*)expr) > 0
-      && strlen((char*)header) > 0
-      && strlen((char*)format) > 0
-      )
-    /* Save column in tiptop struct "screen_t" */
-    add_column(s, (char*) header, (char*) format, (char*) desc, (char*)expr);
+  header = (char*) xmlGetProp(cur, (xmlChar*) "header");
+  if(!header || !is_blank(header))
+    goto end;
 
-  xmlFree(header);
-  xmlFree(format);
-  xmlFree(desc);
-  xmlFree(expr);
+  format = (char*) xmlGetProp(cur, (xmlChar*) "format");
+  if(!format)
+    goto end;
+
+  expr = (char*) xmlGetProp(cur, (xmlChar*) "expr");
+  if(!expr || !is_blank(expr))
+    goto end;
+
+  desc = (char*) xmlGetProp(cur, (xmlChar*) "desc");
+
+  /* Save column in tiptop struct "screen_t" */
+  add_column(s, header, format, desc, expr);
+
+ end:
+  if(header)
+    free(header);
+  if(format)
+    free(format);
+  if(desc)
+    free(desc);
+  if(expr)
+    free(expr);
 }
 
 
 static void parse_counters(screen_t* s, xmlDocPtr doc, xmlNodePtr cur)
 {
-  char *alias = NULL, *config = NULL, *type = NULL;
-  char* arch = NULL;
-  char* model = NULL;
+  char *alias = NULL, *config = NULL, *type = NULL, *arch = NULL, *model = NULL;
 
   alias = (char*)xmlGetProp(cur,(xmlChar*) "alias");
-  if (!alias)  /* no alias, cannot be referenced, hence useless */
+  if (!alias || !is_blank(alias)) 
+    /* no alias, cannot be referenced, hence useless */
     goto end;
 
   config = (char*)xmlGetProp(cur,(xmlChar*) "config");
-  if (!config)  /* cannot be a valid counter without 'config' */
+  if (!config || !is_blank(config)) 
+    /* cannot be a valid counter without 'config' */
     goto end;
 
   arch = (char*)xmlGetProp(cur,(xmlChar*) "arch");
@@ -171,15 +191,15 @@ static void parse_counters(screen_t* s, xmlDocPtr doc, xmlNodePtr cur)
 
  end:
   if (alias)
-    xmlFree(alias);
+    free(alias);
   if (config)
-    xmlFree(config);
+    free(config);
   if (type)
-  xmlFree(type);
+    free(type);
   if (model)
-    xmlFree(model);
+    free(model);
   if (arch)
-    xmlFree(arch);
+    free(arch);
 }
 
 

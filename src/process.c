@@ -461,6 +461,8 @@ int update_proc_list(struct process_list* const list,
       }
 
       /* get processor ID */
+
+
       n = fscanf(fstat,
                  "%*d %*d %*d %*d %*d %*d %*d %*u %*d %*u %*u %*u %*u "
                  "%*u %*u %*u %*u %*u %*u %*u %*u %*u %*d %d",

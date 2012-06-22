@@ -143,7 +143,9 @@ expression* parser_expression (char* txt)
    expression* expr= NULL;
    char* clean = NULL;
    clean = remove_space(txt);
-   expr = Expression(clean, 0);
+   if(strlen(clean) > 0)
+     expr = Expression(clean, 0);
+ 
    free(clean);
    return expr;
 }
