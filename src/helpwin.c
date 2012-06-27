@@ -29,10 +29,10 @@ WINDOW* prepare_help_win(screen_t* screen)
 
   /* in case we have more lines than rows on the display, limit the
      amount of text we print. */
-  if (n+3 > LINES)
-    n = LINES - 3;
+  if (n+4 > LINES)
+    n = LINES - 4;
 
-  win = newwin(n+3, 70, LINES - n - 3, 5);
+  win = newwin(n+4, 70, LINES - n - 4, 5);
   return win;
 }
 
@@ -60,6 +60,13 @@ void show_help_win(WINDOW* win, screen_t* screen)
   if (has_colors())
     wattroff(win, COLOR_PAIR(1));
 
+  /* screen description */
+  if (has_colors())
+    wattron(win, COLOR_PAIR(4));
+  mvwprintw(win, 2, 1, screen->desc);
+  if (has_colors())
+    wattroff(win, COLOR_PAIR(4));
+
   /* max size of column headers */
   for(i = 0; i < n; i++) {
     /* strip leading spaces, display looks better this way */
@@ -77,7 +84,7 @@ void show_help_win(WINDOW* win, screen_t* screen)
     char* ptr = screen->columns[i].header;
     while (*ptr == ' ')
       ptr++;
-    mvwprintw(win, i+2, 1, fmt, ptr, screen->columns[i].description);
+    mvwprintw(win, i+3, 1, fmt, ptr, screen->columns[i].description);
   }
   wrefresh(win);
 }

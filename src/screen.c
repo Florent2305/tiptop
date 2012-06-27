@@ -629,7 +629,7 @@ void list_screens()
   int i;
   printf("Available screens:\n");
   for(i=0; i < num_screens; i++) {
-    printf("%2d: %s\n", i, screens[i]->name);
+    printf("%2d: '%s', %s\n", i, screens[i]->name, screens[i]->desc);
   }
 }
 
