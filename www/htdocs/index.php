@@ -1,36 +1,31 @@
-<?php
-
-$domain=ereg_replace('[^\.]*\.(.*)$','\1',$_SERVER['HTTP_HOST']);
-$group_name=ereg_replace('([^\.]*)\..*$','\1',$_SERVER['HTTP_HOST']);
-
-echo '<?xml version="1.0" encoding="UTF-8"?>';
-?>
+<?xml version="1.0" encoding="UTF-8"?>' ?>
 <!DOCTYPE html
 	PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
 	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en   ">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 
   <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-	<title><?php echo $project_name; ?></title>
-	<script language="JavaScript" type="text/javascript">
+	<title>Tiptop</title>
 	<!--
+	<script language="JavaScript" type="text/javascript">
+
 	function help_window(helpurl) {
 		HelpWin = window.open( helpurl,'HelpWindow','scrollbars=yes,resizable=yes,toolbar=no,height=400,width=400');
 	}
-	// -->
-		</script>
 
+		</script>
+	// -->
 <style type="text/css">
-	<!--
 	BODY {
 		margin-top: 3;
 		margin-left: 3;
 		margin-right: 3;
 		margin-bottom: 3;
-		background: #5651a1;
+		background: #ffffff;
 	}
+	<!--
 	ol,ul,p,body,td,tr,th,form { font-family: verdana,arial,helvetica,sans-serif; font-size:small;
 		color: #333333; }
 
@@ -57,131 +52,90 @@ echo '<?xml version="1.0" encoding="UTF-8"?>';
 	a.tabsellink:hover { text-decoration: none; color: black; font-weight: bold; font-size: x-small; }
 	-->
 </style>
-
 </head>
 
 <body>
 
-<table border="0" width="100%" cellspacing="0" cellpadding="0">
 
-	<tr>
-		<td><a href="/"><img src="http://<?php echo $domain; ?>/themes/inria/images/logo.png" border="0" alt="" width="198" height="52" /></a></td>
-	</tr>
+<h1>Motivation</h1>
 
-</table>
+<p>Hardware performance monitoring counters have recently received a
+lot of attention. They have been used by diverse communities to
+understand and improve the quality of computing systems: for example,
+architects use them to extract application characteristics and propose
+new hardware mechanisms; compiler writers study how generated code
+behaves on particular hardware; software developers identify critical
+regions of their applications and evaluate design choices to select
+the best performing implementation. In this paper, we propose that
+counters be used by all categories of users, in particular
+non-experts, and we advocate that a few simple metrics derived from
+these counters are relevant and useful. For example, a low IPC (number
+of executed instructions per cycle) indicates that the hardware is not
+performing at its best; a high cache miss ratio can suggest several
+causes, such as conflicts between processes in a multicore
+environment.</p>
 
-<table border="0" width="100%" cellspacing="0" cellpadding="0">
+<h1>Tiptop in a Nutshell</h1>
 
-	<tr>
-		<td>&nbsp;</td>
-		<td colspan="3">
-
-
-
-		<!-- start tabs -->
-
-	<tr>
-		<td align="left" bgcolor="#E0E0E0" width="9"><img src="http://<?php echo $domain; ?>/themes/inria/images/tabs/topleft.png" height="9" width="9" alt="" /></td>
-		<td bgcolor="#E0E0E0" width="30"><img src="http://<?php echo $domain; ?>/themes/inria/images/clear.png" width="30" height="1" alt="" /></td>
-		<td bgcolor="#E0E0E0"><img src="http://<?php echo $domain; ?>/themes/inria/images/clear.png" width="1" height="1" alt="" /></td>
-		<td bgcolor="#E0E0E0" width="30"><img src="http://<?php echo $domain; ?>/themes/inria/images/clear.png" width="30" height="1" alt="" /></td>
-		<td align="right" bgcolor="#E0E0E0" width="9"><img src="http://<?php echo $domain; ?>/themes/inria/images/tabs/topright.png" height="9" width="9" alt="" /></td>
-	</tr>
-
-	<tr>
-
-		<!-- Outer body row -->
-
-		<td bgcolor="#E0E0E0"><img src="http://<?php echo $domain; ?>/themes/inria/images/clear.png" width="10" height="1" alt="" /></td>
-		<td valign="top" width="99%" bgcolor="#E0E0E0" colspan="3">
-
-			<!-- Inner Tabs / Shell -->
-
-			<table border="0" width="100%" cellspacing="0" cellpadding="0">
-			<tr>
-				<td align="left" bgcolor="#ffffff" width="9"><img src="http://<?php echo $domain; ?>/themes/inria/images/tabs/topleft-inner.png" height="9" width="9" alt="" /></td>
-				<td bgcolor="#ffffff"><img src="http://<?php echo $domain; ?>/themes/inria/images/clear.png" width="1" height="1" alt="" /></td>
-				<td align="right" bgcolor="#ffffff" width="9"><img src="http://<?php echo $domain; ?>/themes/inria/images/tabs/topright-inner.png" height="9" width="9" alt="" /></td>
-			</tr>
-
-			<tr>
-				<td bgcolor="#ffffff"><img src="http://<?php echo $domain; ?>/themes/inria/images/clear.png" width="10" height="1" alt="" /></td>
-				<td valign="top" width="99%" bgcolor="white">
-
-	<!-- whole page table -->
-<table width="100%" cellpadding="5" cellspacing="0" border="0">
-<tr><td width="65%" valign="top">
-<?php if ($handle=fopen('http://'.$domain.'/export/projtitl.php?group_name='.$group_name,'r')){
-$contents = '';
-while (!feof($handle)) {
-	$contents .= fread($handle, 8192);
-}
-fclose($handle);
-echo $contents; } ?>
-
-<?php if ($handle=fopen('http://'.$domain.'/export/projnews.php?group_name='.$group_name,'r')){
-$contents = '';
-while (!feof($handle)) {
-	$contents .= fread($handle, 8192);
-}
-fclose($handle);
-$contents=str_replace('href="/','href="http://'.$domain.'/',$contents);
-echo $contents; } ?>
-
-</td>
-
-<td width="35%" valign="top">
-
-		<table cellspacing="0" cellpadding="1" width="100%" border="0" bgcolor="#d5d5d7">
-		<tr><td>
-			<table cellspacing="0" cellpadding="2" width="100%" border="0" bgcolor="#eaecef">
-				<tr style="background-color:#d5d5d7" align="center">
-					<td colspan="2"><span class="titlebar">Project Summary</span></td>
-				</tr>
-				<tr align="left">
-					<td colspan="2">
-
-<?php if($handle=fopen('http://'.$domain.'/export/projhtml.php?group_name='.$group_name,'r')){
-$contents = '';
-while (!feof($handle)) {
-	$contents .= fread($handle, 8192);
-}
-fclose($handle);
-$contents=str_replace('href="/','href="http://'.$domain.'/',$contents);
-$contents=str_replace('src="/','src="http://'.$domain.'/',$contents);
-echo $contents; } ?>
-
-					</td>
-				</tr>
-			</table>
-		</td></tr>
-		</table><p>&nbsp;</p>
-</td></tr></table>
-			&nbsp;<p>
-			<!-- end main body row -->
+<p style="text-align: center;"><img src="tiptop-snapshot.png" border="0" width="400" height="269" style="border: 0;" /></p>
 
 
-				</td>
-				<td width="10" bgcolor="#ffffff"><img src="http://<?php echo $domain; ?>/themes/inria/images/clear.png" width="2" height="1" alt="" /></td>
-			</tr>
-			<tr>
-				<td align="left" bgcolor="#E0E0E0" width="9"><img src="http://<?php echo $domain; ?>/themes/inria/images/tabs/bottomleft-inner.png" height="11" width="11" alt="" /></td>
-				<td bgcolor="#ffffff"><img src="http://<?php echo $domain; ?>/themes/inria/images/clear.png" width="1" height="1" alt="" /></td>
-				<td align="right" bgcolor="#E0E0E0" width="9"><img src="http://<?php echo $domain; ?>/themes/inria/images/tabs/bottomright-inner.png" height="11" width="11" alt="" /></td>
-			</tr>
-			</table>
+<h1>Features</h1>
+<ul>
+<li>No root privilege needed</li>
+<li>No patch to OS</li>
+<li>No module to load</li>
+<li>No need to instrument applications</li>
+<li>No need to even restart applications</li>
+<li>Any event supported by the hardware
+<ul>
+<li>some predefined: instructions, cycles, LLC misses (easy)</li>
+<li>any hardware supported event (slightly harder)</li>
+</ul>
+</li>
+<li>Live mode and batch mode</li>
+<li>Configure file to define counters and screens</li>
+<li>Pretty much like <em>top</em></li>
+</ul>
 
-		<!-- end inner body row -->
+<h1>Requirements</h1>
+<ul>
+<li>Linux 2.6.31+</li>
+<li>Nice to have: libcurses and libxml2</li>
+</ul>
 
-		</td>
-		<td width="10" bgcolor="#E0E0E0"><img src="http://<?php echo $domain; ?>/themes/inria/images/clear.png" width="2" height="1" alt="" /></td>
-	</tr>
-	<tr>
-		<td align="left" bgcolor="#E0E0E0" width="9"><img src="http://<?php echo $domain; ?>/themes/inria/images/tabs/bottomleft.png" height="9" width="9" alt="" /></td>
-		<td bgcolor="#E0E0E0" colspan="3"><img src="http://<?php echo $domain; ?>/themes/inria/images/clear.png" width="1" height="1" alt="" /></td>
-		<td align="right" bgcolor="#E0E0E0" width="9"><img src="http://<?php echo $domain; ?>/themes/inria/images/tabs/bottomright.png" height="9" width="9" alt="" /></td>
-	</tr>
-</table>
+
+<h1>Download</h1>
+<p>Tiptop is available in source code on the Inria
+forge: <a href="https://gforge.inria.fr/projects/tiptop" title="Tiptop
+on Inria forge">https://gforge.inria.fr/projects/tiptop</a>.</p>
+<ul>
+<li>Latest release: <a href="releases/tiptop-1.0.1.tar.gz">tiptop-1.0.1.tar.gz</a></li>
+<li>Previous releases:
+<ul>
+  <li><a href="releases/tiptop-1.0.tar.gz">tiptop-1.0.tar.gz</a></li>
+</ul>
+</ul>
+
+<h1>More Information</h1>
+<p>More information on tiptop is available in our Research
+Report <a href="http://hal.inria.fr/hal-00639173/" title="Tiptop:
+Hardware Performance Counters for the Masses">RR-7789</a>.</p>
+
+<p>Be sure to check the README and the man page included in the distribution.</p>
+
+<p>Specific counters for Intel architectures can be found in the
+Intel® 64 and IA-32 Architectures Software Developer’s Manual, Volume
+3B.</p>
+
+
+<h1>Legal</h1>
+<p>Tiptop is copyright Inria and released under GPL v2.</p>
+<p>Tiptop is registered at the APP (Agence de Protection des
+Programmes) under number
+IDDN.FR.001.450006.000.S.P.2011.000.10800.</p>
+
+
 
 <!-- PLEASE LEAVE "Powered By GForge" on your site -->
 <br />
