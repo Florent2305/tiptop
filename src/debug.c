@@ -46,5 +46,4 @@ void debug_printf(char* fmt, ...)
   vfprintf(debug_file, fmt, args);
 }
 
-
 #endif  /* ENABLE_DEBUG */

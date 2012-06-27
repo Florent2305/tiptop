@@ -10,29 +10,32 @@
     <option name="delay" value="2.000000" />
   </options>
 
-  <screen name="BranchementPrediction" desc="Screen by default">
 
+  <screen name="BranchementPrediction" desc="Screen by default">
     <counter alias="CYCLE" config="CPU_CYCLES" type="HARDWARE" />
     <counter alias="INSN" config="INSTRUCTIONS" type="HARDWARE" />
 
     <counter alias="BR" config="BRANCH_MISSES" type="HARDWARE" />
     <counter alias="BR_R" config="BRANCH_INSTRUCTIONS" type="HARDWARE" />
-    <counter alias="BR_TAK" config="0x4088" type="RAW" arch="x86" model="06_1a" />
-    <counter alias="MIS_TAK" config="0x4089" type="RAW" arch="x86" model="06_1a" />
 
     <column header=" IPC" format="%4.1lf" desc="Instructions per cycle" expr="delta(INSN)/delta(CYCLE)"/>
     <column header=" %CPU" format="%5.1f" desc="(unknown)" expr="CPU_TOT" />
-    <column header=" %SYS" format="%5.1f" desc="(unknown)" expr="CPU_SYS" />
-    <column header="   BR_RET(M)" format="   %9.1f" desc="BRANCH_INSTRUCTIONS (divide by 1000)" expr="delta(BR_R)/1000" />
-    <column header="   BR_MIS(M)" format="   %9.1f" desc="BRANCH_MISSES (divide by 1000)" expr="delta(BR)/1000" />
-  <column header=" %MIS/RET" format="%9.1f" desc="100*branch_misses/branch_instructions" expr="100*BR/BR_R" />
 
-    <column header="   BR_TAK(M)" format="   %9.1f" desc="Branch taken( divide by 1000)" expr="delta(BR_TAK)/1000" />	      
-    <column header="   MIS_TAK(M)" format="    %9.1f" desc="Mispredicted Branch taken( divide by 1000)" expr="delta(MIS_TAK)/1000" />
-    <column header=" %MIS/TAK" format="%9.1f" desc="MIS_TAK/BR_TAK" expr="100*delta(MIS_TAK)/delta(BR_R)" />
+    <column header="   INSN(m)" format=" %9.1lf" desc="Instructions per million" expr="delta(INSN)/1000000"/>
+    <column header="  Branch(m)" format="  %9.3f" desc="(unknown)" expr="delta(BR_R)/1000000" />
 
-    <column header="  %Taken" format=" %7.1f" desc="Branch taken per Branch instructions retired" expr="100*(delta(BR_TAK)-delta(BR)-delta(MIS_TAK))/delta(BR_R)" />
+    <column header=" %Br/Inst" format="    %4.3f" desc="BRANCH_INSTRUCTIONS / Instructions retired" expr="100*delta(BR_R)/delta(INSN)" />
+
+    <column header=" %BrMiss/Br" format="      %3.3f" desc="Branch miss per BRANCH_INSTRUCTIONS retired" expr="100*delta(BR)/delta(BR_R)" />    
+
+    <column header=" %BrMiss/Inst" format="        %3.3f" desc="Branch miss per INSTRUCTIONS retired" expr="100*delta(BR)/delta(INSN)" />    
+
+    <column header=" Inst/Br" format="   %5.3f" desc="INSTRUCTIONS retired per branch instructions retired " expr="delta(INSN)/delta(BR_R)" />
   </screen>
+
+
+
+
   <screen  name="L1 stat (Write)" desc="Stats in L1">   
     <counter alias="CYCLE" config="CPU_CYCLES" type="HARDWARE" />
     <counter alias="INSN" config="INSTRUCTIONS" type="HARDWARE" />
@@ -40,13 +43,14 @@
     <counter alias="LWM" config="CACHE_L1D | (CACHE_OP_WRITE &lt; 8) | (CACHE_RESULT_MISS &lt; 16)" type="HW_CACHE"/>
     
     <column header=" IPC" format="%4.1lf" desc="Instructions per cycle" expr="delta(INSN)/delta(CYCLE)"/>
-    <column header=" L1Write_Miss" format="     %8.1f" desc="L1 Write Miss(per Thousand)" expr="delta(LWM)/1000" />
-    <column header="    L1Write_Acc" format="      %9.1f" desc="L1 Write Access(per Thousand)" expr="delta(LWA)/1000" />
+    <column header="  L1WriteMiss" format="     %8.1f" desc="L1 Write Miss(per Thousand)" expr="delta(LWM)/1000" />
+    <column header="  WriteAcc" format=" %9.1f" desc="L1 Write Access(per Thousand)" expr="delta(LWA)/1000" />
     <column header=" %Miss/Acc" format="  %8.1f" desc="L1 Write Miss per access" expr="100*delta(LWM)/delta(LWA)" />
-    <column header=" %Acc/Cycle" format="   %8.1f" desc="L1 Write and Read Miss per cycles" expr="100*(delta(LWA))/delta(CYCLE)" />
+    <column header=" %Acc/Cycle" format="   %8.2f" desc="L1 Write Miss per cycles" expr="100*(delta(LWA))/delta(CYCLE)" />
+    <column header="  %Acc/Inst" format="   %8.2f" desc="L1 Write access per instructions retired" expr="100*(delta(LWA))/delta(INSN)" />
 
   </screen>
-  <screen  name="L1 stat on reading" desc="Stats in L1">   
+  <screen  name="L1 stat (Read)" desc="Stats in L1">   
 
     <counter alias="CYCLE" config="CPU_CYCLES" type="HARDWARE" />
     <counter alias="INSN" config="INSTRUCTIONS" type="HARDWARE" />
@@ -54,54 +58,85 @@
     <counter alias="LRM" config="CACHE_L1D | (CACHE_OP_READ &lt; 8) | (CACHE_RESULT_MISS &lt; 16)" type="HW_CACHE"/>    
 
     <column header=" IPC" format="%4.1lf" desc="Instructions per cycle" expr="delta(INSN)/delta(CYCLE)"/>
-    <column header=" L1Read_Miss" format="    %8.1f" desc="L1 Read MISS" expr="delta(LRM)/1000" />
-    <column header="    L1Read_Acc" format="     %9.1f" desc="L1 Read ACCESS(Housand)" expr="delta(LRA)/1000" />
-    <column header=" %Miss/Acc" format="  %8.1f" desc="L1 Read Access" expr="100*delta(LRM)/delta(LRA)" />
-    <column header=" %Acc/Cycle" format="   %8.1f" desc="L1 Write and Read Miss per cycles" expr="100*(delta(LRA))/delta(CYCLE)" />
+    <column header="  L1ReadMiss" format="    %8.1f" desc="L1 Read MISS" expr="delta(LRM)/1000" />
+    <column header="   Read_Acc" format="  %9.1f" desc="L1 Read ACCESS(Housand)" expr="delta(LRA)/1000" />
+    <column header=" %Miss/Acc" format="  %8.1f" desc="L1 Read per read access" expr="100*delta(LRM)/delta(LRA)" />
+    <column header=" %Acc/Cycle" format="   %8.1f" desc="L1 Read Miss per cycles" expr="100*(delta(LRA))/delta(CYCLE)" />
+    <column header=" %Acc/Inst" format="  %8.1f" desc="L1 read access per instructions retired" expr="100*(delta(LRA))/delta(INSN)" />
 
   </screen>
-  <screen name="L2 stat(intel)" desc="Screen by default">
+
+  <screen  name="L1 stat (ReadWritePrefetch)" desc="Stats in L1:  Read and Write">   
 
     <counter alias="CYCLE" config="CPU_CYCLES" type="HARDWARE" />
     <counter alias="INSN" config="INSTRUCTIONS" type="HARDWARE" />
-    <counter alias="L2R" config="0x0224" type="RAW" arch="x86" model="06_1a"/>
-    <counter alias="L2M" config="0x0324" type="RAW"  arch="x86" model="06_1a"/>
-    <counter alias="L2W" config="0x0f28" type="RAW"  arch="x86" model="06_1a"/>
-    <counter alias="L2WM" config="0x0128" type="RAW" arch="x86" model="06_1a"/>
+    <counter alias="LRA" config="CACHE_L1D | (CACHE_OP_READ &lt; 8) | (CACHE_RESULT_ACCESS &lt; 16)" type="HW_CACHE"/>
+    <counter alias="LPA" config="CACHE_L1D | (CACHE_OP_PREFETCH &lt; 8) | (CACHE_RESULT_ACCESS &lt; 16)" type="HW_CACHE"/>
+    <counter alias="LWA" config="CACHE_L1D | (CACHE_OP_WRITE &lt; 8) | (CACHE_RESULT_ACCESS &lt; 16)" type="HW_CACHE"/>    
 
     <column header=" IPC" format="%4.1lf" desc="Instructions per cycle" expr="delta(INSN)/delta(CYCLE)"/>
-    <column header="  L2Miss" format="%8.1f" desc="Counts the number of loads that miss L2." expr="delta(L2R)" />
-    <column header="   L2Any" format="%8.1f" desc="Counts all L2 load requests." expr="delta(L2M)" />
-    <column header=" %Miss/Any" format="  %8.1f" desc="L2 load requests missed per access" expr="100*delta(L2R)/delta(L2M)" />
+    <column header="   Read_Acc" format="  %9.3f" desc="L1 Read ACCESS(Housand)" expr="delta(LRA)/1000" />
+    <column header="  WriteAcc" format=" %9.3f" desc="L1 Write Access(per Thousand)" expr="delta(LWA)/1000" />
+    <column header=" PrefetchAcc" format="   %9.3f" desc="L1 Prefetch Access(per Thousand)" expr="delta(LPA)/1000" />
+    <column header="    L1Access" format="    %8.3f" desc="L1 Read + L1 Write + L1 Prefetch(per Thousand)" expr="delta(LPA)+delta(LWA)+delta(LRA)/1000" />
 
-    <column header=" L1ToL2_Miss" format="    %8.1f" desc="Counts number of L1 missed writebacks to the L2" expr="delta(L2WM)" />
-    <column header=" L1toL2_Any" format="   %8.1f" desc="Counts all L1 writebacks to the L2 ." expr="delta(L2W)" />
-    <column header=" %Miss/Any" format="  %8.1f" desc="Writeback(L1) to L2 Misses per all Writeback" expr="100*delta(L2WM)/delta(L2W)" />
+    <column header=" %Acc/Cycle" format="   %8.1f" desc="L1 Read Miss per cycles" expr="100*(delta(LPA)+delta(LWA)+delta(LRA))/delta(CYCLE)" />
+    <column header=" %Acc/Inst" format="  %8.1f" desc="L1 read access per instructions retired" expr="100*(delta(LPA)+delta(LWA)+delta(LRA))/delta(INSN)" />
 
   </screen>
-  <screen name="L3 stat hw_cache" desc="stat L3">
-    
+  <screen  name="L3 stat (Write)" desc="Stats in L1">   
     <counter alias="CYCLE" config="CPU_CYCLES" type="HARDWARE" />
     <counter alias="INSN" config="INSTRUCTIONS" type="HARDWARE" />
     <counter alias="LWA" config="CACHE_LL | (CACHE_OP_WRITE &lt; 8) | (CACHE_RESULT_ACCESS &lt; 16)" type="HW_CACHE"/>
     <counter alias="LWM" config="CACHE_LL | (CACHE_OP_WRITE &lt; 8) | (CACHE_RESULT_MISS &lt; 16)" type="HW_CACHE"/>
-    <counter alias="LRA" config="CACHE_LL | (CACHE_OP_READ &lt; 8) | (CACHE_RESULT_ACCESS &lt; 16)" type="HW_CACHE"/>
-    <counter alias="LRM" config="CACHE_LL | (CACHE_OP_READ &lt; 8) | (CACHE_RESULT_MISS &lt; 16)" type="HW_CACHE"/>
     
     <column header=" IPC" format="%4.1lf" desc="Instructions per cycle" expr="delta(INSN)/delta(CYCLE)"/>
-    <column header=" L3_Miss(R)" format="   %8.1f" desc="L3 Prefetch total" expr="delta(LRM)" />
-    <column header="  L3_Acc(R)" format="   %8.1f" desc="L3 Read Access" expr="delta(LRA)" />
-    <column header=" %%Miss/Acc" format="   %8.1f" desc="L3 Read Miss per Read access" expr="100*(delta(LRM)/(delta(LRA)))" />
-    
-    <column header=" L3_Miss(W)" format="   %8.1f" desc="L3 Write Miss" expr="delta(LWM)" />
-    <column header="  L3_Acc(W)" format="   %8.1f" desc="L3 Write Access" expr="delta(LWA)" />
-    <column header=" %%Miss/Acc" format="   %8.1f" desc="L3 Write Miss per Write Access" expr="100*(delta(LWM)/(delta(LWA)))" />
-    
-    <column header=" %Cumul(RW)" format="   %8.1f" desc="L3 R+W MISS PER ACCESS" expr="100*(delta(LRM)+delta(LWM))/(delta(LRA)+delta(LWA))" />
-    
-    <column header=" %Acc/Cycle" format="  %8.1f" desc="L1 Write and Read Miss per cycles" expr="100*(delta(LWA)+delta(LRA))/delta(CYCLE)" />            
-      
+    <column header="  L3WriteMiss" format="     %8.3f" desc="L3 Write Miss(per Thousand)" expr="delta(LWM)/1000" />
+    <column header="  WriteAcc" format=" %9.3f" desc="L3 Write Access(per Thousand)" expr="delta(LWA)/1000" />
+    <column header=" %Miss/Acc" format="  %8.1f" desc="L3 Write Miss per access" expr="100*delta(LWM)/delta(LWA)" />
+    <column header=" %Acc/Cycle" format="   %8.1f" desc="L3 Write Miss per cycles" expr="100*(delta(LWA))/delta(CYCLE)" />
+    <column header="  %Acc/Inst" format="   %8.1f" desc="L3 Write access per instructions retired" expr="100*(delta(LWA))/delta(INSN)" />
+
   </screen>
+  <screen  name="L3 stat on reading" desc="Stats in L3">   
+
+    <counter alias="CYCLE" config="CPU_CYCLES" type="HARDWARE" />
+    <counter alias="INSN" config="INSTRUCTIONS" type="HARDWARE" />
+    <counter alias="LRA" config="CACHE_LL | (CACHE_OP_READ &lt; 8) | (CACHE_RESULT_ACCESS &lt; 16)" type="HW_CACHE"/>
+    <counter alias="LRM" config="CACHE_LL | (CACHE_OP_READ &lt; 8) | (CACHE_RESULT_MISS &lt; 16)" type="HW_CACHE"/>    
+
+    <column header=" IPC" format="%4.1lf" desc="Instructions per cycle" expr="delta(INSN)/delta(CYCLE)"/>
+    <column header="  L3ReadMiss" format="    %8.3f" desc="L3 Read MISS" expr="delta(LRM)/1000" />
+    <column header="   Read_Acc" format="  %9.3f" desc="L3 Read ACCESS(Housand)" expr="delta(LRA)/1000" />
+    <column header=" %Miss/Acc" format="  %8.1f" desc="L3 Read per read access" expr="100*delta(LRM)/delta(LRA)" />
+    <column header=" %Acc/Cycle" format="   %8.1f" desc="L3 Read Miss per cycles" expr="100*(delta(LRA))/delta(CYCLE)" />
+    <column header="  %Acc/Inst" format="   %8.1f" desc="L3 read access per instructions retired" expr="100*(delta(LRA))/delta(INSN)" />
+
+  </screen>
+
+  <screen  name="L3 access stat " desc="Stats in L3:  Read and Write">   
+
+    <counter alias="CYCLE" config="CPU_CYCLES" type="HARDWARE" />
+    <counter alias="INSN" config="INSTRUCTIONS" type="HARDWARE" />
+    <counter alias="LTA" config="CACHE_REFERENCES" type="HARDWARE"/>
+    <counter alias="LTM" config="CACHE_MISSES" type="HARDWARE"/>
+    <counter alias="LPA" config="CACHE_LL | (CACHE_OP_PREFETCH &lt; 8) | (CACHE_RESULT_ACCESS &lt; 16)" type="HW_CACHE"/>
+
+    <column header=" IPC" format="%4.1lf" desc="Instructions per cycle" expr="delta(INSN)/delta(CYCLE)"/>
+    <column header=" L3Access" format=" %8.1f" desc="L3 Last level cache references" expr="delta(LTA)" />
+    <column header="   L3Miss" format=" %8.1f" desc="L3 Last level cache misses" expr="delta(LTM)" />
+
+    <column header="   L3Pref" format=" %8.1f" desc="L3 Last level prefetch access" expr="delta(LPA)" />
+
+
+    <column header=" %Miss/Acc" format="    %6.2f" desc="L3  Miss per cycles" expr="100*delta(LTM)/delta(LTA)" />
+
+
+    <column header=" %Acc/Cycle" format="     %6.2f" desc="L3 Access per cycles" expr="100*delta(LTA)/delta(CYCLE)" />
+    <column header=" %Acc/Inst" format="    %6.2f" desc="L3 access per instructions retired" expr="100*delta(LTA)/delta(INSN)" />
+
+  </screen>
+  
   <screen name="imix" desc="Instruction mix">
     <counter alias="C" config="CPU_CYCLES" type="HARDWARE" />
     <counter alias="I" config="INSTRUCTIONS" type="HARDWARE" />
@@ -119,6 +154,6 @@
     <column header=" %FP/I" format="  %4.1f" desc="Fraction of x87" expr="(100.000000 * (delta(x87) / delta(I)))" />
     <column header="     %BR/I" format="  %8.1f" desc="Fraction of branch instructions" expr="(100.000000 * (delta(brr) / delta(I)))" />
   </screen>
-    
+  
 </tiptop>
   

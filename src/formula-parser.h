@@ -17,9 +17,48 @@ typedef enum{
   CONST,
   OPER,
   ELEM,
-  DELTA,
+  DELT,
   ERROR
-} t_op;
+} type_t;
+
+/*
+char* str_tok[]={
+  "ADD",
+  "SUB",
+  "MUL",
+  "DIV",
+  "AND",
+  "OR",
+  "PD",
+  "PG",
+  "CD",
+  "CG",
+  "COUNTER",
+  "NUMBER",
+  "DELTA",
+  "END"
+} ;
+*/
+
+typedef enum {
+  ADD,
+  SUB,
+  MUL,
+  DIV,
+  AND,
+  OR,
+  PD,
+  PG,
+  CD,
+  CG,
+  COUNTER,
+  NUMBER,
+  DELTA,
+  END
+} token_t ;
+
+
+
 typedef struct operation operation;
 typedef struct expression expression;
 typedef struct unit unit;
@@ -34,8 +73,7 @@ struct unit {
 struct operation {
   int operateur;
   expression* exp1;
-  expression* exp2;
-};
+  expression* exp2;};
 
 struct expression {
   int type;

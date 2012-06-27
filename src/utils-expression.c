@@ -20,6 +20,37 @@
 #include "utils-expression.h"
 
 
+/* dedicated tools to allocate expression and son */
+
+unit* alloc_unit()
+{
+  unit* u = malloc(sizeof(unit));
+  u->alias = NULL;
+  u->val = -1;
+  u->type = -1;
+  u->delta = -1;
+  return u;
+}
+
+
+expression* alloc_expression()
+{
+  expression* e = malloc(sizeof(expression));
+  e->ele = NULL;
+  e->op = NULL;
+  e->type = -1;
+  return e;
+}
+
+operation* alloc_operation()
+{
+  operation* o = malloc(sizeof(operation));
+  o->operateur = '!';
+  o->exp1 = NULL;
+  o->exp2 = NULL;
+  return o;
+}
+
 /* dedicated destroyer to free expressions */
 
 void free_unit(unit* u)
@@ -34,10 +65,8 @@ void free_unit(unit* u)
 
 void free_expression (expression* e)
 {
-  if (e == NULL) {
-    printf("expression NULL!\n");
+  if (e == NULL) 
     return;
-  }
   free_unit(e->ele);
   free_operation(e->op);
   free(e);
@@ -89,7 +118,7 @@ int build_expression(expression* e, FILE* fd)
         return fprintf(fd, "%s", e->ele->alias);
     }
     else if (e->ele->type == CONST)
-      return fprintf(fd, "%lf", e->ele->val);
+      return fprintf(fd, "%4.2lf", e->ele->val);
   }
   else if (e->type == OPER && e->op != NULL) {
     if (fprintf(fd, "(") < 0)
@@ -144,7 +173,7 @@ expression* parser_expression (char* txt)
    char* clean = NULL;
    clean = remove_space(txt);
    if(strlen(clean) > 0)
-     expr = Expression(clean, 0);
+     expr = Expression(clean, 1);
  
    free(clean);
    return expr;
@@ -167,6 +196,7 @@ static double get_counter_value(unit* e, counter_t* tab, int nbc, char delta,
                                 struct process* p, int* error)
 {
   int id;
+  /* System information: not based on performances counters */
   if (strcmp(e->alias, "CPU_TOT") == 0)
     return p->cpu_percent;
 
@@ -186,7 +216,9 @@ static double get_counter_value(unit* e, counter_t* tab, int nbc, char delta,
     }
   }
   id = get_counter_id(e->alias, tab, nbc);
+
   if ((id == -1) || (p->values[id] == 0xffffffff)) {
+    /* Invalid counter */
     *error = 1;
     return 1;
   }
@@ -208,19 +240,21 @@ static double get_counter_value(unit* e, counter_t* tab, int nbc, char delta,
 double evaluate_column_expression(expression* e, counter_t* c, int nbc,
                            struct process* p, int* error)
 {
+  /* Invalid Expression */
   if (e == NULL) {
     *error = 1;
     return 0;
   }
   *error = 0;
   if (e->type == ELEM) {
-    if (e->ele->type == COUNT)
+    /* Return Element value */
+    if (e->ele->type == COUNT) 
       return get_counter_value(e->ele, c, nbc, e->ele->delta, p, error);
     else if(e->ele->type == CONST)
       return e->ele->val;
   }
   else if ((e->type == OPER) && (e->op != NULL)) {
-
+    /* Or calcul leaf value and return the result */
     switch(e->op->operateur) {
     case '+':
       return evaluate_column_expression(e->op->exp1, c, nbc, p, error) +
@@ -239,6 +273,7 @@ double evaluate_column_expression(expression* e, counter_t* c, int nbc,
     case '/': {
       double tmp = evaluate_column_expression(e->op->exp2, c, nbc, p, error);
       if (tmp == 0) {
+      /* Divide by 0 */
         *error = 2;
         return 0;
       }
@@ -246,12 +281,12 @@ double evaluate_column_expression(expression* e, counter_t* c, int nbc,
       break;
     }
     default:
+      /* Unknown operator */
       assert(0);
     }
   }
   return 0;
 }
-
 
 uint64_t evaluate_counter_expression(expression* e, int* error)
 {
@@ -270,6 +305,7 @@ uint64_t evaluate_counter_expression(expression* e, int* error)
   }
   else if ((e->type == OPER) && (e->op != NULL)) {
     switch(e->op->operateur) {
+      /* Binary operator to define a counter type */
     case '<':
       return evaluate_counter_expression(e->op->exp1, error) <<
 	evaluate_counter_expression(e->op->exp2, error);

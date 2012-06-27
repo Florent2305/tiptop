@@ -17,6 +17,10 @@
 #include "process.h"
 
 
+operation* alloc_operation();
+expression* alloc_expression();
+unit* alloc_unit();
+
 void free_expression (expression* e);
 void free_unit(unit* u);
 void free_operation(operation* p);

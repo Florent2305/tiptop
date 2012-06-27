@@ -28,16 +28,16 @@
 
 
 static void option_update(xmlChar* name, xmlChar* val, struct option* opt);
-static void parse_options(xmlDocPtr doc, xmlNodePtr cur, struct option* opt);
-static void parse_screen(xmlDocPtr doc, xmlNodePtr cur);
-static void parse_counters(screen_t* s, xmlDocPtr doc, xmlNodePtr cur);
-static void parse_columns(screen_t* s, xmlDocPtr doc, xmlNodePtr cur);
+static void parse_options(xmlNodePtr cur, struct option* opt);
+static void parse_screen(xmlNodePtr cur);
+static void parse_counters(screen_t* s, xmlNodePtr cur);
+static void parse_columns(screen_t* s, xmlNodePtr cur);
 
 
 static int is_blank(char* t){
   if(t==NULL) return -1;
   int lg = strlen(t), i=0;
-  while(i < lg && t[i] == '\n') 
+  while(i < lg && isblank(t[i])) 
     i++;
   if(i == lg) return 0;
   else return -1;
@@ -46,7 +46,7 @@ static int is_blank(char* t){
 
 
 /*
- *	Remplissage des structures
+ *	Filling structures
  */
 
 static void option_update(xmlChar* name, xmlChar* val, struct option* opt)
@@ -101,27 +101,26 @@ static void option_update(xmlChar* name, xmlChar* val, struct option* opt)
 /*
 *	Parser
 */
-static void parse_screen( xmlDocPtr doc, xmlNodePtr cur)
+static void parse_screen(xmlNodePtr cur)
 {
-  xmlChar *desc=NULL, *name=NULL;
+  char *desc=NULL, *name=NULL;
   screen_t* s;
-  name = xmlGetProp(cur,(xmlChar*) "name");
-  desc = xmlGetProp(cur,(xmlChar*) "desc");
+  name = (char*)xmlGetProp(cur,(xmlChar*) "name");
+  desc = (char*)xmlGetProp(cur,(xmlChar*) "desc");
 
-  if (name == NULL)
-    s = new_screen( "(no name)", (char*)desc, 0);
+  if (name == NULL || strlen(name) == 0)
+    s = new_screen( "(no name)", desc, 0);
   else
-    s = new_screen((char*)name, (char*)desc, 0);
+    s = new_screen(name, desc, 0);
 
   cur = cur->xmlChildrenNode;
 
-  while (cur != NULL) {
-
+  while (cur != NULL)   {
     if ((!xmlStrcmp(cur->name, (const xmlChar *)"column")))
-      parse_columns(s, doc, cur);
+      parse_columns(s, cur);
     else if ((!xmlStrcmp(cur->name, (const xmlChar *)"counter")))
-      parse_counters(s, doc, cur);
-
+      parse_counters(s, cur);
+    
     cur = cur->next;
   }
   xmlFree(desc);
@@ -130,22 +129,27 @@ static void parse_screen( xmlDocPtr doc, xmlNodePtr cur)
 
 
 
-static void parse_columns(screen_t* s, xmlDocPtr doc, xmlNodePtr cur)
+static void parse_columns(screen_t* s, xmlNodePtr cur)
 {
   char *header=NULL, *format=NULL, *desc=NULL, *expr=NULL;
 
   header = (char*) xmlGetProp(cur, (xmlChar*) "header");
-  if(!header || !is_blank(header))
+  if(!header || strlen(header) == 0){
+    fprintf(stderr, "[TIPTOP] Need a header for a column in screen '%s'\n", s->name);
     goto end;
+  }
 
   format = (char*) xmlGetProp(cur, (xmlChar*) "format");
-  if(!format)
+  if(!format || strlen(header) == 0){
+    fprintf(stderr, "[TIPTOP] Need a format for column '%s' in screen '%s'\n", header, s->name);
     goto end;
+  }
 
   expr = (char*) xmlGetProp(cur, (xmlChar*) "expr");
-  if(!expr || !is_blank(expr))
+  if(!expr){
+    fprintf(stderr, "[TIPTOP] Need an expression for column '%s' in screen '%s'\n", header, s->name);
     goto end;
-
+  }
   desc = (char*) xmlGetProp(cur, (xmlChar*) "desc");
 
   /* Save column in tiptop struct "screen_t" */
@@ -163,31 +167,48 @@ static void parse_columns(screen_t* s, xmlDocPtr doc, xmlNodePtr cur)
 }
 
 
-static void parse_counters(screen_t* s, xmlDocPtr doc, xmlNodePtr cur)
+static void parse_counters(screen_t* s, xmlNodePtr cur)
 {
   char *alias = NULL, *config = NULL, *type = NULL, *arch = NULL, *model = NULL;
 
   alias = (char*)xmlGetProp(cur,(xmlChar*) "alias");
-  if (!alias || !is_blank(alias)) 
+  if (!alias || !is_blank(alias)) {
     /* no alias, cannot be referenced, hence useless */
+    fprintf(stderr, "[TIPTOP] Need a alias for a counter in screen '%s'\n", s->name);
     goto end;
+  }
 
   config = (char*)xmlGetProp(cur,(xmlChar*) "config");
-  if (!config || !is_blank(config)) 
+  if (!config) {
     /* cannot be a valid counter without 'config' */
+    fprintf(stderr, "[TIPTOP] Need a config for counter '%s' in screen '%s'\n", alias, s->name);
     goto end;
+  }
 
   arch = (char*)xmlGetProp(cur,(xmlChar*) "arch");
-  if (arch && !match_target((char*)arch))
+  if (arch && !match_target((char*)arch)){
+    fprintf(stderr, "[TIPTOP] Bad archi  for your processor in counter '%s' in screen '%s'\n", alias, s->name);
     goto end;
+  }
+ 
 
   model = (char*)xmlGetProp(cur,(xmlChar*) "model");
-  if (model && !match_model((char*)model))
-    goto end;
+  if (model && !match_model((char*)model)){
+    fprintf(stderr, "[TIPTOP] Bad model for your processor in counter '%s' in screen '%s'\n", alias, s->name);
+    goto model_end;
+  }
 
   type = (char*)xmlGetProp(cur, (xmlChar*) "type");
 
+  /* Save column in tiptop struct "column_t" */
   add_counter(s, alias, config,  type);
+
+ arch_end:
+  goto end;
+
+ model_end:
+  fprintf(stderr, "[TIPTOP] Bad model for counter '%s' in screen '%s'\n", alias, s->name);
+  goto end;
 
  end:
   if (alias)
@@ -203,7 +224,7 @@ static void parse_counters(screen_t* s, xmlDocPtr doc, xmlNodePtr cur)
 }
 
 
-static void parse_options(xmlDocPtr doc, xmlNodePtr cur, struct option* opt)
+static void parse_options(xmlNodePtr cur, struct option* opt)
 {
   xmlChar *name, *val;
   cur = cur->xmlChildrenNode;
@@ -251,9 +272,9 @@ int parse_doc(char* file, struct option* opt)
   cur = cur->xmlChildrenNode;
   while (cur != NULL) {
     if ((!xmlStrcmp(cur->name, (const xmlChar *)"options")))
-      parse_options (doc, cur, opt);
+      parse_options (cur, opt);
     if ((!xmlStrcmp(cur->name, (const xmlChar *)"screen")))
-      parse_screen (doc, cur);
+      parse_screen (cur);
 
     cur = cur->next;
   }
