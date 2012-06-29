@@ -38,7 +38,7 @@ enum targets get_target()
 
 int match_target(const char* tgt)
 {
-  if (strcmp(tgt, arch_selector) == 0)
+  if (strcasecmp(tgt, arch_selector) == 0)
     return 1;
   return 0;
 }
@@ -92,7 +92,7 @@ int match_model(const char* model)
   char cur_model[6];
   int disp_fam = disp_family_model();
   sprintf(cur_model, "%02x_%02x", disp_fam >> 8, disp_fam & 0xff);
-  if (strcmp(cur_model, model) == 0)
+  if (strcasecmp(cur_model, model) == 0)
     return 1;
 
   return 0;
