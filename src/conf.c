@@ -76,7 +76,7 @@ int read_config(struct option* options)
   
 #else  /* HAVE_LIBXML2 */
   
-  fprintf(stderr, "No xml support, cannot read config file.");
+  fprintf(stderr, "No xml support, cannot read config file.\n");
   return -1;
   
 #endif  /* !HAVE_LIBXML2 */
