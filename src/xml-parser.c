@@ -174,41 +174,39 @@ static void parse_counters(screen_t* s, xmlNodePtr cur)
   alias = (char*)xmlGetProp(cur,(xmlChar*) "alias");
   if (!alias || !is_blank(alias)) {
     /* no alias, cannot be referenced, hence useless */
-    fprintf(stderr, "[TIPTOP] Need a alias for a counter in screen '%s'\n", s->name);
+    fprintf(stderr, "[TIPTOP] Need a alias for a counter in screen '%s'\n",
+            s->name);
     goto end;
   }
 
   config = (char*)xmlGetProp(cur,(xmlChar*) "config");
   if (!config) {
     /* cannot be a valid counter without 'config' */
-    fprintf(stderr, "[TIPTOP] Need a config for counter '%s' in screen '%s'\n", alias, s->name);
+    fprintf(stderr, "[TIPTOP] Need a config for counter '%s' in screen '%s'\n",
+            alias, s->name);
     goto end;
   }
 
   arch = (char*)xmlGetProp(cur,(xmlChar*) "arch");
-  if (arch && !match_target((char*)arch)){
-    fprintf(stderr, "[TIPTOP] Bad archi  for your processor in counter '%s' in screen '%s'\n", alias, s->name);
+  if (arch && !match_target((char*)arch)) {
+    fprintf(stderr,
+            "[TIPTOP] Skipping counter '%s' in screen '%s' (arch mismatch)\n",
+            alias, s->name);
     goto end;
   }
- 
 
   model = (char*)xmlGetProp(cur,(xmlChar*) "model");
-  if (model && !match_model((char*)model)){
-    fprintf(stderr, "[TIPTOP] Bad model for your processor in counter '%s' in screen '%s'\n", alias, s->name);
-    goto model_end;
+  if (model && !match_model((char*)model)) {
+    fprintf(stderr,
+            "[TIPTOP] Skipping counter '%s' in screen '%s' (model mismatch)\n",
+            alias, s->name);
+    goto end;
   }
 
   type = (char*)xmlGetProp(cur, (xmlChar*) "type");
 
   /* Save column in tiptop struct "column_t" */
   add_counter(s, alias, config,  type);
-
- arch_end:
-  goto end;
-
- model_end:
-  fprintf(stderr, "[TIPTOP] Bad model for counter '%s' in screen '%s'\n", alias, s->name);
-  goto end;
 
  end:
   if (alias)
