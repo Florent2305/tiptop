@@ -284,13 +284,13 @@ screen_t* screen_mem()
   add_column(s, " %CPU", "%5.2f", "CPU usage", "CPU_TOT");
   add_column(s, "   I(M)", "%7.2f", "Instruction per Million", "delta(I)/1000000");
 
-  add_column(s, " L1iMiss", "   %5.1f",
+  add_column(s, "    L1iMiss", "   %8.1f",
              "Instruction fetches that miss in L1I (L1I.MISSES) (million)",
              "delta(L1MissI)");
   add_column(s, "   L1i", "  %4.1f",
              "Same L1iMiss per instruction",
              "100*delta(L1MissI)/delta(I)");
-  add_column(s, " L2iMiss", " %7.1f",
+  add_column(s, "  L2iMiss", " %8.1f",
              "Insn fetches that miss L2 cache (L2_RQSTS.IFETCH_MISS) (million)",
              "delta(L2MissI)");
 
