@@ -562,6 +562,19 @@ screen_t* get_screen(int num)
 }
 
 
+/* Return the first screen whose name contains the parameter, and NULL
+   if no screen matches. */
+screen_t* get_screen_by_name(const char* name)
+{
+  int i;
+  for(i=0; i < num_screens; i++) {
+    if (strstr(screens[i]->name, name))
+      return screens[i];
+  }
+  return NULL;
+}
+
+
 char* gen_header(const screen_t* const s, const struct option* options,
                  int width, int active_col)
 {

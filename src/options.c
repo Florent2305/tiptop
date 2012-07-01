@@ -11,6 +11,7 @@
 #include <config.h>
 
 #include <ctype.h>
+#include <errno.h>
 #include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -248,7 +249,12 @@ void parse_command_line(int argc, char* argv[],
 
     if (strcmp(argv[i], "-S") == 0) {
       if (i+1 < argc) {
-        *screen_num = atoi(argv[i+1]);
+        char* endptr;
+        errno = 0;
+        *screen_num = strtol(argv[i+1], &endptr, 10);
+        if (errno  || (endptr == argv[i+1])) {
+          *screen_num = -(i+1);  /* position of the argv to read later */
+        }
         i++;
         continue;
       }

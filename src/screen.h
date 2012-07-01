@@ -64,6 +64,7 @@ void tamp_counters(void);
 
 void init_screen(void);
 screen_t* get_screen(int);
+screen_t* get_screen_by_name(const char* name);
 
 int get_num_screens();
 

@@ -834,12 +834,15 @@ int main(int argc, char* argv[])
   }
 
 
-
   if (options.spawn_pos)
     spawn(argv + options.spawn_pos);
 
   do {
-    screen = get_screen(screen_num);
+    if (screen_num >= 0)
+      screen = get_screen(screen_num);
+    else
+      screen = get_screen_by_name(argv[-screen_num]);
+
     if (!screen) {
       fprintf(stderr, "No such screen.\n");
       exit(EXIT_FAILURE);
