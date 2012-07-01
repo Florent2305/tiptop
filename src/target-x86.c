@@ -82,7 +82,7 @@ char* get_model()
 {
   int disp_fam = disp_family_model();
   char* model = malloc(6);
-  sprintf(model, "%02x_%02x", disp_fam >> 8, disp_fam & 0xff);
+  sprintf(model, "%02X_%02X", disp_fam >> 8, disp_fam & 0xff);
   return model;
 }
 
@@ -91,8 +91,8 @@ int match_model(const char* model)
 {
   char cur_model[6];
   int disp_fam = disp_family_model();
-  sprintf(cur_model, "%02x_%02x", disp_fam >> 8, disp_fam & 0xff);
-  if (strcasecmp(cur_model, model) == 0)
+  sprintf(cur_model, "%02X_%02X", disp_fam >> 8, disp_fam & 0xff);
+  if (strstr(model, cur_model))  /* a bit too permissive? */
     return 1;
 
   return 0;
@@ -105,9 +105,8 @@ void target_dep_string(char* buf, int size)
   enum tables tab = table();
   int disp_fam = disp_family_model();
 
-  snprintf(buf, size, "Target: x86, model = %02X_%02X (table %s)",
-           disp_fam >> 8, disp_fam & 0xff,
-           table_names[tab]);
+  snprintf(buf, size, "Target: x86, model = %02X_%02X",
+           disp_fam >> 8, disp_fam & 0xff);
 }
 
 
