@@ -86,6 +86,10 @@ void free_operation(operation* p)
 /* Print an expression */
 void parcours_expression(expression* e)
 {
+  if(e->type == ERROR){
+    printf("ERROR");
+      return ;
+  }
   if (e->type == ELEM){
     if (e->ele->type == COUNT) {
       if (e->ele->delta == DELTA)
@@ -127,15 +131,20 @@ int build_expression(expression* e, FILE* fd)
       return -1;
 
     if (e->op->operateur == '<') {
-      if (fprintf(fd, " &lt; ") < 0)
+      if (fprintf(fd, " shl ") < 0)
         return -1;
     }
     else if (e->op->operateur == '>') {
-      if (fprintf(fd, " &gt; ") < 0)
+      if (fprintf(fd, " shr ") < 0)
         return -1;
     }
     else if (e->op->operateur == '&') {
-      if (fprintf(fd, " &amp; ") < 0)
+      if (fprintf(fd, " and ") < 0)
+        return -1;
+    }
+
+    else if (e->op->operateur == '|') {
+      if (fprintf(fd, " or ") < 0)
         return -1;
     }
     else if (fprintf(fd, " %c ", e->op->operateur) < 0)
@@ -149,33 +158,12 @@ int build_expression(expression* e, FILE* fd)
   return 0;
 }
 
-
-/* Remove every kind of NOP char: space tabulation and new ligne*/
-static char* remove_space(char* txt)
-{
-  int i,nb=0, j=0, lg = strlen(txt);
-  char* res = malloc(lg+1);
-  for(i=0 ; i < lg; i++){
-    if (isspace(txt[i]))
-      nb++;
-    else
-      res[j++] = txt[i];
-  }
-  res[j] = '\0';
-  return res;
-}
-
-
 /* Parse and return a representative tree */
 expression* parser_expression (char* txt)
 {
    expression* expr= NULL;
-   char* clean = NULL;
-   clean = remove_space(txt);
-   if(strlen(clean) > 0)
-     expr = Expression(clean, 1);
- 
-   free(clean);
+   if(strlen(txt) > 0)
+     expr = Expression(txt, 1);
    return expr;
 }
 

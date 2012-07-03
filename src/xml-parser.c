@@ -25,7 +25,7 @@
 #include "target.h"
 #include "xml-parser.h"
 #include "screen.h"
-
+#include "error.h"
 
 static void option_update(xmlChar* name, xmlChar* val, struct option* opt);
 static void parse_options(xmlNodePtr cur, struct option* opt);
@@ -99,8 +99,8 @@ static void option_update(xmlChar* name, xmlChar* val, struct option* opt)
 
 
 /*
-*	Parser
-*/
+ *	Parser
+ */
 static void parse_screen(xmlNodePtr cur)
 {
   char *desc=NULL, *name=NULL;
@@ -135,21 +135,23 @@ static void parse_columns(screen_t* s, xmlNodePtr cur)
 
   header = (char*) xmlGetProp(cur, (xmlChar*) "header");
   if(!header || strlen(header) == 0){
-    fprintf(stderr, "[TIPTOP] Need a header for a column in screen '%s'\n", s->name);
+    error_printf(" Need a header for a column in screen '%s'\n", s->name);
     goto end;
   }
 
   format = (char*) xmlGetProp(cur, (xmlChar*) "format");
   if(!format || strlen(header) == 0){
-    fprintf(stderr, "[TIPTOP] Need a format for column '%s' in screen '%s'\n", header, s->name);
+    error_printf("Need a format for column '%s' in screen '%s'\n", header, s->name);
     goto end;
   }
 
   expr = (char*) xmlGetProp(cur, (xmlChar*) "expr");
   if(!expr){
-    fprintf(stderr, "[TIPTOP] Need an expression for column '%s' in screen '%s'\n", header, s->name);
+    error_printf("Need an expression for column '%s' in screen '%s'\n", header, s->name);
     goto end;
   }
+
+
   desc = (char*) xmlGetProp(cur, (xmlChar*) "desc");
 
   /* Save column in tiptop struct "screen_t" */
@@ -174,32 +176,26 @@ static void parse_counters(screen_t* s, xmlNodePtr cur)
   alias = (char*)xmlGetProp(cur,(xmlChar*) "alias");
   if (!alias || !is_blank(alias)) {
     /* no alias, cannot be referenced, hence useless */
-    fprintf(stderr, "[TIPTOP] Need a alias for a counter in screen '%s'\n",
-            s->name);
+    error_printf("Need a alias for a counter in screen '%s'\n", s->name);
     goto end;
   }
 
   config = (char*)xmlGetProp(cur,(xmlChar*) "config");
   if (!config) {
     /* cannot be a valid counter without 'config' */
-    fprintf(stderr, "[TIPTOP] Need a config for counter '%s' in screen '%s'\n",
-            alias, s->name);
+    error_printf("Need a config for counter '%s' in screen '%s'\n", alias, s->name);
     goto end;
   }
 
   arch = (char*)xmlGetProp(cur,(xmlChar*) "arch");
-  if (arch && !match_target((char*)arch)) {
-    fprintf(stderr,
-            "[TIPTOP] Skipping counter '%s' in screen '%s' (arch mismatch)\n",
-            alias, s->name);
+  if (arch && !match_target((char*)arch)){
+    error_printf("[TIPTOP] Skipping counter '%s' in screen '%s' (arch mismatch)\n", alias, s->name);
     goto end;
   }
 
   model = (char*)xmlGetProp(cur,(xmlChar*) "model");
-  if (model && !match_model((char*)model)) {
-    fprintf(stderr,
-            "[TIPTOP] Skipping counter '%s' in screen '%s' (model mismatch)\n",
-            alias, s->name);
+  if (model && !match_model((char*)model)){
+    error_printf("[TIPTOP] Skipping counter '%s' in screen '%s' (model mismatch)\n", alias, s->name);
     goto end;
   }
 
@@ -250,19 +246,19 @@ int parse_doc(char* file, struct option* opt)
   doc = xmlParseFile(file);
 
   if (doc == NULL ) {
-    fprintf(stderr,"Document not parsed successfully. \n");
+    error_printf("Document not parsed successfully\n");
     return -1;
   }
 
   cur = xmlDocGetRootElement(doc);
 
   if (cur == NULL) {
-    fprintf(stderr,"empty document\n");
+    error_printf("Empty document\n");
     xmlFreeDoc(doc);
     return -1;
   }
   if (xmlStrcmp(cur->name, (const xmlChar *) "tiptop")) {
-    fprintf(stderr,"document of the wrong type, root node != screens");
+    error_printf("Document of the wrong type, root node != screens\n");
     xmlFreeDoc(doc);
     return -1;
   }

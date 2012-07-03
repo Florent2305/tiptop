@@ -33,6 +33,7 @@ WINDOW* prepare_help_win(screen_t* screen)
     n = LINES - 4;
 
   win = newwin(n+4, 70, LINES - n - 4, 5);
+  clearok(win, TRUE);
   return win;
 }
 
@@ -43,7 +44,6 @@ void show_help_win(WINDOW* win, screen_t* screen)
   char fmt[20] = { 0 };
   char msg[100] = { 0 };
   int  n = screen->num_columns;
-
   /* in case we have more lines than rows on the display... */
   if (n+3 > LINES)
     n = LINES - 3;

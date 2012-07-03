@@ -25,7 +25,8 @@ INSTALL  = @INSTALL@
 
 OBJS=tiptop.o pmc.o process.o requisite.o conf.o screen.o \
      debug.o version.o helpwin.o options.o hash.o spawn.o \
-     xml-parser.o formula-parser.o target.o utils-expression.o
+     xml-parser.o formula-parser.o target.o utils-expression.o \
+     error.o
 
 
 all: tiptop

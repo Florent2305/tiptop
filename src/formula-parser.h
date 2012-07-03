@@ -21,24 +21,6 @@ typedef enum{
   ERROR
 } type_t;
 
-/*
-char* str_tok[]={
-  "ADD",
-  "SUB",
-  "MUL",
-  "DIV",
-  "AND",
-  "OR",
-  "PD",
-  "PG",
-  "CD",
-  "CG",
-  "COUNTER",
-  "NUMBER",
-  "DELTA",
-  "END"
-} ;
-*/
 
 typedef enum {
   ADD,
@@ -49,8 +31,8 @@ typedef enum {
   OR,
   PD,
   PG,
-  CD,
-  CG,
+  GT,
+  LT,
   COUNTER,
   NUMBER,
   DELTA,

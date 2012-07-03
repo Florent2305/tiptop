@@ -74,6 +74,8 @@ void init_options(struct option* opt)
   opt->euid = geteuid();
   opt->out = stdout;
   opt->watch_uid = -1;
+  opt->scroll = 0;
+  opt->error = 0;
 }
 
 void free_options(struct option* options)

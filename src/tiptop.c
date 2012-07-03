@@ -41,6 +41,7 @@
 #include "screen.h"
 #include "spawn.h"
 #include "utils-expression.h"
+#include "error.h"
 
 struct option options;
 
@@ -138,8 +139,9 @@ static void build_rows(struct process_list* proc_list, screen_t* s, int width)
 {
   int row_width;
   struct process* p;
-
   assert(TXT_LEN > 20);
+
+
 
   row_width = TXT_LEN;
   if ((width != -1) && (width < row_width))
@@ -562,14 +564,26 @@ static int handle_key()
 
   else if (c == 'h')
     options.help = 1 - options.help;
-
+  else if (c == 'e'){
+    options.error = 1 - options.error;
+    restart_error_win();
+  }
+  
   else if (c == 'W') {
     if (export_screens(&options) < 0)
       message = ".tiptoprc not written: already exists in current directory?";
     else
       message = ".tiptoprc written";
   }
-
+  if(c == KEY_UP){
+    if(options.scroll > 0) 
+      options.scroll--;
+  }
+  if(c == KEY_DOWN){
+    if(options.scroll < get_error()-1) 
+      options.scroll++;
+  }
+  
   return c;
 }
 
@@ -580,7 +594,10 @@ static int handle_key()
  */
 static int live_mode(struct process_list* proc_list, screen_t* screen)
 {
-  WINDOW*         help_win;
+  WINDOW*         help_win;  
+  WINDOW*         error_win;
+  int nb_proc = 0;
+  int boot = 0;
   fd_set          fds;
   struct process** p;
   int             num_iter = 0;
@@ -593,6 +610,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
   noecho();
   keypad(stdscr, TRUE);
 
+ 
   /* Prepare help window */
   help_win = prepare_help_win(screen);
 
@@ -612,6 +630,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
   tv.tv_usec = 200000; /* 200 ms for first iteration */
 
   header = gen_header(screen, &options, COLS - 1, active_col);
+
   pos = screen_pos(screen);
 
   for(num_iter=0; !options.max_iter || num_iter<options.max_iter; num_iter++) {
@@ -621,8 +640,11 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
     erase();
     mvprintw(0, 0, "tiptop -");
 
+    if ((get_error() > 0) && (COLS >= 67)){
+      mvprintw(0, COLS-67, "[error]");
+    }
     if ((options.config_file == 1) && (COLS >= 60))
-      mvprintw(0, COLS-54, "[conf]");
+      mvprintw(0, COLS-60, "[conf]");
     if ((options.euid == 0) && (COLS >= 54))
       mvprintw(0, COLS-54, "[root]");
     if ((options.watch_uid != -1) && (COLS >= 48))
@@ -675,6 +697,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
     qsort(p, proc_list->num_tids, sizeof(struct process*), sorting_fun);
 
     printed = 0;
+
     /* Iterate over all threads */
     for(i=0; i < proc_list->num_tids; i++) {
 
@@ -738,6 +761,10 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
     }
 
     refresh();  /* display everything */
+    if (options.error){
+      error_win = prepare_error_win(printed); 
+      show_error_win(error_win, options.scroll);
+    }
     if (options.help)
       show_help_win(help_win, screen);
 
@@ -780,7 +807,6 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
       if ((c == 'u') || (c == 'K') || (c == 'p')) /* need to rebuild tasks list */
         return c;
     }
-
     tv.tv_sec = options.delay;
     tv.tv_usec = (options.delay - tv.tv_sec) * 1000000.0;
   }
@@ -788,6 +814,9 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
   free(header);
 
   delwin(help_win);
+  if(error_win)
+    delwin(error_win);
+
   endwin();  /* stop curses */
   return 'q';
 }

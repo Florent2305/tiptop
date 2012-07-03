@@ -31,12 +31,16 @@ struct option {
   uid_t  euid;  /* effective user ID of tiptop */
   FILE*  out;
 
+  int scroll;
+
+
   unsigned int    batch : 1;
   unsigned int    command_done : 1;
   unsigned int    config_file : 1;
   unsigned int    debug : 1;
   unsigned int    default_screen : 1;
   unsigned int    help : 1;
+  unsigned int    error : 1;
   unsigned int    idle : 1;
   unsigned int    show_cmdline : 1;
   unsigned int    show_epoch : 1;

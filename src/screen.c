@@ -35,6 +35,7 @@
 #include "process.h"
 #include "screen.h"
 #include "utils-expression.h"
+#include "error.h"
 
 
 static const int alloc_chunk = 10;
@@ -71,8 +72,7 @@ static void check_counters_used(expression* e, screen_t* s, int* error)
     if(find >= 0) 
       s->counters[find].used++;
     else{
-      fprintf(stderr, 
-	      "[TIPTOP] Undeclared counter '%s' in screen '%s': Column ignored.\n", 
+      error_printf("[TIPTOP] Undeclared counter '%s' in screen '%s': Column ignored\n", 
 	      e->ele->alias,s->name);
       (*error)++;
     }
@@ -114,9 +114,9 @@ void tamp_counters ()
     j=0;
     while (j < screens[i]->num_counters)
       if (screens[i]->counters[j].used == 0) {
-        fprintf(stderr, "[TIPTOP] Unused counter '%s' in screen '%s'.\n",
-                screens[i]->counters[j].alias,
-                screens[i]->name);
+        error_printf("[TIPTOP] Unused counter '%s' in screen '%s'\n",
+		     screens[i]->counters[j].alias,
+		     screens[i]->name);
         delete_and_shift_counters(i, j);
       }
       else
@@ -124,9 +124,6 @@ void tamp_counters ()
   }
 }
 
-/*
- *
- */
 
 static screen_t* alloc_screen()
 {
@@ -365,27 +362,28 @@ int add_counter(screen_t* const s, char* alias, char* config, char* type)
   expression* expr = NULL;
 
   if(s->num_counters >=  MAX_EVENTS){
-    fprintf(stderr,"[TIPTOP] Too much counters (max.16) in the screen '%s', '%s' is ignored.\n", s->name,  alias);
+    error_printf("[TIPTOP] Too much counters (max.16) in the screen '%s', '%s' is ignored\n", s->name,  alias);
     return -1;
   }
-  /* Parse the configuration */
-  expr = parser_expression(config);
 
   int_type = get_counter_type(type, &err);
 
+  /* Parse the configuration */
+  expr = parser_expression(config);
+
   if (err > 0) {
     /* error*/
-    fprintf(stderr, "[TIPTOP] Bad type '%s': counter '%s' is ignored.\n", type, alias);
+    free_expression(expr);
+    error_printf("[TIPTOP] Bad type '%s': counter '%s' is ignored\n", type, alias);
     return -1;
   }
-  err = 0;
 
+  err=0;
   int_conf = evaluate_counter_expression(expr, &err);
-
   free_expression(expr);
   if (err > 0) {
     /* error*/
-    fprintf(stderr, "[TIPTOP] Bad config '%s': counter '%s' is ignored.\n",config,  alias);
+    error_printf("[TIPTOP] Bad config '%s': counter '%s' is ignored\n",config,  alias);
     return -1;
   }
 
@@ -412,7 +410,7 @@ int add_counter_by_value(screen_t* const s, char* alias,
   int n = s->num_counters;
 
   if(n >=  MAX_EVENTS){
-    fprintf(stderr,"[TIPTOP] Too much counters (max.16) in the screen '%s', '%s' is ignored.\n"
+    error_printf("[TIPTOP] Too much counters (max.16) in the screen '%s', '%s' is ignored\n"
 	    , s->name,  alias);
     return -1;
   }
@@ -442,17 +440,16 @@ int add_column(screen_t* const s, char* header, char* format, char* desc,
 
   if (e == NULL || e->type == ERROR) {
     free_expression(e);
-    fprintf(stderr,
-	    "[TIPTOP] Invalid expression in column '%s', screen '%s': Column ignored.\n", 
+    error_printf("[TIPTOP] Invalid expression in column '%s', screen '%s': Column ignored\n", 
 	    s->name, header);
     return -1;
   }
 
   check_counters_used(e, s, &err);
-  if( err > 0 ) 
+  if( err > 0 ) {
+    free_expression(e);
     return -1;
-  
-
+  }
 
   if (n == s->num_alloc_columns) {
     s->columns = realloc(s->columns, sizeof(column_t) * (n + alloc_chunk));
@@ -714,7 +711,7 @@ void delete_screen(screen_t* s)
 }
 
 
-/* Delete all screens. */
+/* Delete all screens.nnnnnn */
 void delete_screens()
 {
   int i;
