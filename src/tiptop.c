@@ -564,10 +564,7 @@ static int handle_key()
 
   else if (c == 'h')
     options.help = 1 - options.help;
-  else if (c == 'e'){
-    options.error = 1 - options.error;
-    restart_error_win();
-  }
+  
   
   else if (c == 'W') {
     if (export_screens(&options) < 0)
@@ -594,8 +591,8 @@ static int handle_key()
  */
 static int live_mode(struct process_list* proc_list, screen_t* screen)
 {
-  WINDOW*         help_win;  
-  WINDOW*         error_win;
+  WINDOW*         help_win = NULL;  
+  WINDOW*         error_win = NULL;
   int nb_proc = 0;
   int boot = 0;
   fd_set          fds;
@@ -761,8 +758,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
 
     refresh();  /* display everything */
     if (options.error) {
-      error_win = prepare_error_win(printed); 
-      show_error_win(error_win, options.scroll);
+      show_error_win(error_win, options.scroll, printed);      
     }
     if (options.help)
       show_help_win(help_win, screen);
@@ -805,6 +801,16 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
 
       if ((c == 'u') || (c == 'K') || (c == 'p')) /* need to rebuild tasks list */
         return c;
+
+      if (c == 'e'){
+	options.error = 1 - options.error;
+	if(!options.error){
+	  delwin(error_win);
+	  error_win = NULL;
+	}
+	else
+	  restart_error_win();
+      }
     }
     tv.tv_sec = options.delay;
     tv.tv_usec = (options.delay - tv.tv_sec) * 1000000.0;
@@ -815,6 +821,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
   delwin(help_win);
   if(error_win)
     delwin(error_win);
+  error_win = NULL;
 
   endwin();  /* stop curses */
   return 'q';
@@ -914,6 +921,7 @@ int main(int argc, char* argv[])
   } while (key != 'q');
 
   /* done, free memory (makes valgrind happy) */
+  close_error();
   delete_screens();
   done_proc_list(proc_list);
   free_options(&options);

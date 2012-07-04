@@ -242,27 +242,30 @@ expression* Expression(char* t, int init)
 	  free_expression(res);
 	  return e;
 	}
-      if(cur_tok == ADD || cur_tok == SUB || cur_tok == GT || cur_tok == LT || cur_tok == AND || cur_tok == OR)
+      if(cur_tok == ADD || cur_tok == SUB || cur_tok == GT || cur_tok == LT || cur_tok == AND || cur_tok == OR || cur_tok == LT || cur_tok == GT)
 	{
 	  res->op = FollowingExpression();       /* Going in FollowingExpression */
 	  
-	  if (res->op->operateur == ERROR)
+	  if (res->op->operateur == ERROR){
+	    free_expression(e);
 	    goto error;
-      
+	  }      
 	  res->type = OPER;
 	  res->op->exp1 = e;
 	}
       if(cur_tok == END || cur_tok == PD)
 	{
 	  /* Just a EimpleExpression (FollowExpr == NULL) */
-	  if(res->op)
+	  if(res->op){
 	    return res;
+	  }
 	  else 
 	    {
 	      free_expression(res);
 	      return e;
 	    }
 	}
+      else free_expression(e);
     }
  error:
   res->type = ERROR;

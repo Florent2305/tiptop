@@ -367,20 +367,21 @@ int add_counter(screen_t* const s, char* alias, char* config, char* type)
   }
 
   int_type = get_counter_type(type, &err);
-
-  /* Parse the configuration */
-  expr = parser_expression(config);
-
+  
   if (err > 0) {
     /* error*/
-    free_expression(expr);
     error_printf("[TIPTOP] Bad type '%s': counter '%s' is ignored\n", type, alias);
     return -1;
   }
 
+  /* Parse the configuration */
+  expr = parser_expression(config);
+
   err=0;
   int_conf = evaluate_counter_expression(expr, &err);
+
   free_expression(expr);
+
   if (err > 0) {
     /* error*/
     error_printf("[TIPTOP] Bad config '%s': counter '%s' is ignored\n",config,  alias);
@@ -659,18 +660,13 @@ void list_screens()
 }
 
 
-static void delete_counter(counter_t c)
-{
-  if (c.alias)
-    free(c.alias);
-}
-
-
 static void delete_counters (counter_t* c, int nbc)
 {
   int i;
-  for(i=0;i<nbc;i++)
-    delete_counter(c[i]);
+  for(i=0;i<nbc;i++){
+    if (c[i].alias)
+      free(c[i].alias);
+  }
   free(c);
 }
 

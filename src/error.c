@@ -29,7 +29,10 @@ int get_error()
 {
   return nb_error;
 }
-
+void close_error(){
+  if(error_file)
+    fclose(error_file);
+}
 
 void error_printf(char* fmt, ...)
 {
@@ -49,25 +52,59 @@ void error_printf(char* fmt, ...)
 }
 
 
-void show_error_win(WINDOW* win, int scroll)
+int boot = 0;
+int tids = 0;
+
+WINDOW* prepare_error_win(int nb_tids)
 {
-  long current_pos;
-  int maxx, maxy, i;
-  getmaxyx(win, maxy, maxx);
-  char buf[maxx];
-  char blank[maxx-2];
-  int pos=0;
-  if (!error_file) {
-    return;
+  WINDOW* we;
+  /* Keep dimension of the box */
+  if(boot == 0){
+    boot++;
+    tids = nb_tids;
   }
-  for(i=0;i<maxx-2;i++)
+    
+  int l = LINES-tids-5;
+  /* Encure a place for window */
+  if(l <= 0) 
+    l = 10;
+  
+  we = newwin(l, COLS, LINES-l,0);
+  // clearok(we, TRUE);
+
+  return we;
+}
+
+
+void show_error_win(WINDOW* win, int scroll, int nb_proc){
+
+  long current_pos;
+  int maxx , maxy , i;
+
+  if(!error_file)
+    return;
+
+  if(!win)
+    win = prepare_error_win(nb_proc);
+
+  getmaxyx(win, maxy, maxx);
+
+  char buf[maxx];
+  char blank[maxx-3];
+  int pos=0;
+
+  
+  for(i=0;i<maxx-3;i++) 
     blank[i] = ' ';
 
+  /* Save currrent position in tiptop.error */
   current_pos = ftell(error_file);
   rewind(error_file);
+
   box(win, 0, 0);
   mvwprintw(win, 0, 5, " In .tiptoprc: %d errors detected (e to close) ",
             nb_error);
+
   pos++;
 
   /* scrolling the file */
@@ -90,10 +127,8 @@ void show_error_win(WINDOW* win, int scroll)
       buf[strlen(buf-1)] = 0;
 
     mvwprintw(win,pos++,1,"%s", buf);
-
-    buf[strlen(buf-1)] = '\n';
   }
-
+  
   if (pos != maxy-2) { /* To complete screen */
     while(pos < maxy-2)
       mvwprintw(win,pos++,1,"%s",blank);
@@ -102,35 +137,13 @@ void show_error_win(WINDOW* win, int scroll)
   else
     mvwprintw(win,pos,1,"......", i);
 
+
   /* restoring older state of tiptop.error */
   fseek(error_file, current_pos, SEEK_SET);
   wrefresh(win);
 }
 
-int boot = 0;
-int tids = 0;
-
 void restart_error_win()
 {
   boot = 0;
-}
-
-
-WINDOW* prepare_error_win(int nb_tids)
-{
-  WINDOW* we;
-
-  if (boot == 0) {
-    boot++;
-    tids = nb_tids;
-  }
-
-  int l = LINES-tids-5;
-  if (l < 0)
-    l = 10;
-
-  we = newwin(l, COLS, LINES-l, 0);
-  clearok(we, TRUE);
-
-  return we;
 }
