@@ -1,3 +1,12 @@
+/*
+ * This file is part of tiptop.
+ *
+ * Author: Antoine NAUDIN
+ * Copyright (c) 2012 Inria
+ *
+ * License: GNU General Public License version 2.
+ *
+ */
 
 #include <curses.h>
 

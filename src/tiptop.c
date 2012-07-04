@@ -640,9 +640,8 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
     erase();
     mvprintw(0, 0, "tiptop -");
 
-    if ((get_error() > 0) && (COLS >= 67)){
-      mvprintw(0, COLS-67, "[error]");
-    }
+    if ((get_error() > 0) && (COLS >= 37))
+      mvprintw(LINES-1, 30, "[errors]");
     if ((options.config_file == 1) && (COLS >= 60))
       mvprintw(0, COLS-60, "[conf]");
     if ((options.euid == 0) && (COLS >= 54))
@@ -761,7 +760,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
     }
 
     refresh();  /* display everything */
-    if (options.error){
+    if (options.error) {
       error_win = prepare_error_win(printed); 
       show_error_win(error_win, options.scroll);
     }
