@@ -78,6 +78,8 @@ $(distdir): FORCE
 	cp $(srcdir)/src/conf.h $(distdir)/src
 	cp $(srcdir)/src/debug.c $(distdir)/src
 	cp $(srcdir)/src/debug.h $(distdir)/src
+	cp $(srcdir)/src/error.c $(distdir)/src
+	cp $(srcdir)/src/error.h $(distdir)/src
 	cp $(srcdir)/src/formula-parser.c $(distdir)/src
 	cp $(srcdir)/src/formula-parser.h $(distdir)/src
 	cp $(srcdir)/src/hash.c $(distdir)/src
