@@ -156,7 +156,7 @@ static void parse_columns(screen_t* s, xmlNodePtr cur)
 
   /* Save column in tiptop struct "screen_t" */
   add_column(s, header, format, desc, expr);
-
+ 
  end:
   if(header)
     free(header);
