@@ -13,14 +13,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "errno.h"
 #include "screen.h"
 
-#define ERROR_MAX 32
-#define LENGHT 1000
-
-static const char* const error_file_name = "tiptop.error";
+static char* path_error_file = NULL;
 static FILE* error_file = NULL;
 
 static int nb_error = 0;
@@ -33,18 +31,33 @@ void close_error(){
   if(error_file)
     fclose(error_file);
 }
+void set_path_error(char* path){
+  path_error_file = path;
+}
+
 
 void error_printf(char* fmt, ...)
 {
   va_list args;
   nb_error++;
+
   /* open file the first time we get here. */
   if (!error_file) {
-    error_file = fopen(error_file_name, "w+");
-    if (!error_file) {
-      perror("fopen");
-      fprintf(stderr, "Cannot open error file.\n");
-      exit(EXIT_FAILURE);
+
+    if(path_error_file){
+      error_file = fopen(path_error_file, "w+");
+      if (!error_file) {
+	perror("fopen");
+	fprintf(stderr, "Cannot open error file.\n");
+	exit(EXIT_FAILURE);
+      }   
+    }
+    else{
+      error_file = tmpfile();
+      if(error_file == NULL){
+	fprintf(stderr, "Cannot open error file.\n");
+	exit(EXIT_FAILURE);
+      }
     }
   }
   va_start(args, fmt);
@@ -52,47 +65,38 @@ void error_printf(char* fmt, ...)
 }
 
 
-int boot = 0;
-int tids = 0;
-
 WINDOW* prepare_error_win(int nb_tids)
 {
   WINDOW* we;
-  /* Keep dimension of the box */
-  if(boot == 0){
-    boot++;
-    tids = nb_tids;
-  }
     
-  int l = LINES-tids-5;
+  int l = LINES-nb_tids-5;
   /* Encure a place for window */
   if(l <= 0) 
     l = 10;
   
   we = newwin(l, COLS, LINES-l,0);
-  // clearok(we, TRUE);
-
   return we;
 }
-
+static int nbp = 0;
 
 void show_error_win(WINDOW* win, int scroll, int nb_proc){
 
   long current_pos;
-  int maxx , maxy , i;
-
+  int maxx , maxy , i, pos=1;
+  int tmp;
   if(!error_file)
     return;
 
+  if(nb_proc != -1)
+    nbp = nb_proc;
+
   if(!win)
-    win = prepare_error_win(nb_proc);
+    win = prepare_error_win(nbp);
 
   getmaxyx(win, maxy, maxx);
 
   char buf[maxx];
   char blank[maxx-3];
-  int pos=0;
-
   
   for(i=0;i<maxx-3;i++) 
     blank[i] = ' ';
@@ -102,7 +106,7 @@ void show_error_win(WINDOW* win, int scroll, int nb_proc){
   rewind(error_file);
 
   box(win, 0, 0);
-  mvwprintw(win, 0, 5, " In .tiptoprc: %d errors detected (e to close) ",
+  mvwprintw(win, 0, 5, " %d errors detected (e to close) ",
             nb_error);
 
   pos++;
@@ -141,9 +145,4 @@ void show_error_win(WINDOW* win, int scroll, int nb_proc){
   /* restoring older state of tiptop.error */
   fseek(error_file, current_pos, SEEK_SET);
   wrefresh(win);
-}
-
-void restart_error_win()
-{
-  boot = 0;
 }

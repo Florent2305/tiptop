@@ -17,4 +17,4 @@ WINDOW* prepare_error_win(int nb_tids);
 void show_error_win(WINDOW* win, int scroll, int nb_proc);
 int get_error();
 
-void restart_error_win();
+void set_path_error(char* path);

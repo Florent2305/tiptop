@@ -18,6 +18,8 @@
 /* global state */
 struct option {
   char*  path_conf_file;
+  char*  path_error_file;
+
   int    spawn_pos;
   float  delay;
   float  cpu_threshold;  /* CPU activity below which a thread is considered inactive */
@@ -40,7 +42,7 @@ struct option {
   unsigned int    debug : 1;
   unsigned int    default_screen : 1;
   unsigned int    help : 1;
-  unsigned int    error : 1;
+  unsigned int    error : 2;
   unsigned int    idle : 1;
   unsigned int    show_cmdline : 1;
   unsigned int    show_epoch : 1;

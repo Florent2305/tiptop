@@ -758,7 +758,12 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
 
     refresh();  /* display everything */
     if (options.error) {
-      show_error_win(error_win, options.scroll, printed);      
+      if(options.error == 1){
+	options.error = 2;
+	show_error_win(error_win, options.scroll, printed);      
+      }
+      else
+	show_error_win(error_win, options.scroll, -1);      
     }
     if (options.help)
       show_help_win(help_win, screen);
@@ -803,13 +808,13 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
         return c;
 
       if (c == 'e'){
-	options.error = 1 - options.error;
-	if(!options.error){
+	if(options.error > 0){
+	  options.error = 0;
 	  delwin(error_win);
 	  error_win = NULL;
 	}
 	else
-	  restart_error_win();
+	  options.error = 1;
       }
     }
     tv.tv_sec = options.delay;
@@ -819,9 +824,6 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
   free(header);
 
   delwin(help_win);
-  if(error_win)
-    delwin(error_win);
-  error_win = NULL;
 
   endwin();  /* stop curses */
   return 'q';
