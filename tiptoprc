@@ -9,7 +9,6 @@
   <options>
     <option name="cpu_threshold" value="0.00001" />
     <option name="delay" value="2.0" />
-    <option name="max_iter" value="0" />
     <option name="only_pid" value="0" />
     <option name="batch" value="0" />
   </options>
