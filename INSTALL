@@ -19,3 +19,8 @@ Tiptop can be built in two ways:
 3.  /where/you/unpacked/tiptop-x.y/configure  [--prefix=/some/where]
 4.  make
 (5. optional)  make install
+
+
+
+Consider editing and installing the provided configuration file
+tiptoprc.

@@ -68,8 +68,9 @@ $(distdir): FORCE
 	cp $(srcdir)/configure $(distdir)
 	cp $(srcdir)/config.h.in $(distdir)
 	cp $(srcdir)/install-sh $(distdir)
-	cp $(srcdir)/README $(distdir)
+	cp $(srcdir)/AUTHORS $(distdir)
 	cp $(srcdir)/INSTALL $(distdir)
+	cp $(srcdir)/README $(distdir)
 	cp $(srcdir)/Makefile.in $(distdir)
 	cp $(srcdir)/tiptoprc $(distdir)
 	cp $(srcdir)/src/Makefile.in $(distdir)/src

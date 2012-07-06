@@ -38,5 +38,5 @@ tiptop -i
 tiptop -H
   also show threads
 
-tiptop -W
+tiptop -W path
   specify the location of the configuration file

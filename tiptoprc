@@ -1,8 +1,11 @@
-<!-- tiptop exampel configuration file -->
+<!-- tiptop example configuration file -->
 
 <!-- Rename this file to .tiptoprc,                                       -->
 <!-- and place it either in your current directory, the location          -->
 <!-- specified in $TIPTOP, or in your $HOME.                              -->
+<!--                                                                      -->
+<!-- Note that some of the screens are redundant with builtin screen.     -->
+<!-- They are provided here for convenience and illustration.             -->
 
 <tiptop>
 
@@ -17,7 +20,7 @@
       Simple screen, similar to the default screen.
       Shows basic features of the config file.
   -->
-  <screen name="default" desc="Screen by default">
+  <screen name="default" desc="Screen by default (config file)">
     <counter alias="CYCLE" config="CPU_CYCLES"    type="HARDWARE" />
     <counter alias="INSN"  config="INSTRUCTIONS"  type="HARDWARE" />
     <counter alias="MISS"  config="CACHE_MISSES"  type="HARDWARE" />
@@ -104,11 +107,13 @@
     <counter alias="I" config="INSTRUCTIONS" type="HARDWARE" />
 
     <!-- number of micro-ops retired -->
-    <counter alias="uOP" config="0x1c2" type="RAW" arch="x86" model="06_1A;06_1E;06_1F;06_2E" />
+    <counter alias="uOP" config="0x1c2" type="RAW"
+             arch="x86" model="06_1A;06_1E;06_1F;06_2E" />
     <counter alias="uOP" config="0x1c2" type="RAW" arch="x86" model="06_2A" />
 
     <!-- number of macro-fused uops retired -->
-    <counter alias="MACRO" config="0x4c2" type="RAW" arch="x86" model="06_1A;06_1E;06_1F;06_2E" />
+    <counter alias="MACRO" config="0x4c2" type="RAW"
+             arch="x86" model="06_1A;06_1E;06_1F;06_2E" />
 
     <column header=" %CPU" format="%5.1f" desc="CPU usage" expr="CPU_TOT" />
     <column header=" %SYS" format="%5.1f" desc="system CPU usage" expr="CPU_SYS" />
@@ -181,16 +186,18 @@
     <counter alias="C"   config="CPU_CYCLES" type="HARDWARE" />
     <counter alias="I"   config="INSTRUCTIONS" type="HARDWARE" />
 
-    <counter alias="LD"  config="0x10b" type="RAW" arch="x86" model="06_1A;06_1E;06_1F;06_2E" />
+    <counter alias="LD"  config="0x10b" type="RAW"
+             arch="x86" model="06_1A;06_1E;06_1F;06_2E" />
     <counter alias="LD"  config="0x81d0" type="RAW" arch="x86" model="06_2A" />
-
-    <counter alias="ST"  config="0x20b" type="RAW" arch="x86" model="06_1A;06_1E;06_1F;06_2E" />
+    <counter alias="ST"  config="0x20b" type="RAW"
+             arch="x86" model="06_1A;06_1E;06_1F;06_2E" />
     <counter alias="ST"  config="0x82d0" type="RAW" arch="x86" model="06_2A" />
-
-    <counter alias="x87" config="0x2c0" type="RAW" arch="x86" model="06_1A;06_1E;06_1F;06_2E" />
+    <counter alias="x87" config="0x2c0" type="RAW"
+             arch="x86" model="06_1A;06_1E;06_1F;06_2E" />
     <counter alias="x87" config="0x0110" type="RAW" arch="x86" model="06_2A" />
 
-    <counter alias="brr" config="0xc4"  type="RAW" arch="x86" model="06_1A;06_1E;06_1F;06_2E" />
+    <counter alias="brr" config="0xc4"  type="RAW"
+             arch="x86" model="06_1A;06_1E;06_1F;06_2E" />
     <counter alias="brr" config="0xc4"  type="RAW" arch="x86" model="06_2A" />
 
     <column header=" %CPU" format="%5.1f" desc="CPU usage" expr="CPU_TOT" />

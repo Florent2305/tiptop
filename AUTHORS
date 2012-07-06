@@ -5,4 +5,5 @@ Erven ROHOU
       Main author
 
 Antoine NAUDIN
-      Contributed the configuration file and expression parser
+      Contributed the configuration file, the expression parser, and
+      the error management mechanism.

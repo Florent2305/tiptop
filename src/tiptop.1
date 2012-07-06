@@ -1,6 +1,8 @@
 .TH TIPTOP 1 "August 2011" "Linux" "Linux User's Manual"
 .ds ME \fBtiptop\fR
+.ds PM \fBptiptop\fR
 .ds Me tiptop
+.ds Pm ptiptop
 
 .SH NAME
 tiptop \- display hardware performance counters for Linux tasks
@@ -9,6 +11,8 @@ tiptop \- display hardware performance counters for Linux tasks
 \*(ME [OPTION]
 
 \*(ME [OPTION] -- command  (EXPERIMENTAL)
+
+\*(PM PATTERN [OPTIONS]
 
 .SH DESCRIPTION
 The \*(ME program provides a dynamic real-time view of the tasks
@@ -41,7 +45,11 @@ a '?' sign is printed.
 If -- appears in the command line, \*(Me treats the rest of the line
 as a command. A new process if forked, and hardware counters are
 attached just before execvp is called. This makes it possible to trace
-an application from the first instruction. This is experimental!
+an application from the first instruction. This is commonly used in
+combination with sticky mode to track a command from start to
+finish. This is experimental!
+
+\*(Pm is simply a shortcut for tiptop -p.
 
 \*(Me requires Linux 2.6.31+.
 
@@ -71,8 +79,8 @@ display the command line of the task instead of its name.
 Specify the delay between refreshes. VALUE can be fractional.
 
 .TP 4
-\-\fBE\fR PATH
-Created a file pointed by path to store errors.
+\-\fBE\fR FILENAME
+Specify file where errors are logged.
 
 .TP 4
 \-\-\fBepoch\fR
@@ -318,7 +326,15 @@ following:
 
 .nf
 <counter alias="uops_issued" config="0x010e"
-         type="RAW" arch="x86" model="06_2a" />
+         type="RAW" arch="x86" model="06_2A" />
+.fi
+
+For the x86 architecture, a single counter can be valid for several
+models.
+
+.nf
+<counter alias="uOP" config="0x1c2" type="RAW"
+         arch="x86" model="06_1A;06_1E;06_1F;06_2E" />
 .fi
 
 See also /usr/include/linux/perf_events.h for more on config and type.
@@ -370,7 +386,7 @@ PROC_ID (processor where the process was last seen).
 
     <!-- Sandy Bridge only -->
     <counter alias="uops_issued" config="0x010e"
-             type="RAW" arch="x86" model="06_2a" />
+             type="RAW" arch="x86" model="06_2A" />
 
     <view header=" %CPU" format="%5.1f"
           desc="CPU usage" expr="CPU_TOT" />
