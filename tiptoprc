@@ -75,10 +75,14 @@
   <screen name="L1" desc="Statistics on L1 cache">
     <counter alias="CYCLE" config="CPU_CYCLES"   type="HARDWARE" />
     <counter alias="INSN"  config="INSTRUCTIONS" type="HARDWARE" />
-    <counter alias="L1read" config="CACHE_L1D | (CACHE_OP_READ &lt; 8) | (CACHE_RESULT_ACCESS &lt; 16)" type="HW_CACHE"/>
-    <counter alias="L1write" config="CACHE_L1D | (CACHE_OP_WRITE &lt; 8) | (CACHE_RESULT_ACCESS &lt; 16)" type="HW_CACHE"/>
-    <counter alias="L1Rmiss" config="CACHE_L1D | (CACHE_OP_READ &lt; 8) | (CACHE_RESULT_MISS &lt; 16)" type="HW_CACHE"/>
-    <counter alias="L1Wmiss" config="CACHE_L1D | (CACHE_OP_WRITE &lt; 8) | (CACHE_RESULT_MISS &lt; 16)" type="HW_CACHE"/>
+    <counter alias="L1read" type="HW_CACHE"
+             config="L1D | (OP_READ shl 8) | (RESULT_ACCESS shl 16)" />
+    <counter alias="L1write" type="HW_CACHE"
+             config="L1D | (OP_WRITE shl 8) | (RESULT_ACCESS shl 16)" />
+    <counter alias="L1Rmiss" type="HW_CACHE"
+             config="L1D | (OP_READ shl 8) | (RESULT_MISS shl 16)" />
+    <counter alias="L1Wmiss" type="HW_CACHE"
+             config="L1D | (OP_WRITE shl 8) | (RESULT_MISS shl 16)" />
 
     <column header="  IPC" format=" %4.1f" desc="Executed instructions per cycle"
             expr="delta(INSN)/delta(CYCLE)"/>

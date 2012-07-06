@@ -22,11 +22,11 @@
  *
  *
  *
- *                  ***               
- *                               
- *          Parser's Grammar Rules     
- *                                   
- *                  ***               
+ *                  ***
+ *
+ *          Parser's Grammar Rules
+ *
+ *                  ***
  *
  *** Expr      => SimlExpr FollExpr
  *
@@ -52,10 +52,10 @@
  *
  */
 
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 
 #include "debug.h"
 #include "formula-parser.h"
@@ -66,23 +66,6 @@ static operation* FollowingElement();
 static expression* Element();
 static operation* FollowingExpression();
 static expression* SimpleExpression();
-
-char* toktostr[]={
-  "ADD",
-  "SUB",
-  "MUL",
-  "DIV",
-  "AND",
-  "OR",
-  "PD",
-  "PG",
-  "GT",
-  "LT",
-  "COUNTER",
-  "NUMBER",
-  "DELTA",
-  "END"
-} ;
 
 /* Current analyzed token */
 static token_t cur_tok = END;
@@ -110,16 +93,17 @@ static int next_tok=0;
 
 /* Return string representation of current token in "txt" */
 
-char* get_current_word(){
+char* get_current_word()
+{
   return strndup(&txt[here], next_tok - here);
 }
 
 /* Look for next token and place it in global "cur_token" */
 
-token_t get_next_token (){
-
+token_t get_next_token ()
+{
   char car;
-  int only_numb = 0;	
+  int only_numb = 0;
   int dot = 0;
   int len_txt = strlen(txt);
 
@@ -130,30 +114,29 @@ token_t get_next_token (){
 
   while(next_tok<len_txt && isspace(txt[next_tok]))
     next_tok++;
-  
-  here = next_tok;
 
+  here = next_tok;
   car = txt[here];
 
-  if(is_sep(car)) {
+  if (is_sep(car)) {
     next_tok++;
-    if(car == '+') cur_tok =  ADD;
-    if(car == '-') cur_tok =  SUB;
-    if(car == '*') cur_tok =  MUL;
-    if(car == '/') cur_tok =  DIV;
-    if(car == ')') cur_tok =  PD;
-    if(car == '(') cur_tok =  PG;
-    if(car == '|') cur_tok =  OR;
+    if (car == '+') cur_tok =  ADD;
+    if (car == '-') cur_tok =  SUB;
+    if (car == '*') cur_tok =  MUL;
+    if (car == '/') cur_tok =  DIV;
+    if (car == ')') cur_tok =  PD;
+    if (car == '(') cur_tok =  PG;
+    if (car == '|') cur_tok =  OR;
     goto end;
-  }	
-  
-  while( next_tok < len_txt && !is_sep(car)){
-    if(!is_number(car))
+  }
+
+  while ((next_tok < len_txt) && (!is_sep(car))) {
+    if (!is_number(car))
       only_numb = -1;
     if(is_dot(car))
-      dot++;	
+      dot++;
     car = txt[++next_tok];
-  }	
+  }
 
   if(only_numb == 0 && dot <= 1) {
     cur_tok =  NUMBER;
@@ -169,20 +152,20 @@ token_t get_next_token (){
     goto end;
   }
   if(strncmp("shl", &txt[here], 3) == 0){
-    cur_tok = LT;
+    cur_tok = SHL;
     goto end;
   }
   if(strncmp("shr", &txt[here], 3) == 0){
-    cur_tok = GT;
+    cur_tok = SHR;
     goto end;
   }
   if(strncmp("or", &txt[here], 2) == 0){
     cur_tok = OR;
     goto end;
   }
-  cur_tok = COUNTER;    
+  cur_tok = COUNTER;
 
- end: 
+ end:
   return cur_tok;
 }
 
@@ -195,17 +178,17 @@ static char Op1()
     op='+';
   if(cur_tok == SUB)
     op='-';
-  if(cur_tok == GT)
+  if(cur_tok == SHR)
     op='>';
-  if(cur_tok == LT)
+  if(cur_tok == SHL)
     op='<';
   if(cur_tok == AND)
     op='&';
   if(cur_tok == OR)
     op='|';
-  
+
   get_next_token();
-  return op;   
+  return op;
 }
 
 static char Op2()
@@ -216,61 +199,61 @@ static char Op2()
   if(cur_tok == DIV)
     op='/';
   get_next_token();
-  return op;   
+  return op;
  }
+
 
 expression* Expression(char* t, int init)
 {
   expression* e = NULL;
   expression* res = alloc_expression();
-  
+
   debug_printf("[Formula-parser]Expression");
-   
-  if(init == 1)
+
+  if(init == 1) {
+    here=0;
+    next_tok=0;
+    txt = t;
+    get_next_token();
+  }
+  if (cur_tok == PG || cur_tok == DELTA || cur_tok == COUNTER || cur_tok == NUMBER)
+  {
+    e = SimpleExpression();     /* Going in Simple Expression */
+
+    if (e->type == ERROR) {
+      free_expression(res);
+      return e;
+    }
+    if (cur_tok == ADD || cur_tok == SUB || cur_tok == SHR || cur_tok == SHL ||
+        cur_tok == AND || cur_tok == OR)
     {
-      here=0;
-      next_tok=0;
-      txt = t;
-      get_next_token();
+      res->op = FollowingExpression();       /* Going in FollowingExpression */
+
+      if (res->op->operateur == ERROR) {
+        free_expression(e);
+        goto error;
+      }
+      res->type = OPER;
+      res->op->exp1 = e;
     }
-  if(cur_tok == PG || cur_tok == DELTA || cur_tok == COUNTER || cur_tok == NUMBER)
-    {      
-      e = SimpleExpression();     /* Going in Simple Expression */
-      
-      if (e->type == ERROR)
-	{
-	  free_expression(res);
-	  return e;
-	}
-      if(cur_tok == ADD || cur_tok == SUB || cur_tok == GT || cur_tok == LT || cur_tok == AND || cur_tok == OR || cur_tok == LT || cur_tok == GT)
-	{
-	  res->op = FollowingExpression();       /* Going in FollowingExpression */
-	  
-	  if (res->op->operateur == ERROR){
-	    free_expression(e);
-	    goto error;
-	  }      
-	  res->type = OPER;
-	  res->op->exp1 = e;
-	}
-      if(cur_tok == END || cur_tok == PD)
-	{
-	  /* Just a EimpleExpression (FollowExpr == NULL) */
-	  if(res->op){
-	    return res;
-	  }
-	  else 
-	    {
-	      free_expression(res);
-	      return e;
-	    }
-	}
-      else free_expression(e);
+    if (cur_tok == END || cur_tok == PD) {
+      /* Just a EimpleExpression (FollowExpr == NULL) */
+      if (res->op) {
+        return res;
+      }
+      else {
+        free_expression(res);
+        return e;
+      }
     }
+    else free_expression(e);
+  }
+
  error:
   res->type = ERROR;
-  return res;  
+  return res;
 }
+
 
 static expression* SimpleExpression()
 {
@@ -278,35 +261,30 @@ static expression* SimpleExpression()
   expression* ex2 = NULL ;
 
  debug_printf("[Formula-parser]SimpleExpression");
- 
-      
-  if(cur_tok == PG || cur_tok == DELTA || cur_tok == COUNTER || cur_tok == NUMBER)
-    {
 
-      ex1 = Element();  /* Going in Element */
+ if (cur_tok == PG || cur_tok == DELTA || cur_tok == COUNTER || cur_tok == NUMBER)
+ {
+   ex1 = Element();  /* Going in Element */
 
-      if (ex1->type != ERROR) 
-	{
-	  if(cur_tok == MUL || cur_tok == DIV)
-	    {
-	      ex2=alloc_expression();	      
-	      ex2->op = FollowingElement();       /* Going in Following Element */
+   if (ex1->type != ERROR) {
+     if(cur_tok == MUL || cur_tok == DIV) {
+       ex2=alloc_expression();
+       ex2->op = FollowingElement();       /* Going in Following Element */
 
-	      if (ex2->op->operateur == ERROR) 
-		{ /* Syntax error */
-		  free_expression(ex1);
-		  ex2->type = ERROR;
-		}
-	      else{
-		ex2->type = OPER;
-		ex2->op->exp1 = ex1;
-	      }
-	      return ex2;
-	    }
-	}
-      return ex1;
-    }
-  
+       if (ex2->op->operateur == ERROR) { /* Syntax error */
+         free_expression(ex1);
+         ex2->type = ERROR;
+       }
+       else {
+         ex2->type = OPER;
+         ex2->op->exp1 = ex1;
+       }
+       return ex2;
+     }
+   }
+   return ex1;
+ }
+
   ex2=alloc_expression();
   ex2->type = ERROR;
   return ex2;
@@ -319,71 +297,64 @@ static expression* Element()
 
   debug_printf("[Formula-parser]Element\n");
 
-  if (cur_tok == PG) 
-    {  
-      get_next_token();
+  if (cur_tok == PG) {
+    get_next_token();
 
-      if(cur_tok == PG || cur_tok == DELTA || cur_tok == COUNTER || cur_tok == NUMBER)
-	{      
-	  ex3 = Expression(NULL,0);    /* => Expression */
-
-	  if (cur_tok != PD || ex3->type == ERROR) 
-	    ex3->type = ERROR;
-	  else 
-	    get_next_token();
-	    
-	  return ex3;
-	}
-      ex3 = alloc_expression();
-      goto error;
-    }
-  else 
+    if (cur_tok == PG || cur_tok == DELTA || cur_tok == COUNTER || cur_tok == NUMBER)
     {
-      ex3 = alloc_expression();
-      
-      if (cur_tok == DELTA) 
-	{ 
-	  get_next_token();
-	  delta = 1;
-	}      
-      if(cur_tok == NUMBER || cur_tok == COUNTER)
-	{    
-	  ex3->ele = Unit();  /* => Unit */
-	  if (delta == 1) 
-	    { 
-	      if (cur_tok != PD) /* Syntax error */
-		goto error;
-	      get_next_token();
-	      ex3->ele->delta = DELTA;
-	    }
-	ex3->type = ELEM;
-	return ex3;
-	}
+      ex3 = Expression(NULL,0);    /* => Expression */
+
+      if (cur_tok != PD || ex3->type == ERROR)
+        ex3->type = ERROR;
+      else
+        get_next_token();
+      return ex3;
     }
- error :
+    ex3 = alloc_expression();
+    goto error;
+  }
+  else {
+    ex3 = alloc_expression();
+
+    if (cur_tok == DELTA) {
+      get_next_token();
+      delta = 1;
+    }
+    if (cur_tok == NUMBER || cur_tok == COUNTER) {
+      ex3->ele = Unit();  /* => Unit */
+      if (delta == 1) {
+        if (cur_tok != PD) /* Syntax error */
+          goto error;
+        get_next_token();
+        ex3->ele->delta = DELTA;
+      }
+      ex3->type = ELEM;
+      return ex3;
+    }
+  }
+ error:
   ex3->type = ERROR;
   return ex3;
-  
 }
+
 
 static operation* FollowingExpression()
 {
   char c;
   operation* op = NULL;
-  op =alloc_operation(); 
+  op =alloc_operation();
   debug_printf("[Formula-parser]FollowingExpression");
 
   c = Op1();   /* => Op1 */
-  
-  if (cur_tok == PG || cur_tok == DELTA || cur_tok == COUNTER || cur_tok == NUMBER) 
+
+  if (cur_tok == PG || cur_tok == DELTA || cur_tok == COUNTER || cur_tok == NUMBER)
     {
       op->exp2 = Expression(NULL, 0);     /* => Expression */
-    
-      if (op->exp2->type != ERROR) 
-	{
-	  op->operateur = c;      
-	  return op;
-	}   
+
+      if (op->exp2->type != ERROR) {
+        op->operateur = c;
+        return op;
+      }
     }
   /* Syntax Error */
   op->operateur = ERROR;
@@ -394,20 +365,19 @@ static operation* FollowingExpression()
 static operation* FollowingElement()
 {
   operation* op = NULL;
-  char c; 
+  char c;
   op = alloc_operation();
 
   c = Op2(); /* => Op2 */
-    
-  if (cur_tok == PG || cur_tok == DELTA || cur_tok == COUNTER || cur_tok == NUMBER) 
-    { 
+
+  if (cur_tok == PG || cur_tok == DELTA || cur_tok == COUNTER || cur_tok == NUMBER)
+    {
       op->exp2 = SimpleExpression();   /* => SimpleExpression*/
 
-      if (op->exp2->type != ERROR) 
-	{
-	  op->operateur = c;
-	  return op;
-	}
+      if (op->exp2->type != ERROR) {
+        op->operateur = c;
+        return op;
+      }
     }
   /* Syntax Error */
   op->operateur = ERROR;
@@ -421,12 +391,12 @@ static unit* Unit()
   char* w = get_current_word();
   u = alloc_unit();
 
-  if (cur_tok == NUMBER) 
+  if (cur_tok == NUMBER)
     {
       u->type = CONST;
       u->val = atof(w);
     }
-  else if (cur_tok == COUNTER) 
+  else if (cur_tok == COUNTER)
     {
       u->type = COUNT;
       u->alias = strdup(w);;

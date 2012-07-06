@@ -33,9 +33,6 @@ struct option {
   uid_t  euid;  /* effective user ID of tiptop */
   FILE*  out;
 
-  int scroll;
-
-
   unsigned int    batch : 1;
   unsigned int    command_done : 1;
   unsigned int    config_file : 1;

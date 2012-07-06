@@ -17,9 +17,11 @@
 
 enum tables { A_UNK, A_1, A_2, A_4, A_6, A_10, A_11, A_12, A_22 };
 
+#if 0
 static const char* table_names[] = {
   "unknown", "A-1", "A-2", "A-4", "A-6", "A-10", "A-11", "A-12", "A-22"
 };
+#endif
 
 const char* const arch_selector = "x86";
 
@@ -102,7 +104,6 @@ int match_model(const char* model)
 /* Generate a target-dependent string, displayed in the help window. */
 void target_dep_string(char* buf, int size)
 {
-  enum tables tab = table();
   int disp_fam = disp_family_model();
 
   snprintf(buf, size, "Target: x86, model = %02X_%02X",

@@ -19,7 +19,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "debug.h"
+#include "error.h"
 #include "hash.h"
 #include "options.h"
 #include "pmc.h"
@@ -233,7 +233,7 @@ void new_processes(struct process_list* const list,
     fclose(f);
 
     if (req_info != 0) {  /* could not read all 3 info. Process is gone? */
-      debug_printf("Could not read info for process %d (gone already?)\n", pid);
+      error_printf("Could not read info for process %d (gone already?)\n", pid);
       continue;
     }
 
@@ -354,7 +354,7 @@ void new_processes(struct process_list* const list,
           if (num_files < num_files_limit) {
             fd = sys_perf_counter_open(&events, tid, cpu, grp, flags);
             if (fd == -1) {
-              debug_printf("Could not attach counter to PID %d (%s): %s\n",
+              error_printf("Could not attach counter to PID %d (%s): %s\n",
                            tid,
                            ptr->name,
                            errno < sys_nerr ? sys_errlist[errno] : "??");
@@ -362,7 +362,7 @@ void new_processes(struct process_list* const list,
           }
           else {
             fd = -1;
-            debug_printf("Files limit reached for PID %d (%s)\n",
+            error_printf("Files limit reached for PID %d (%s)\n",
                          tid, ptr->name);
           }
 

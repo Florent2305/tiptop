@@ -35,7 +35,7 @@ static void usage(const char* name)
   fprintf(stderr, "\t-c             use command line instead of process name\n");
   fprintf(stderr, "\t--cpu-min m    minimum %%CPU to display a process\n");
   fprintf(stderr, "\t-d delay       delay in seconds between refreshes\n");
-  fprintf(stderr, "\t-E path        Created a file pointed by path to store errors\n");
+  fprintf(stderr, "\t-E filename    file where errors are logged\n");
   fprintf(stderr, "\t--epoch        add epoch at beginning of each line\n");
 #ifdef ENABLE_DEBUG
   fprintf(stderr, "\t-g             debug\n");
@@ -76,7 +76,6 @@ void init_options(struct option* opt)
   opt->euid = geteuid();
   opt->out = stdout;
   opt->watch_uid = -1;
-  opt->scroll = 0;
   opt->error = 0;
   opt->path_conf_file = NULL;
   opt->path_error_file = NULL;
@@ -84,9 +83,8 @@ void init_options(struct option* opt)
 
 void free_options(struct option* options)
 {
-  if(options->path_error_file)
+  if (options->path_error_file)
     free(options->path_error_file);
-
   if (options->path_conf_file)
     free(options->path_conf_file);
   if (options->watch_name)
@@ -103,7 +101,7 @@ void parse_command_line(int argc, char* argv[],
   int i;
 
   /* Note: many flags are toggles. They invert what is in the
-4     configuration file. */
+     configuration file. */
   for(i=1; i < argc; i++) {
 
     if (strcmp(argv[i], "--") == 0) {  /* command to be spawned by tiptop */
@@ -348,7 +346,6 @@ void parse_command_line(int argc, char* argv[],
     if (strcmp(argv[i], "-E") == 0) {
       if (i+1 < argc) {
         options->path_error_file = strdup(argv[i+1]);
-        set_path_error(options->path_error_file);
         i++;
         continue;
       }

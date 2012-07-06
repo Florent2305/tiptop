@@ -33,6 +33,7 @@
 
 #include "conf.h"
 #include "debug.h"
+#include "error.h"
 #include "helpwin.h"
 #include "options.h"
 #include "pmc.h"
@@ -41,7 +42,6 @@
 #include "screen.h"
 #include "spawn.h"
 #include "utils-expression.h"
-#include "error.h"
 
 struct option options;
 
@@ -564,23 +564,27 @@ static int handle_key()
 
   else if (c == 'h')
     options.help = 1 - options.help;
-  
-  
+
   else if (c == 'W') {
     if (export_screens(&options) < 0)
       message = ".tiptoprc not written: already exists in current directory?";
     else
       message = ".tiptoprc written";
   }
-  if(c == KEY_UP){
-    if(options.scroll > 0) 
-      options.scroll--;
-  }
-  if(c == KEY_DOWN){
-    if(options.scroll < get_error()-1) 
-      options.scroll++;
-  }
-  
+
+  else if (c == KEY_UP)
+    scroll_up();
+  else if (c == KEY_PPAGE)
+    scroll_page_up();
+  else if (c == KEY_DOWN)
+    scroll_down();
+  else if (c == KEY_NPAGE)
+    scroll_page_down();
+  else if (c == KEY_HOME)
+    scroll_home();
+  else if (c == KEY_END)
+    scroll_end();
+
   return c;
 }
 
@@ -591,10 +595,8 @@ static int handle_key()
  */
 static int live_mode(struct process_list* proc_list, screen_t* screen)
 {
-  WINDOW*         help_win = NULL;  
+  WINDOW*         help_win = NULL;
   WINDOW*         error_win = NULL;
-  int nb_proc = 0;
-  int boot = 0;
   fd_set          fds;
   struct process** p;
   int             num_iter = 0;
@@ -607,7 +609,6 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
   noecho();
   keypad(stdscr, TRUE);
 
- 
   /* Prepare help window */
   help_win = prepare_help_win(screen);
 
@@ -637,7 +638,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
     erase();
     mvprintw(0, 0, "tiptop -");
 
-    if ((get_error() > 0) && (COLS >= 37))
+    if ((num_errors() > 0) && (COLS >= 37))
       mvprintw(LINES-1, 30, "[errors]");
     if ((options.config_file == 1) && (COLS >= 60))
       mvprintw(0, COLS-60, "[conf]");
@@ -758,12 +759,12 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
 
     refresh();  /* display everything */
     if (options.error) {
-      if(options.error == 1){
-	options.error = 2;
-	show_error_win(error_win, options.scroll, printed);      
+      if (options.error == 1) {
+        options.error = 2;
+        show_error_win(error_win, printed);
       }
       else
-	show_error_win(error_win, options.scroll, -1);      
+        show_error_win(error_win, -1);
     }
     if (options.help)
       show_help_win(help_win, screen);
@@ -807,14 +808,14 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
       if ((c == 'u') || (c == 'K') || (c == 'p')) /* need to rebuild tasks list */
         return c;
 
-      if (c == 'e'){
-	if(options.error > 0){
-	  options.error = 0;
-	  delwin(error_win);
-	  error_win = NULL;
-	}
-	else
-	  options.error = 1;
+      if (c == 'e') {
+        if (options.error > 0) {
+          options.error = 0;
+          delwin(error_win);
+          error_win = NULL;
+        }
+        else
+          options.error = 1;
       }
     }
     tv.tv_sec = options.delay;
@@ -828,7 +829,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
   endwin();  /* stop curses */
   return 'q';
 }
-#endif
+#endif  /* HAVE_LIBCURSES */
 
 
 int main(int argc, char* argv[])
@@ -847,6 +848,7 @@ int main(int argc, char* argv[])
 
   /* Parse command line arguments. */
   parse_command_line(argc, argv, &options, &list_scr, &screen_num);
+  init_errors(options.batch, options.path_error_file);
 
   q = read_config(&options);
 
@@ -894,7 +896,6 @@ int main(int argc, char* argv[])
       start_child();
     }
 
-   
     if (options.batch) {
       batch_mode(proc_list, screen);
       key = 'q';

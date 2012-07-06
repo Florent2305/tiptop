@@ -72,7 +72,7 @@ static void check_counters_used(expression* e, screen_t* s, int* error)
     if(find >= 0) 
       s->counters[find].used++;
     else{
-      error_printf("[TIPTOP] Undeclared counter '%s' in screen '%s': Column ignored\n", 
+      error_printf("Undeclared counter '%s' in screen '%s': Column ignored\n", 
 	      e->ele->alias,s->name);
       (*error)++;
     }
@@ -114,7 +114,7 @@ void tamp_counters ()
     j=0;
     while (j < screens[i]->num_counters)
       if (screens[i]->counters[j].used == 0) {
-        error_printf("[TIPTOP] Unused counter '%s' in screen '%s'\n",
+        error_printf("Unused counter '%s' in screen '%s'\n",
 		     screens[i]->counters[j].alias,
 		     screens[i]->name);
         delete_and_shift_counters(i, j);
@@ -218,14 +218,14 @@ struct predefined_event events[] = {
 
   /* Add by antoine */
 
-  { PERF_COUNT_HW_CACHE_L1D, "CACHE_L1D"},
-  { PERF_COUNT_HW_CACHE_L1I, "CACHE_L1I"},
-  { PERF_COUNT_HW_CACHE_LL, "CACHE_LL"},
-  { PERF_COUNT_HW_CACHE_OP_READ, "CACHE_OP_READ"},
-  { PERF_COUNT_HW_CACHE_OP_WRITE, "CACHE_OP_WRITE"},
-  { PERF_COUNT_HW_CACHE_OP_PREFETCH, "CACHE_OP_PREFETCH"},
-  { PERF_COUNT_HW_CACHE_RESULT_ACCESS, "CACHE_RESULT_ACCESS"},
-  { PERF_COUNT_HW_CACHE_RESULT_MISS, "CACHE_RESULT_MISS"},
+  { PERF_COUNT_HW_CACHE_L1D, "L1D"},
+  { PERF_COUNT_HW_CACHE_L1I, "L1I"},
+  { PERF_COUNT_HW_CACHE_LL, "LL"},
+  { PERF_COUNT_HW_CACHE_OP_READ, "OP_READ"},
+  { PERF_COUNT_HW_CACHE_OP_WRITE, "OP_WRITE"},
+  { PERF_COUNT_HW_CACHE_OP_PREFETCH, "OP_PREFETCH"},
+  { PERF_COUNT_HW_CACHE_RESULT_ACCESS, "RESULT_ACCESS"},
+  { PERF_COUNT_HW_CACHE_RESULT_MISS, "RESULT_MISS"},
 
 #if 0
   /* Appear in Linux 3.0 */
@@ -362,7 +362,7 @@ int add_counter(screen_t* const s, char* alias, char* config, char* type)
   expression* expr = NULL;
 
   if(s->num_counters >=  MAX_EVENTS){
-    error_printf("[TIPTOP] Too much counters (max.16) in the screen '%s', '%s' is ignored\n", s->name,  alias);
+    error_printf("Too much counters (max.16) in the screen '%s', '%s' is ignored\n", s->name,  alias);
     return -1;
   }
 
@@ -370,7 +370,7 @@ int add_counter(screen_t* const s, char* alias, char* config, char* type)
   
   if (err > 0) {
     /* error*/
-    error_printf("[TIPTOP] Bad type '%s': counter '%s' is ignored\n", type, alias);
+    error_printf("Bad type '%s': counter '%s' is ignored\n", type, alias);
     return -1;
   }
 
@@ -384,7 +384,7 @@ int add_counter(screen_t* const s, char* alias, char* config, char* type)
 
   if (err > 0) {
     /* error*/
-    error_printf("[TIPTOP] Bad config '%s': counter '%s' is ignored\n",config,  alias);
+    error_printf("Bad config '%s': counter '%s' is ignored\n", config, alias);
     return -1;
   }
 
@@ -410,9 +410,9 @@ int add_counter_by_value(screen_t* const s, char* alias,
 {
   int n = s->num_counters;
 
-  if(n >=  MAX_EVENTS){
-    error_printf("[TIPTOP] Too much counters (max.16) in the screen '%s', '%s' is ignored\n"
-	    , s->name,  alias);
+  if (n >= MAX_EVENTS) {
+    error_printf("Too many counters (max %d) in screen '%s', ignoring '%s'\n",
+                 MAX_EVENTS, s->name,  alias);
     return -1;
   }
 
@@ -441,7 +441,7 @@ int add_column(screen_t* const s, char* header, char* format, char* desc,
 
   if (e == NULL || e->type == ERROR) {
     free_expression(e);
-    error_printf("[TIPTOP] Invalid expression in column '%s', screen '%s': Column ignored\n", 
+    error_printf("Invalid expression in column '%s', screen '%s': column ignored\n", 
 	    s->name, header);
     return -1;
   }
