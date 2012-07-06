@@ -87,7 +87,7 @@ static int next_tok=0;
 #define is_op1(c) (c=='+' || c=='-')
 #define is_op2(c) (c=='/'|| c=='*')
 
-#define is_number(c) (c >= '0' && c <= '9' || c == '.')
+#define is_number(c) ((c >= '0' && c <= '9') || c == '.')
 #define is_dot(c) (c == '.' || c == ',')
 #define is_char(c) (c >= 'a' && c <= 'z' && c >= 'A' && c <= 'Z')
 
