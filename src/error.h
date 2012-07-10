@@ -8,6 +8,9 @@
  *
  */
 
+#ifndef _ERROR_H
+#define _ERROR_H
+
 #include <config.h>
 
 #ifdef HAVE_LIBCURSES
@@ -29,3 +32,5 @@ void init_errors(int batch_mode, const char* error_file_name);
 void error_printf(char* fmt, ...);
 void close_error();
 int num_errors();
+
+#endif  /* _ERROR_H */

@@ -20,7 +20,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "errno.h"
+#include "error.h"
 
 
 static FILE* error_file = NULL;

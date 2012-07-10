@@ -19,7 +19,7 @@
 
 #include "options.h"
 #include "process.h"
-
+#include "spawn.h"
 
 static int pipefd[2];
 static pid_t my_child = 0;

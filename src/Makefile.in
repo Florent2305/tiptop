@@ -77,21 +77,22 @@ depend:
 
 conf.o: conf.h options.h screen.h formula-parser.h utils-expression.h
 conf.o: process.h xml-parser.h
+error.o: error.h
 formula-parser.o: debug.h formula-parser.h utils-expression.h process.h
 formula-parser.o: screen.h options.h
 hash.o: hash.h process.h screen.h formula-parser.h options.h
 options.o: options.h version.h
 pmc.o: pmc.h
-process.o: debug.h hash.h process.h screen.h formula-parser.h options.h pmc.h
+process.o: error.h hash.h process.h screen.h formula-parser.h options.h pmc.h
 process.o: spawn.h
 requisite.o: pmc.h requisite.h
 screen.o: conf.h options.h screen.h formula-parser.h process.h
-screen.o: utils-expression.h
-spawn.o: options.h process.h screen.h formula-parser.h
+screen.o: utils-expression.h error.h
+spawn.o: options.h process.h screen.h formula-parser.h spawn.h
 target-x86.o: screen.h formula-parser.h options.h target.h
 target.o: target.h
-tiptop.o: conf.h options.h screen.h formula-parser.h debug.h helpwin.h pmc.h
-tiptop.o: process.h requisite.h spawn.h utils-expression.h
+tiptop.o: conf.h options.h screen.h formula-parser.h debug.h error.h
+tiptop.o: helpwin.h pmc.h process.h requisite.h spawn.h utils-expression.h
 utils-expression.o: formula-parser.h process.h screen.h options.h
 utils-expression.o: utils-expression.h
 version.o: version.h

@@ -21,7 +21,6 @@
 
 #include "options.h"
 #include "version.h"
-#include "error.h"
 
 
 static void usage(const char* name)

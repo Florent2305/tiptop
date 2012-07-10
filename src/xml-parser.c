@@ -59,10 +59,10 @@ static int is_blank(char* t)
 static void option_update(xmlChar* name, xmlChar* val, struct option* opt)
 {
   if(!xmlStrcmp(name, (const xmlChar *) "delay")) {
-    opt->delay = atof((const char*)val);
+    opt->delay = (float)atof((const char*)val);
   }
   if(!xmlStrcmp(name, (const xmlChar *) "cpu_threshold")) {
-    opt->cpu_threshold = atof((char*)val);
+    opt->cpu_threshold = (float)atof((char*)val);
   }
   if(!xmlStrcmp(name, (xmlChar *) "batch")) {
     opt->batch = (opt->batch || atoi((char*)val));

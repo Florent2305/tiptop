@@ -324,7 +324,7 @@ void new_processes(struct process_list* const list,
         else
           ptr->username = NULL;
 
-        ptr->num_threads = num_threads;
+        ptr->num_threads = (short)num_threads;
         if (cmdline[0] == '\0')
           get_cmdline(pid, cmdline, sizeof(cmdline));
         ptr->cmdline = strdup(cmdline);
@@ -357,7 +357,7 @@ void new_processes(struct process_list* const list,
               error_printf("Could not attach counter to PID %d (%s): %s\n",
                            tid,
                            ptr->name,
-                           errno < sys_nerr ? sys_errlist[errno] : "??");
+                           strerror(errno));
             }
           }
           else {
@@ -490,7 +490,7 @@ int update_proc_list(struct process_list* const list,
       proc->prev_cpu_time_u = utime;
     }
 
-    proc->proc_id = proc_id;
+    proc->proc_id = (short)proc_id;
     /* Backup previous value of counters */
     for(zz = 0; zz < proc->num_events; zz++)
       proc->prev_values[zz] = proc->values[zz];

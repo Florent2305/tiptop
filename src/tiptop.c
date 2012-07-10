@@ -514,7 +514,7 @@ static int handle_key()
   }
 
   else if (c == 'R')
-    sorting_order = 1 - sorting_order;
+    sorting_order = (enum sorting_order) (1 - (int)sorting_order);
 
   else if (c == 'S')
     options.sticky = 1 - options.sticky;

@@ -66,6 +66,8 @@ static operation* FollowingElement();
 static expression* Element();
 static operation* FollowingExpression();
 static expression* SimpleExpression();
+static token_t get_next_token(void);
+static char* get_current_word(void);
 
 /* Current analyzed token */
 static token_t cur_tok = END;
