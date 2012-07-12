@@ -342,6 +342,21 @@ models.
          arch="x86" model="06_1A;06_1E;06_1F;06_2E" />
 .fi
 
+When the type is HW_CACHE, the config is specified by shifting and
+ORing predefined values. The 8 least significant bits represent the
+cache level (possible values L1D, L1I, LL, DTLB, ITLB, BPU). The next
+8 bits represent the type of access (OP_READ, OP_WRITE,
+OP_PREFETCH). The last 8 bits represent are one of RESULT_ACCESS or
+RESULT_MISS.
+
+Note that "shift left" is expressed as shl (the usual << does not fit
+well in xml).
+
+.nf
+<counter alias="L1Rmiss" type="HW_CACHE"
+         config="L1D | (OP_READ shl 8) | (RESULT_MISS shl 16)" />
+.fi
+
 See also /usr/include/linux/perf_events.h for more on config and type.
 
 A column defines its header, the printf-like format for values, and an
@@ -351,12 +366,12 @@ optional.
 .nf
 <counter alias="instr" config="INSTRUCTIONS" />
 <counter alias="cycle" config="CPU_CYCLES" />
-<view header=" IPC" format="%4.2f"
-      desc="Total instructions per cycle"
-      expr="instr/cycle"/>
-<view header=" ipc" format="%4.2f"
-      desc="Total instructions per cycle"
-      expr="instr/cycle" />
+<column header=" IPC" format="%4.2f"
+        desc="Total instructions per cycle"
+        expr="instr/cycle"/>
+<column header=" ipc" format="%4.2f"
+        desc="Total instructions per cycle"
+        expr="instr/cycle" />
 .fi
 
 The syntax of expressions supports basic arithmetic (+ - * /
@@ -367,8 +382,8 @@ Expressions can also refer to predefined variables such as CPU_TOT
 PROC_ID (processor where the process was last seen).
 
 .nf
-<view header=" ipc" format="%4.2f"
-      desc="Instantaneaous IPC"
+<column header=" ipc" format="%4.2f"
+      desc="Average IPC over last period"
       expr="delta(instr) / delta(cycle)" />
 .fi
 
@@ -393,28 +408,28 @@ PROC_ID (processor where the process was last seen).
     <counter alias="uops_issued" config="0x010e"
              type="RAW" arch="x86" model="06_2A" />
 
-    <view header=" %CPU" format="%5.1f"
-          desc="CPU usage" expr="CPU_TOT" />
-    <view header="   P" format="  %2.0f"
-          desc="Processor where last seen" expr="PROC_ID" />
-    <view header="  Mcycle" format="%8.2f"
-          desc="Cycles (millions)"
-          expr="delta(cycle) / 1000000" />
-    <view header="  Minstr" format="%8.2f"
-          desc="Instructions (millions)"
-          expr="delta(instr) / 1000000" />
-    <view header=" IPC" format="%4.2f"
-          desc="Executed instructions per cycle"
-          expr="delta(instr) / delta(cycle)" />
-    <view header=" %MISS" format="%6.2f"
-          desc="Cache miss per instructions (in %)"
-          expr="100 * delta(miss) / delta(instr)" />
-    <view header=" %BMIS" format="%6.2f"
-          desc="Branch misprediction per instruction (in %)"
-          expr="100 * delta(br_miss) / delta(instr)" />
-    <view header="uops/inst" format="     %4.1f"
-          desc="Number of issued uops per instruction"
-          expr="delta(uops_issued) / delta(instr)" />
+    <column header=" %CPU" format="%5.1f"
+            desc="CPU usage" expr="CPU_TOT" />
+    <column header="   P" format="  %2.0f"
+            desc="Processor where last seen" expr="PROC_ID" />
+    <column header="  Mcycle" format="%8.2f"
+            desc="Cycles (millions)"
+            expr="delta(cycle) / 1000000" />
+    <column header="  Minstr" format="%8.2f"
+            desc="Instructions (millions)"
+            expr="delta(instr) / 1000000" />
+    <column header=" IPC" format="%4.2f"
+            desc="Executed instructions per cycle"
+            expr="delta(instr) / delta(cycle)" />
+    <column header=" %MISS" format="%6.2f"
+            desc="Cache miss per instructions (in %)"
+            expr="100 * delta(miss) / delta(instr)" />
+    <column header=" %BMIS" format="%6.2f"
+            desc="Branch misprediction per instruction (in %)"
+            expr="100 * delta(br_miss) / delta(instr)" />
+    <column header="uops/inst" format="     %4.1f"
+            desc="Number of issued uops per instruction"
+            expr="delta(uops_issued) / delta(instr)" />
   </screen>
 </tiptop>
 .fi
