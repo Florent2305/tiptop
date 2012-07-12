@@ -8,19 +8,30 @@ AC_CONFIG_HEADERS([config.h])
 AC_PROG_CC
 AC_PROG_INSTALL
 
+
+AC_ARG_ENABLE(curses, [  --disable-curses        disable usage of libcurses, even if available],
+              [disable_curses=$enableval], [disable_curses=$enableval])
+
+AC_ARG_ENABLE(libxml2, [  --disable-libxml2       disable usage of libxml2, even if available],
+              [disable_libxml2=$enableval], [disable_libxml2=$enableval])
+
 # Checks for libraries.
+if test ! x$disable_curses = xno; then # check only if not disabled
 AC_CHECK_LIB([curses], [initscr],
                   [have_curses=yes;
                   AC_DEFINE([HAVE_LIBCURSES], [1], [Define to 1 if you have the `curses' library (-lcurses).])
                   LIBS="-lcurses $LIBS"],
              [have_curses=no])
+fi
 
+if test ! x$disable_libxml2 = xno; then # check only if not disabled
 AC_CHECK_LIB([xml2], [xmlParseFile],
                   [have_xml2=yes;
                   AC_DEFINE([HAVE_LIBXML2], [1], [Define to 1 if you have the `libxml2' library (-lxml2).])
                   LIBS="-lxml2 $LIBS"
                   CFLAGS="$CFLAGS -I/usr/include/libxml2"],
              [have_xml2=no])
+fi
 
 # Checks for header files.
 AC_CHECK_HEADERS([inttypes.h stdint.h stdlib.h string.h sys/ioctl.h sys/time.h unistd.h])

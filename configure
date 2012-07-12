@@ -658,6 +658,8 @@ SHELL'
 ac_subst_files=''
 ac_user_opts='
 enable_option_checking
+enable_curses
+enable_libxml2
 enable_debug
 '
       ac_precious_vars='build_alias
@@ -1280,6 +1282,8 @@ Optional Features:
   --disable-option-checking  ignore unrecognized --enable/--with options
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
+  --disable-curses        disable usage of libcurses, even if available
+  --disable-libxml2       disable usage of libxml2, even if available
   --enable-debug          enable support for debug
 
 Some influential environment variables:
@@ -3175,7 +3179,25 @@ test -z "$INSTALL_SCRIPT" && INSTALL_SCRIPT='${INSTALL}'
 test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
 
 
+
+# Check whether --enable-curses was given.
+if test "${enable_curses+set}" = set; then :
+  enableval=$enable_curses; disable_curses=$enableval
+else
+  disable_curses=$enableval
+fi
+
+
+# Check whether --enable-libxml2 was given.
+if test "${enable_libxml2+set}" = set; then :
+  enableval=$enable_libxml2; disable_libxml2=$enableval
+else
+  disable_libxml2=$enableval
+fi
+
+
 # Checks for libraries.
+if test ! x$disable_curses = xno; then # check only if not disabled
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for initscr in -lcurses" >&5
 $as_echo_n "checking for initscr in -lcurses... " >&6; }
@@ -3223,7 +3245,9 @@ else
   have_curses=no
 fi
 
+fi
 
+if test ! x$disable_libxml2 = xno; then # check only if not disabled
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for xmlParseFile in -lxml2" >&5
 $as_echo_n "checking for xmlParseFile in -lxml2... " >&6; }
 if ${ac_cv_lib_xml2_xmlParseFile+:} false; then :
@@ -3271,6 +3295,7 @@ else
   have_xml2=no
 fi
 
+fi
 
 # Checks for header files.
 ac_ext=c
