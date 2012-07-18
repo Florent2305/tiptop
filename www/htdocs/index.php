@@ -149,9 +149,10 @@ between processes in a multicore environment.</p>
 forge: <a href="https://gforge.inria.fr/projects/tiptop" title="Tiptop
 on Inria forge">https://gforge.inria.fr/projects/tiptop</a>.</p>
 <ul>
-<li>Latest release: <a href="releases/tiptop-1.0.1.tar.gz">tiptop-1.0.1.tar.gz</a></li>
+<li>Latest release: <a href="releases/tiptop-2.0.tar.gz">tiptop-2.0.tar.gz</a></li>
 <li>Previous releases:
 <ul>
+  <li><a href="releases/tiptop-1.0.1.tar.gz">tiptop-1.0.1.tar.gz</a></li>
   <li><a href="releases/tiptop-1.0.tar.gz">tiptop-1.0.tar.gz</a></li>
 </ul>
 </ul>
