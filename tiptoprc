@@ -212,7 +212,7 @@
     <column header="  IPC" format=" %4.2f" desc="Executed instructions per cycle"
             expr="delta(I) / delta(C)" />
     <column header="       %LD" format="  %8.1f" desc="Fraction of load (%)"
-            expr="100 * delta(LD) / delta(I))" />
+            expr="100 * delta(LD) / delta(I)" />
     <column header="      %ST" format="  %7.1f" desc="Fraction of stores (%)"
             expr="100 * (delta(ST) / delta(I))" />
     <column header="   %FP" format="  %4.1f" desc="Fraction of x87 (%)"
