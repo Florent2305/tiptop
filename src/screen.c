@@ -371,7 +371,7 @@ int add_counter(screen_t* const s, char* alias, char* config, char* type)
   }
 
   int_type = get_counter_type(type, &err);
-  
+
   if (err > 0) {
     /* error*/
     error_printf("Bad type '%s': counter '%s' is ignored\n", type, alias);
@@ -440,13 +440,13 @@ int add_column(screen_t* const s, char* header, char* format, char* desc,
 {
   int col_width, err=0;
   int n = s->num_columns;
-  
+
   expression* e = parser_expression(expr);
 
   if (e == NULL || e->type == ERROR) {
     free_expression(e);
-    error_printf("Invalid expression in column '%s', screen '%s': column ignored\n", 
-	    s->name, header);
+    error_printf("Invalid expression in column '%s', screen '%s': column ignored\n",
+                 header, s->name);
     return -1;
   }
 
