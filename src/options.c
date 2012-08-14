@@ -76,7 +76,6 @@ void init_options(struct option* opt)
   opt->out = stdout;
   opt->watch_uid = -1;
   opt->error = 0;
-  opt->path_conf_file = NULL;
   opt->path_error_file = NULL;
 }
 
@@ -84,13 +83,33 @@ void free_options(struct option* options)
 {
   if (options->path_error_file)
     free(options->path_error_file);
-  if (options->path_conf_file)
-    free(options->path_conf_file);
   if (options->watch_name)
     free(options->watch_name);
   if (options->only_name)
     free(options->only_name);
 }
+
+
+/* Look for a user specified path in the command line for the
+   configuration file (flag -W). Return it if found, otherwise return
+   NULL. */
+char* get_path_to_config(int argc, char* argv[])
+{
+  int i;
+
+  for(i=1; i < argc; i++) {
+    if (strcmp(argv[i], "-W") == 0) {
+      if (i+1 < argc)
+        return argv[i+1];
+      else {
+        fprintf(stderr, "Missing file name after -W.\n");
+        exit(EXIT_FAILURE);
+      }
+    }
+  }
+  return NULL;
+}
+
 
 void parse_command_line(int argc, char* argv[],
                         struct option* const options,
@@ -151,8 +170,20 @@ void parse_command_line(int argc, char* argv[],
       }
     }
 
+    if (strcmp(argv[i], "-E") == 0) {
+      if (i+1 < argc) {
+        options->path_error_file = strdup(argv[i+1]);
+        i++;
+        continue;
+      }
+      else {
+        fprintf(stderr, "Missing file name after -E.\n");
+        exit(EXIT_FAILURE);
+      }
+    }
+
     if (strcmp(argv[i], "--epoch") == 0) {
-      options->show_epoch = 1;
+      options->show_epoch = 1 - options->show_epoch;
       continue;
     }
 
@@ -276,7 +307,7 @@ void parse_command_line(int argc, char* argv[],
     }
 
     if (strcmp(argv[i], "--timestamp") == 0) {
-      options->show_timestamp = 1;
+      options->show_timestamp = 1 - options->show_timestamp;
       continue;
     }
 
@@ -332,26 +363,9 @@ void parse_command_line(int argc, char* argv[],
     }
 
     if (strcmp(argv[i], "-W") == 0) {
-      if (i+1 < argc) {
-        options->path_conf_file = strdup(argv[i+1]);
-        i++;
-        continue;
-      }
-      else {
-        fprintf(stderr, "Missing file name after -W.\n");
-        exit(EXIT_FAILURE);
-      }
-    }
-    if (strcmp(argv[i], "-E") == 0) {
-      if (i+1 < argc) {
-        options->path_error_file = strdup(argv[i+1]);
-        i++;
-        continue;
-      }
-      else {
-        fprintf(stderr, "Missing file name after -E.\n");
-        exit(EXIT_FAILURE);
-      }
+      /* error case already handled by previous function */
+      i++;
+      continue;
     }
 
     if (strstr(argv[0], "ptiptop")) {

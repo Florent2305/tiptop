@@ -17,9 +17,7 @@
 
 /* global state */
 struct option {
-  char*  path_conf_file;
   char*  path_error_file;
-
   int    spawn_pos;
   float  delay;
   float  cpu_threshold;  /* CPU activity below which a thread is considered inactive */
@@ -52,6 +50,7 @@ struct option {
 
 
 void init_options(struct option* opt);
+char* get_path_to_config(int argc, char* argv[]);
 void parse_command_line(int argc, char* argv[], struct option* const,int*,int*);
 void free_options(struct option* options);
 

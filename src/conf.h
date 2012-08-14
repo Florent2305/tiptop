@@ -15,7 +15,7 @@
 #include "screen.h"
 
 
-int read_config(struct option* options);
+int read_config(char* path_conf_file, struct option* options);
 int dump_configuration(screen_t** sc, int num_screens, struct option* o);
 
 #endif  /* _CONF_H */

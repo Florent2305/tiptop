@@ -30,7 +30,7 @@ static const char* const config_file = ".tiptoprc";
  * the TIPTOP environment variable, then the local directory, finally
  * $HOME. */
 
-int read_config(struct option* options)
+int read_config(char* path_conf_file, struct option* options)
 {
 #ifdef HAVE_LIBXML2
   char* path = NULL;
@@ -38,9 +38,9 @@ int read_config(struct option* options)
   int   res;
 
   /* Check path with '-W' in tiptop options */
-  if (options->path_conf_file != NULL) {
-      path = options->path_conf_file;
-    }
+  if (path_conf_file != NULL) {
+    path = path_conf_file;
+  }
 
   if (!path) {
       /* Check Env. Var.  $TIPTOP */
@@ -55,9 +55,9 @@ int read_config(struct option* options)
     }
 
   if (!path) {
-      /* Check $HOME */
-      path = getenv("HOME");
-    }
+    /* Check $HOME */
+    path = getenv("HOME");
+  }
 
   if (!path)
     return -1;

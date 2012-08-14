@@ -834,6 +834,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
 
 int main(int argc, char* argv[])
 {
+  char* path_to_config;
   int key = 0;
   int list_scr = 0;
   struct process_list* proc_list;
@@ -846,18 +847,19 @@ int main(int argc, char* argv[])
 
   init_options(&options);
 
-  /* Parse command line arguments. */
-  parse_command_line(argc, argv, &options, &list_scr, &screen_num);
-  init_errors(options.batch, options.path_error_file);
-
-  q = read_config(&options);
-
+  path_to_config = get_path_to_config(argc, argv);
+  q = read_config(path_to_config, &options);
   if (q == 0) {
     debug_printf("Config file successfully parsed.\n");
     options.config_file = 1;
   }
   else
     debug_printf("Could not parse config file.\n");
+
+  /* Parse command line arguments. */
+  parse_command_line(argc, argv, &options, &list_scr, &screen_num);
+
+  init_errors(options.batch, options.path_error_file);
 
   /* Add default screens */
   if (options.default_screen == 1)
@@ -871,7 +873,6 @@ int main(int argc, char* argv[])
     delete_screens();
     exit(0);
   }
-
 
   if (options.spawn_pos)
     spawn(argv + options.spawn_pos);

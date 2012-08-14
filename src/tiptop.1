@@ -63,11 +63,11 @@ the configuration file (if any).
 \-\fBb\fR
 Start \*(Me in batch-mode. Output is sent to stdout, and no
 interactive command is accepted. \*(Me will run forever, or until the
-number of iterations specified by \fB-n\fR.
+number of iterations specified by \fB-n\fR. (toggle)
 
 .TP 4
 \-\fBc\fR
-display the command line of the task instead of its name.
+display the command line of the task instead of its name. (toggle)
 
 .TP 4
 \-\-\fBcpu\-min\fR VALUE
@@ -86,7 +86,7 @@ Specify file where errors are logged.
 \-\-\fBepoch\fR
 Print the Epoch at each refresh. In batch-mode, it is printed at the
 beginning of each row. In live-mode, it is at the bottom of the
-display.
+display. (toggle)
 
 .TP 4
 \-\fBh --help\fR
@@ -94,16 +94,16 @@ Print a brief help message and exit.
 
 .TP 4
 \-\fBH\fR
-Show threads (or toggle the configuration file setting).
+Show threads. (toggle)
 
 .TP 4
 \-\fBi\fR
-Show idle tasks (or toggle the configuration file setting).
+Show idle tasks. (toggle)
 
 .TP 4
 \-\fBK --kernel\fR
 Include kernel activity in the reported values. This is only possible
-is the user is root, or the \*(Me executable is setuid root.
+is the user is root, or the \*(Me executable is setuid root. (toggle)
 
 .TP 4
 \-\-\fBlist\-screens\fR
@@ -137,14 +137,14 @@ looks for the first screen whose name contains VALUE.
 \-\-\fBsticky\fR
 Start in sticky mode: tasks stay in the list after they die. In
 live-mode, they appear in a different color (when supported). In
-batch-mode, the word DEAD is appended.
+batch-mode, the word DEAD is appended. (toggle)
 
 .TP 4
 \-\-\fBtimestamp\fR
 Print a timestamp at the beginning of each row. The timestamp is the
 number of refreshes so far. In batch-mode, it is printed at the
 beginning of each row. In live-mode, it is at the bottom of the
-display.
+display. (toggle)
 
 .TP 4
 \-\fBu\fR USER
@@ -153,7 +153,7 @@ numeric value UID.
 
 .TP 4
 \-\fBU\fR
-Show the owner of each task (or toggle the configuration file setting).
+Show the owner of each task. (toggle)
 
 .TP 4
 \-\fBv\fR
@@ -414,10 +414,10 @@ PROC_ID (processor where the process was last seen).
             desc="Processor where last seen" expr="PROC_ID" />
     <column header="  Mcycle" format="%8.2f"
             desc="Cycles (millions)"
-            expr="delta(cycle) / 1000000" />
+            expr="delta(cycle) / 1e6" />
     <column header="  Minstr" format="%8.2f"
             desc="Instructions (millions)"
-            expr="delta(instr) / 1000000" />
+            expr="delta(instr) / 1e6" />
     <column header=" IPC" format="%4.2f"
             desc="Executed instructions per cycle"
             expr="delta(instr) / delta(cycle)" />
