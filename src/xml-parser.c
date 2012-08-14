@@ -35,23 +35,6 @@ static void parse_counters(screen_t* s, xmlNodePtr cur);
 static void parse_columns(screen_t* s, xmlNodePtr cur);
 
 
-static int is_blank(char* t)
-{
-  int lg;
-  int i=0;
-
-  if (t==NULL)
-    return -1;
-  lg = strlen(t);
-  while ((i < lg) && isblank(t[i]))
-    i++;
-  if (i == lg)
-    return 0;
-  else
-    return -1;
-}
-
-
 /*
  *	Filling structures
  */
@@ -182,7 +165,7 @@ static void parse_counters(screen_t* s, xmlNodePtr cur)
   char *alias = NULL, *config = NULL, *type = NULL, *arch = NULL, *model = NULL;
 
   alias = (char*)xmlGetProp(cur,(xmlChar*) "alias");
-  if (!alias || !is_blank(alias)) {
+  if (!alias) {
     /* no alias, cannot be referenced, hence useless */
     error_printf("Need a alias for a counter in screen '%s'\n", s->name);
     goto end;
