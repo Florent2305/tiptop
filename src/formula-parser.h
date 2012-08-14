@@ -12,7 +12,7 @@
 #define _FORMULA_PARSER_H
 
 
-typedef enum{
+typedef enum {
   COUNT,
   CONST,
   OPER,
@@ -22,48 +22,30 @@ typedef enum{
 } type_t;
 
 
-typedef enum {
-  ADD,
-  SUB,
-  MUL,
-  DIV,
-  AND,
-  OR,
-  PD,
-  PG,
-  SHR,
-  SHL,
-  COUNTER,
-  NUMBER,
-  DELTA,
-  END
-} token_t ;
-
-
-
 typedef struct operation operation;
 typedef struct expression expression;
 typedef struct unit unit;
 
 struct unit {
-  int type;
+  int    type;
   double val;
-  char* alias;
-  int delta;
+  char*  alias;
+  int    delta;
 };
+
 
 struct operation {
-  int operateur;
+  int         operator;
   expression* exp1;
-  expression* exp2;};
-
-struct expression {
-  int type;
-  operation* op;
-  unit* ele;
+  expression* exp2;
 };
 
 
-expression* Expression(char* txt, int init);
+struct expression {
+  int        type;
+  operation* op;
+  unit*      ele;
+};
+
 
 #endif  /* _FORMULA_PARSER_H */

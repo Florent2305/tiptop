@@ -75,13 +75,14 @@ $(distdir): FORCE
 	cp $(srcdir)/tiptoprc $(distdir)
 	cp $(srcdir)/src/Makefile.in $(distdir)/src
 	cp $(srcdir)/src/tiptop.1 $(distdir)/src
+	cp $(srcdir)/src/calc.lex $(distdir)/src
+	cp $(srcdir)/src/calc.y $(distdir)/src
 	cp $(srcdir)/src/conf.c $(distdir)/src
 	cp $(srcdir)/src/conf.h $(distdir)/src
 	cp $(srcdir)/src/debug.c $(distdir)/src
 	cp $(srcdir)/src/debug.h $(distdir)/src
 	cp $(srcdir)/src/error.c $(distdir)/src
 	cp $(srcdir)/src/error.h $(distdir)/src
-	cp $(srcdir)/src/formula-parser.c $(distdir)/src
 	cp $(srcdir)/src/formula-parser.h $(distdir)/src
 	cp $(srcdir)/src/hash.c $(distdir)/src
 	cp $(srcdir)/src/hash.h $(distdir)/src

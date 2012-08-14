@@ -22,11 +22,13 @@ LIBS =     @LIBS@
 CFLAGS =   @CFLAGS@ -I..
 CPPFLAGS = @CPPFLAGS@
 INSTALL  = @INSTALL@
+LEX =      @LEX@
+YACC =     @YACC@
 
 OBJS=tiptop.o pmc.o process.o requisite.o conf.o screen.o \
      debug.o version.o helpwin.o options.o hash.o spawn.o \
-     xml-parser.o formula-parser.o target.o utils-expression.o \
-     error.o
+     xml-parser.o target.o utils-expression.o \
+     error.o lex.yy.o y.tab.o 
 
 
 all: tiptop
@@ -50,6 +52,13 @@ version.o: version.c
                         -DCOMPILE_DATE="\"`date`\"" \
                         -c $(srcdir)/version.c
 
+lex.yy.c: calc.lex
+	$(LEX) calc.lex
+
+y.tab.c y.tab.h: calc.y
+	$(YACC) -d calc.y
+
+
 install:
 	$(INSTALL) -d $(DESTDIR)$(bindir)
 	$(INSTALL) -m 0755 tiptop $(DESTDIR)$(bindir)
@@ -63,7 +72,7 @@ uninstall:
 	-rm $(DESTDIR)$(man1dir)/tiptop.1
 
 clean:
-	/bin/rm -f $(OBJS) tiptop ptiptop
+	/bin/rm -f $(OBJS) lex.yy.c y.tab.c y.tab.h tiptop ptiptop
 
 
 depend:
@@ -75,24 +84,25 @@ depend:
 
 # DO NOT DELETE
 
-conf.o: conf.h options.h screen.h formula-parser.h utils-expression.h
+conf.o: conf.h options.h screen.h utils-expression.h
 conf.o: process.h xml-parser.h
 error.o: error.h
-formula-parser.o: debug.h formula-parser.h utils-expression.h process.h
-formula-parser.o: screen.h options.h
-hash.o: hash.h process.h screen.h formula-parser.h options.h
+
+hash.o: hash.h process.h screen.h options.h
 options.o: options.h version.h
 pmc.o: pmc.h
-process.o: error.h hash.h process.h screen.h formula-parser.h options.h pmc.h
+process.o: error.h hash.h process.h screen.h options.h pmc.h
 process.o: spawn.h
 requisite.o: pmc.h requisite.h
-screen.o: conf.h options.h screen.h formula-parser.h process.h
+screen.o: conf.h options.h screen.h process.h
 screen.o: utils-expression.h error.h
-spawn.o: options.h process.h screen.h formula-parser.h spawn.h
-target-x86.o: screen.h formula-parser.h options.h target.h
+spawn.o: options.h process.h screen.h spawn.h
+target-x86.o: screen.h options.h target.h
 target.o: target.h
-tiptop.o: conf.h options.h screen.h formula-parser.h debug.h error.h
+tiptop.o: conf.h options.h screen.h debug.h error.h
 tiptop.o: helpwin.h pmc.h process.h requisite.h spawn.h utils-expression.h
-utils-expression.o: formula-parser.h process.h screen.h options.h
-utils-expression.o: utils-expression.h
+utils-expression.o: process.h screen.h options.h
+utils-expression.o: utils-expression.h y.tab.h
 version.o: version.h
+lex.yy.o: utils-expression.h y.tab.h
+y.tab.o: utils-expression.h formula-parser.h 

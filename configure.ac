@@ -1,11 +1,13 @@
 AC_PREREQ([2.68])
-AC_INIT([tiptop], [2.0], [erven.rohou@inria.fr])
+AC_INIT([tiptop], [2.1], [erven.rohou@inria.fr])
 
 AC_CONFIG_SRCDIR([src/tiptop.c])
 AC_CONFIG_HEADERS([config.h])
 
 # Checks for programs.
 AC_PROG_CC
+AC_PROG_LEX
+AC_PROG_YACC
 AC_PROG_INSTALL
 
 
