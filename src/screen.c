@@ -45,46 +45,47 @@ static int num_alloc_screens = 0;
 static screen_t** screens = NULL;
 
 /*
- * To reduce number of opened counters
+ * The following functions factorize counters used in various columns
+ * of a screen.
  */
 
-/* Navigate into expression to check used counters */
+/* Navigate into expressions, and mark used counters */
 static void check_counters_used(expression* e, screen_t* s, int* error)
 {
 
   int i = 0;
-  int find;
+  int found;
 
- if (e->type == ELEM && e->ele->type == COUNT) {
-    find = -1;
-    if(strcmp(e->ele->alias, "CPU_TOT") == 0 || 
-       strcmp(e->ele->alias, "CPU_SYS") == 0 || 
-       strcmp(e->ele->alias, "CPU_USER") == 0 || 
-       strcmp(e->ele->alias, "PROC_ID") == 0 )
+  if (e->type == ELEM && e->ele->type == COUNT) {
+    found = -1;
+    if (strcmp(e->ele->alias, "CPU_TOT") == 0 ||
+        strcmp(e->ele->alias, "CPU_SYS") == 0 ||
+        strcmp(e->ele->alias, "CPU_USER") == 0 ||
+        strcmp(e->ele->alias, "PROC_ID") == 0 )
       return ;
-    
-    for(i=0; i < s->num_counters; i++){
+
+    for(i=0; i < s->num_counters; i++) {
       assert(s->counters[i].alias != NULL);
       if (strcmp(e->ele->alias, s->counters[i].alias) == 0)
-        find = i;
+        found = i;
     }
 
-    if(find >= 0) 
-      s->counters[find].used++;
+    if (found >= 0)
+      s->counters[found].used++;
     else{
-      error_printf("Undeclared counter '%s' in screen '%s': Column ignored\n", 
-	      e->ele->alias,s->name);
+      error_printf("Undeclared counter '%s' in screen '%s': column ignored\n",
+                   e->ele->alias, s->name);
       (*error)++;
     }
-    
- }
- else if (e->type == OPER && e->op != NULL) {
-   check_counters_used(e->op->exp1, s, error);
-   check_counters_used(e->op->exp2, s, error);
- }
+  }
+  else if (e->type == OPER && e->op != NULL) {
+    check_counters_used(e->op->exp1, s, error);
+    check_counters_used(e->op->exp2, s, error);
+  }
 }
 
 
+/* delete unmarked counters */
 static void delete_and_shift_counters(int sc, int co)
 {
   int i;
@@ -105,7 +106,7 @@ static void delete_and_shift_counters(int sc, int co)
 }
 
 
-/* To remove declared but unused counter from the "counters" list */
+/* Remove declared but unused counter from the "counters" list */
 void tamp_counters ()
 {
   int i,j;
@@ -115,8 +116,8 @@ void tamp_counters ()
     while (j < screens[i]->num_counters)
       if (screens[i]->counters[j].used == 0) {
         error_printf("Unused counter '%s' in screen '%s'\n",
-		     screens[i]->counters[j].alias,
-		     screens[i]->name);
+                     screens[i]->counters[j].alias,
+                     screens[i]->name);
         delete_and_shift_counters(i, j);
       }
       else
@@ -365,8 +366,10 @@ int add_counter(screen_t* const s, char* alias, char* config, char* type)
   int n;
   expression* expr = NULL;
 
-  if(s->num_counters >=  MAX_EVENTS){
-    error_printf("Too much counters (max.16) in the screen '%s', '%s' is ignored\n", s->name,  alias);
+  if (s->num_counters >=  MAX_EVENTS) {
+    error_printf("Too many counters (max %d) in screen '%s', ignoring '%s'\n"
+                 "(change MAX_EVENTS and recompile)\n",
+                 MAX_EVENTS, s->name, alias);
     return -1;
   }
 
@@ -374,7 +377,7 @@ int add_counter(screen_t* const s, char* alias, char* config, char* type)
 
   if (err > 0) {
     /* error*/
-    error_printf("Bad type '%s': counter '%s' is ignored\n", type, alias);
+    error_printf("Bad type '%s': ignoring counter '%s'\n", type, alias);
     return -1;
   }
 
@@ -388,7 +391,7 @@ int add_counter(screen_t* const s, char* alias, char* config, char* type)
 
   if (err > 0) {
     /* error*/
-    error_printf("Bad config '%s': counter '%s' is ignored\n", config, alias);
+    error_printf("Bad config '%s': ignoring counter '%s'\n", config, alias);
     return -1;
   }
 
@@ -415,7 +418,8 @@ int add_counter_by_value(screen_t* const s, char* alias,
   int n = s->num_counters;
 
   if (n >= MAX_EVENTS) {
-    error_printf("Too many counters (max %d) in screen '%s', ignoring '%s'\n",
+    error_printf("Too many counters (max %d) in screen '%s', ignoring '%s'\n"
+                 "(change MAX_EVENTS and recompile)",
                  MAX_EVENTS, s->name,  alias);
     return -1;
   }
@@ -506,9 +510,9 @@ static screen_t* default_screen()
   add_column(s, " %SYS", "%5.1f", "System CPU usage", "CPU_SYS");
   add_column(s, "   P", "  %2.0f", "Processor where last seen", "PROC_ID");
   add_column(s, "  Mcycle", "%8.2f", "Cycles (millions)",
-             "delta(CYCLE) / 1000000");
+             "delta(CYCLE) / 1e6");
   add_column(s, "  Minstr", "%8.2f", "Instructions (millions)",
-             "delta(INSN) / 1000000");
+             "delta(INSN) / 1e6");
   add_column(s, "  IPC",     " %4.2f", "Executed instructions per cycle",
              "delta(INSN)/delta(CYCLE)");
   add_column(s, " %MISS",   "%6.2f", "Cache miss per 100 instructions",
@@ -711,7 +715,7 @@ void delete_screen(screen_t* s)
 }
 
 
-/* Delete all screens.nnnnnn */
+/* Delete all screens. */
 void delete_screens()
 {
   int i;

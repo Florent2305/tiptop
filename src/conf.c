@@ -73,12 +73,12 @@ int read_config(struct option* options)
   res = parse_doc(file, options);
   free(file);
   return res;
-  
+
 #else  /* HAVE_LIBXML2 */
-  
+
   fprintf(stderr, "No xml support, cannot read config file.\n");
   return -1;
-  
+
 #endif  /* !HAVE_LIBXML2 */
 }
 
@@ -92,13 +92,15 @@ static int dump_option_string(FILE* out, char* name, char* value)
 {
   if (value == NULL)
     return 0;
-  return fprintf(out , "%s%s%s%s%s\n",tok_opt_sta, name, tok_opt_mid, value, tok_opt_end);
+  return fprintf(out, "%s%s%s%s%s\n",
+                 tok_opt_sta, name, tok_opt_mid, value, tok_opt_end);
 }
 
 
 static int dump_option_int(FILE* out, char* name, int value)
 {
-  return fprintf(out, "%s%s%s%d%s\n",tok_opt_sta, name, tok_opt_mid, value, tok_opt_end);
+  return fprintf(out, "%s%s%s%d%s\n",
+                 tok_opt_sta, name, tok_opt_mid, value, tok_opt_end);
 }
 
 static int dump_option_float(FILE* out, char* name, float value)
