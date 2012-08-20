@@ -61,7 +61,7 @@ a.tabsellink:hover { text-decoration: none; color: black; font-weight: bold; fon
 
 <h2>Motivation</h2>
 
-<div style="float:right; padding:10px"><a href="tiptop-snapshot.gif"><img src="tiptop-snapshot.png"
+<div style="float:right; padding:10px"><a href="tiptop-snapshot.gif"><img src="tiptop-snapshot.gif"
 border="0" width="400" height="269" style="border: 0;" /></a></div>
 
 <p>Hardware performance monitoring counters have recently received a
