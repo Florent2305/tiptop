@@ -2,7 +2,7 @@
  * This file is part of tiptop.
  *
  * Author: Erven ROHOU
- * Copyright (c) 2011, 2012 Inria
+ * Copyright (c) 2011, 2012, 2013 Inria
  *
  * License: GNU General Public License version 2.
  *
@@ -24,6 +24,7 @@ struct option {
   int    max_iter;
   char*  only_name;
   int    only_pid;
+  int    paranoia_level;
   char*  watch_name;
   pid_t  watch_pid;
   int    watch_uid;

@@ -453,12 +453,13 @@ static int handle_key()
       message = "Kernel mode Off";
     }
     else {
-      if (options.euid == 0) {
+      if ((options.euid == 0) || (options.paranoia_level < 2)) {
         options.show_kernel = 1;
         message = "Kernel mode On";
       }
       else {
-        message = "Kernel mode only available to root.";
+        message =
+          "Kernel mode not available (not root and paranoia level too high).";
         c = ' ';  /* do not return the 'K' to the upper level, since
                      it was ignored. */
       }
@@ -841,11 +842,13 @@ int main(int argc, char* argv[])
   screen_t* screen = NULL;
   int screen_num = 0;
   int q;
+  int paranoia_level;
 
   /* Check OS to make sure we can run. */
-  check();
+  paranoia_level = check();
 
   init_options(&options);
+  options.paranoia_level = paranoia_level;
 
   path_to_config = get_path_to_config(argc, argv);
   q = read_config(path_to_config, &options);

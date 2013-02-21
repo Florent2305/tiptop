@@ -106,7 +106,11 @@ Show idle tasks. (toggle)
 .TP 4
 \-\fBK --kernel\fR
 Include kernel activity in the reported values. This is only possible
-is the user is root, or the \*(Me executable is setuid root. (toggle)
+is the user is root, the \*(Me executable is setuid root, or the
+paranoia level is low enough. (toggle)
+.nf
+See file /proc/sys/kernel/perf_event_paranoid.
+.fi
 
 .TP 4
 \-\-\fBlist\-screens\fR

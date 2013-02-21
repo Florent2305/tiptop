@@ -2,7 +2,7 @@
  * This file is part of tiptop.
  *
  * Author: Erven ROHOU
- * Copyright (c) 2011 Inria
+ * Copyright (c) 2011, 2013 Inria
  *
  * License: GNU General Public License version 2.
  *
@@ -18,11 +18,33 @@
 #include "requisite.h"
 
 
-void check()
+#ifdef HAVE_LINUX_PERF_COUNTER_H
+#define PARANOID "/proc/sys/kernel/perf_counter_paranoid"
+
+#elif HAVE_LINUX_PERF_EVENT_H
+#define PARANOID "/proc/sys/kernel/perf_event_paranoid"
+
+#else
+#error Sorry, performance counters not supported on this system.
+#endif
+
+
+int check()
 {
   int fd, cpu, grp, flags, pid;
+  FILE* paranoid;
+  int   paranoia_level = 999;
   struct utsname os;
   struct STRUCT_NAME events = {0, };
+
+  paranoid = fopen(PARANOID, "r");
+  if (!paranoid) {
+    fprintf(stderr, "System does not support performance events.\n");
+    fprintf(stderr, "File '" PARANOID "' is missing.\n");
+    exit(EXIT_FAILURE);
+  }
+  fscanf(paranoid, "%d", &paranoia_level);
+  fclose(paranoid);
 
   events.disabled = 0;
   events.exclude_hv = 1;
@@ -55,4 +77,5 @@ void check()
   }
   
   close(fd);
+  return paranoia_level;
 }
