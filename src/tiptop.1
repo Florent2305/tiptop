@@ -78,7 +78,8 @@ display the command line of the task instead of its name. (toggle)
 
 .TP 4
 \-\fBd\fR VALUE
-Specify the delay between refreshes. VALUE can be fractional.
+Specify the delay between refreshes. VALUE can be fractional. It must
+be larger than 0.01.
 
 .TP 4
 \-\fBE\fR FILENAME
@@ -195,8 +196,8 @@ Toggle between showing task names and command lines.
 
 .TP 4
 \fBd\fR
-Change the refresh interval. The new value is queried. Positive,
-non-zero fractional values are accepted.
+Change the refresh interval. The new value is queried. Fractional
+values larger than 0.01 are accepted.
 
 .TP 4
 \fBe\fR

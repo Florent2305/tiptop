@@ -159,7 +159,7 @@ void parse_command_line(int argc, char* argv[],
     if (strcmp(argv[i], "-d") == 0) {
       if (i+1 < argc) {
         options->delay = (float)atof(argv[i+1]);
-        if (options->delay < 0.1)
+        if (options->delay < 0.01)
           options->delay = 1;
         i++;
         continue;

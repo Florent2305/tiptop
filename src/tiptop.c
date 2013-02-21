@@ -432,7 +432,7 @@ static int handle_key()
     echo();
     nocbreak();
     scanw("%f", &options.delay);
-    if (options.delay < 0.1)
+    if (options.delay < 0.01)
       options.delay = 1.0;
     tv.tv_sec = options.delay;
     tv.tv_usec = (options.delay - tv.tv_sec)*1000000.0;
