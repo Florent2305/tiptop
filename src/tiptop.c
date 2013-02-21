@@ -2,7 +2,7 @@
  * This file is part of tiptop.
  *
  * Author: Erven ROHOU
- * Copyright (c) 2011, 2012 Inria
+ * Copyright (c) 2011, 2012, 2013 Inria
  *
  * License: GNU General Public License version 2.
  *
@@ -874,8 +874,12 @@ int main(int argc, char* argv[])
     exit(0);
   }
 
-  if (options.spawn_pos)
-    spawn(argv + options.spawn_pos);
+  if (options.spawn_pos) {
+    /* monitor only spawned process */
+    int child = spawn(argv + options.spawn_pos);
+    options.only_pid = child;
+    options.idle = 1;
+  }
 
   do {
     if (screen_num >= 0)

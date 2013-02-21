@@ -2,7 +2,7 @@
  * This file is part of tiptop.
  *
  * Author: Erven ROHOU
- * Copyright (c) 2011, 2012 Inria
+ * Copyright (c) 2011, 2012, 2013 Inria
  *
  * License: GNU General Public License version 2.
  *
@@ -54,8 +54,8 @@ static void child_handler(int sig)
 
 
 /* Fork a new process, wait for the signal, and execute the command
-   passed in parameter. */
-void spawn(char** argv)
+   passed in parameter. Return the PID of the child. */
+int spawn(char** argv)
 {
   pid_t    child;
   sigset_t sigs;
@@ -104,7 +104,6 @@ void spawn(char** argv)
     n = read(pipefd[0], &buffer, 1);  /* blocking read */
     if (n != 1)
       fprintf(stderr, "Something went wrong with the command\n");
-    close(pipefd[0]);
 
     if (execvp(argv[0], argv) == -1) {
       perror("execvp");
@@ -115,6 +114,7 @@ void spawn(char** argv)
   /* parent */
   close(pipefd[0]);
   my_child = child;
+  return child;
 }
 
 

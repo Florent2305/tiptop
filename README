@@ -3,7 +3,7 @@
 
 
 Tiptop is a performance monitoring tool for Linux.  It provides a
-dynamic real-time view of the tasks running in the system. tiptop is
+dynamic real-time view of the tasks running in the system. Tiptop is
 very similar to the top utility, but most of the information displayed
 comes from hardware counters.
 
@@ -40,3 +40,8 @@ tiptop -H
 
 tiptop -W path
   specify the location of the configuration file
+
+
+tiptop -b --sticky -- a_program
+  start a_program in a new process and attach counters, tracking only
+  the new process, until it dies

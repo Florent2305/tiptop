@@ -2,7 +2,7 @@
  * This file is part of tiptop.
  *
  * Author: Erven ROHOU
- * Copyright (c) 2011, 2012 Inria
+ * Copyright (c) 2011, 2012, 2013 Inria
  *
  * License: GNU General Public License version 2.
  *
@@ -15,7 +15,7 @@
 
 #include "options.h"
 
-void spawn(char** argv);
+int spawn(char** argv);
 void start_child(void);
 void wait_for_child(pid_t pid, struct option* options);
 
