@@ -31,11 +31,12 @@
 
 int check()
 {
-  int fd, cpu, grp, flags, pid;
+  int   fd, cpu, grp, flags, pid;
   FILE* paranoid;
   int   paranoia_level = 999;
   struct utsname os;
   struct STRUCT_NAME events = {0, };
+  int    n;
 
   paranoid = fopen(PARANOID, "r");
   if (!paranoid) {
@@ -43,7 +44,11 @@ int check()
     fprintf(stderr, "File '" PARANOID "' is missing.\n");
     exit(EXIT_FAILURE);
   }
-  fscanf(paranoid, "%d", &paranoia_level);
+  n = fscanf(paranoid, "%d", &paranoia_level);
+  if (n != 1) {
+    fprintf(stderr, "Could not read file '" PARANOID "'.\n");
+    fprintf(stderr, "Trying to proceed anyway...\n");
+  }
   fclose(paranoid);
 
   events.disabled = 0;
