@@ -836,6 +836,8 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
 int main(int argc, char* argv[])
 {
   char* path_to_config;
+  char* path_to_errors;
+  int   is_batch_mode;
   int key = 0;
   int list_scr = 0;
   struct process_list* proc_list;
@@ -851,6 +853,11 @@ int main(int argc, char* argv[])
   options.paranoia_level = paranoia_level;
 
   path_to_config = get_path_to_config(argc, argv);
+  path_to_errors = get_path_to_error(argc, argv);
+  is_batch_mode = get_batch_mode(argc, argv);
+
+  init_errors(is_batch_mode, path_to_errors);
+
   q = read_config(path_to_config, &options);
   if (q == 0) {
     debug_printf("Config file successfully parsed.\n");
@@ -862,7 +869,6 @@ int main(int argc, char* argv[])
   /* Parse command line arguments. */
   parse_command_line(argc, argv, &options, &list_scr, &screen_num);
 
-  init_errors(options.batch, options.path_error_file);
 
   /* Add default screens */
   if (options.default_screen == 1)

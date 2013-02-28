@@ -76,13 +76,10 @@ void init_options(struct option* opt)
   opt->out = stdout;
   opt->watch_uid = -1;
   opt->error = 0;
-  opt->path_error_file = NULL;
 }
 
 void free_options(struct option* options)
 {
-  if (options->path_error_file)
-    free(options->path_error_file);
   if (options->watch_name)
     free(options->watch_name);
   if (options->only_name)
@@ -108,6 +105,41 @@ char* get_path_to_config(int argc, char* argv[])
     }
   }
   return NULL;
+}
+
+
+/* Look for a user specified path in the command line for the
+   erorrs file (flag -E). Return it if found, otherwise return
+   NULL. */
+char* get_path_to_error(int argc, char* argv[])
+{
+  int i;
+
+  for(i=1; i < argc; i++) {
+    if (strcmp(argv[i], "-E") == 0) {
+      if (i+1 < argc)
+        return argv[i+1];
+      else {
+        fprintf(stderr, "Missing file name after -E.\n");
+        exit(EXIT_FAILURE);
+      }
+    }
+  }
+  return NULL;
+}
+
+
+/* Look for flat -b to see if we will run in batch mode. */
+int get_batch_mode(int argc, char* argv[])
+{
+  int i;
+
+  for(i=1; i < argc; i++) {
+    if (strcmp(argv[i], "-b") == 0) {
+      return 1;
+    }
+  }
+  return 0;
 }
 
 
@@ -170,9 +202,9 @@ void parse_command_line(int argc, char* argv[],
       }
     }
 
+    /* handled separately, before args are read. Just check arg and skip. */
     if (strcmp(argv[i], "-E") == 0) {
       if (i+1 < argc) {
-        options->path_error_file = strdup(argv[i+1]);
         i++;
         continue;
       }

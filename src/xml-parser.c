@@ -2,7 +2,7 @@
  * This file is part of tiptop.
  *
  * Author: Antoine NAUDIN
- * Copyright (c) 2012 Inria
+ * Copyright (c) 2012, 2013 Inria
  *
  * License: GNU General Public License version 2.
  *
@@ -47,9 +47,6 @@ static void option_update(xmlChar* name, xmlChar* val, struct option* opt)
   if(!xmlStrcmp(name, (const xmlChar *) "cpu_threshold")) {
     opt->cpu_threshold = (float)atof((char*)val);
   }
-  if(!xmlStrcmp(name, (xmlChar *) "batch")) {
-    opt->batch = (opt->batch || atoi((char*)val));
-  }
   if(!xmlStrcmp(name, (xmlChar *) "show_cmdline"))
     opt->show_cmdline = (opt->show_cmdline || atoi((char*)val));
 
@@ -72,7 +69,7 @@ static void option_update(xmlChar* name, xmlChar* val, struct option* opt)
     opt->watch_name = strdup((char*)val);
 
   if(!xmlStrcmp(name, (xmlChar *) "max_iter"))
-    opt->max_iter = (opt->max_iter || atoi((char*)val));
+    opt->max_iter = atoi((char*)val);
 
   if(!xmlStrcmp(name, (xmlChar *) "show_timestamp"))
     opt->show_timestamp = (opt->show_timestamp || atoi((char*)val));

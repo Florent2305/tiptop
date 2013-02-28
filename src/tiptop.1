@@ -65,7 +65,7 @@ the configuration file (if any).
 \-\fBb\fR
 Start \*(Me in batch-mode. Output is sent to stdout, and no
 interactive command is accepted. \*(Me will run forever, or until the
-number of iterations specified by \fB-n\fR. (toggle)
+number of iterations specified by \fB-n\fR.
 
 .TP 4
 \-\fBc\fR
@@ -83,7 +83,8 @@ be larger than 0.01.
 
 .TP 4
 \-\fBE\fR FILENAME
-Specify file where errors are logged.
+Specify file where errors are logged. By default errors are logged to
+stderr in batch-mode, and a temporary file in live-mode.
 
 .TP 4
 \-\-\fBepoch\fR
@@ -109,7 +110,8 @@ Include kernel activity in the reported values. This is only possible
 is the user is root, the \*(Me executable is setuid root, or the
 paranoia level is low enough. (toggle)
 .nf
-See file /proc/sys/kernel/perf_event_paranoid.
+See file /proc/sys/kernel/perf_event_paranoid
+(perf_counter_paranoid on Linux 2.6.31).
 .fi
 
 .TP 4
@@ -301,7 +303,7 @@ Options can be specified on an <options> block.
 Recognized options listed below, with their corresponding command line
 option.
 
-batch (-b), cpu_threshold (--cpu-min), debug (-g), delay (-d), idle
+cpu_threshold (--cpu-min), delay (-d), idle
 (-i), max_iter (-n), show_cmdline (-c), show_epoch (--epoch),
 show_kernel (-K), show_timestamp (--timestamp), show_threads (-H),
 show_user (-U), watch_name (-w), sticky (--sticky), watch_uid (-w)

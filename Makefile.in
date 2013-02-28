@@ -69,6 +69,7 @@ $(distdir): FORCE
 	cp $(srcdir)/config.h.in $(distdir)
 	cp $(srcdir)/install-sh $(distdir)
 	cp $(srcdir)/AUTHORS $(distdir)
+	cp $(srcdir)/COPYING $(distdir)
 	cp $(srcdir)/INSTALL $(distdir)
 	cp $(srcdir)/README $(distdir)
 	cp $(srcdir)/Makefile.in $(distdir)
