@@ -8,6 +8,14 @@ very similar to the top utility, but most of the information displayed
 comes from hardware counters.
 
 
+* Citing
+If you like tiptop and use it in your research, please reference the
+technical report Inria RR-7789: http://hal.inria.fr/hal-00639173
+
+  Tiptop: Hardware Performance Counters for the Masses, Erven Rohou,
+  Inria Research Report 7789, Nov 2011.
+
+
 * Installation
 Tiptop is a single executable. It can be launched from any place in
 the filesystem. Documentation is in the man page tiptop.1.
