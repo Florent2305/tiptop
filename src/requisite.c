@@ -17,16 +17,8 @@
 #include "pmc.h"
 #include "requisite.h"
 
-
-#ifdef HAVE_LINUX_PERF_COUNTER_H
-#define PARANOID "/proc/sys/kernel/perf_counter_paranoid"
-
-#elif HAVE_LINUX_PERF_EVENT_H
-#define PARANOID "/proc/sys/kernel/perf_event_paranoid"
-
-#else
-#error Sorry, performance counters not supported on this system.
-#endif
+#define PARANOID1 "/proc/sys/kernel/perf_counter_paranoid"
+#define PARANOID2 "/proc/sys/kernel/perf_event_paranoid"
 
 
 int check()
@@ -38,15 +30,18 @@ int check()
   struct STRUCT_NAME events = {0, };
   int    n;
 
-  paranoid = fopen(PARANOID, "r");
+  paranoid = fopen(PARANOID1, "r");
+  if (!paranoid)
+    paranoid = fopen(PARANOID2, "r");
+
   if (!paranoid) {
     fprintf(stderr, "System does not support performance events.\n");
-    fprintf(stderr, "File '" PARANOID "' is missing.\n");
+    fprintf(stderr, "File '/proc/sys/kernel/perf_*_paranoid' is missing.\n");
     exit(EXIT_FAILURE);
   }
   n = fscanf(paranoid, "%d", &paranoia_level);
   if (n != 1) {
-    fprintf(stderr, "Could not read file '" PARANOID "'.\n");
+    fprintf(stderr, "Could not read '/proc/sys/kernel/perf_*_paranoid'.\n");
     fprintf(stderr, "Trying to proceed anyway...\n");
   }
   fclose(paranoid);
