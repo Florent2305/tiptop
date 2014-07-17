@@ -34,7 +34,7 @@ OBJS=tiptop.o pmc.o process.o requisite.o conf.o screen.o \
 all: tiptop
 
 tiptop: $(OBJS)
-	$(CC) -o tiptop $(OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o tiptop $(OBJS) $(LIBS)
 	rm -f ptiptop
 	ln tiptop ptiptop
 
