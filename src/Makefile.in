@@ -72,10 +72,12 @@ install:
 	$(INSTALL) -d $(DESTDIR)$(man1dir)
 	$(INSTALL) -m 0644 tiptop.1 $(DESTDIR)$(man1dir)
 	ln $(DESTDIR)$(bindir)/tiptop $(DESTDIR)$(bindir)/ptiptop
+	ln $(DESTDIR)$(man1dir)/tiptop.1 $(DESTDIR)$(man1dir)/ptiptop.1
 
 uninstall:
 	-rm $(DESTDIR)$(bindir)/tiptop
 	-rm $(DESTDIR)$(bindir)/ptiptop
+	-rm $(DESTDIR)$(man1dir)/ptiptop.1
 	-rm $(DESTDIR)$(man1dir)/tiptop.1
 
 clean:
