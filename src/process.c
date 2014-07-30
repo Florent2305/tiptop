@@ -2,7 +2,7 @@
  * This file is part of tiptop.
  *
  * Author: Erven ROHOU
- * Copyright (c) 2011, 2012 Inria
+ * Copyright (c) 2011, 2012, 2014 Inria
  *
  * License: GNU General Public License version 2.
  *
@@ -352,7 +352,7 @@ void new_processes(struct process_list* const list,
           events.config = screen->counters[zz].config;
 
           if (num_files < num_files_limit) {
-            fd = sys_perf_counter_open(&events, tid, cpu, grp, flags);
+            fd = perf_event_open(&events, tid, cpu, grp, flags);
             if (fd == -1) {
               error_printf("Could not attach counter '%s' to PID %d (%s): %s\n",
                            screen->counters[zz].alias,

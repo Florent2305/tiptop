@@ -2,7 +2,7 @@
  * This file is part of tiptop.
  *
  * Author: Erven ROHOU
- * Copyright (c) 2011, 2013 Inria
+ * Copyright (c) 2011, 2013, 2014 Inria
  *
  * License: GNU General Public License version 2.
  *
@@ -57,7 +57,7 @@ int check()
   grp = -1;
   flags = 0;
   pid = 0;   /* self */
-  fd = sys_perf_counter_open(&events, pid, cpu, grp, flags);
+  fd = perf_event_open(&events, pid, cpu, grp, flags);
   if (fd == -1) {
     perror("syscall");
     fprintf(stderr, "Could not perform syscall.\n");

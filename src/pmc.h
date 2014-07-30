@@ -2,7 +2,7 @@
  * This file is part of tiptop.
  *
  * Author: Erven ROHOU
- * Copyright (c) 2011, 2012 Inria
+ * Copyright (c) 2011, 2012, 2014 Inria
  *
  * License: GNU General Public License version 2.
  *
@@ -18,10 +18,12 @@
 #ifdef HAVE_LINUX_PERF_COUNTER_H
 #include <linux/perf_counter.h>
 #define STRUCT_NAME perf_counter_attr
+#define SYSCALL_NUM __NR_perf_counter_open
 
 #elif HAVE_LINUX_PERF_EVENT_H
 #include <linux/perf_event.h>
 #define STRUCT_NAME perf_event_attr
+#define SYSCALL_NUM __NR_perf_event_open
 
 #else
 #error Sorry, performance counters not supported on this system.
@@ -31,10 +33,10 @@
 
 
 /* Declare the syscall with proper naming. */
-long sys_perf_counter_open(struct STRUCT_NAME *hw_event,
-                           pid_t pid,
-                           int cpu,
-                           int group_fd,
-                           unsigned long flags);
+long perf_event_open(struct STRUCT_NAME *hw_event,
+                     pid_t pid,
+                     int cpu,
+                     int group_fd,
+                     unsigned long flags);
 
 #endif  /* _PMC_H */
