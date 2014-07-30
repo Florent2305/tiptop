@@ -2,7 +2,7 @@
  * This file is part of tiptop.
  *
  * Author: Antoine NAUDIN
- * Copyright (c) 2012 Inria
+ * Copyright (c) 2012, 2014 Inria
  *
  * License: GNU General Public License version 2.
  *
@@ -35,7 +35,7 @@ exponent  [eE][+-]?[0-9]+
 
 word      [A-Za-z]([A-Za-z0-9]|_)*
 
-constant  [0-9]+("."[0-9])?{exponent}?|{base16}
+constant  [0-9]+("."[0-9]+)?{exponent}?|{base16}
 
 %%
 
