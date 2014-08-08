@@ -2,7 +2,7 @@
  * This file is part of tiptop.
  *
  * Author: Erven ROHOU
- * Copyright (c) 2011, 2012, 2013 Inria
+ * Copyright (c) 2011, 2012, 2013, 2014 Inria
  *
  * License: GNU General Public License version 2.
  *
@@ -89,16 +89,6 @@ int spawn(char** argv)
     char buffer;
 
     close(pipefd[1]);  /* useless */
-
-    /* in case tiptop is set-UID root, we drop privileges in the child */
-    if ((geteuid() == 0) && (getuid() != 0)) {
-      int res = setuid(getuid());
-      if (res != 0) {
-        /* do not proceed as root */
-        fprintf(stderr, "Could not create command\n");
-        exit(EXIT_FAILURE);
-      }
-    }
 
     /* wait for parent to signal */
     n = read(pipefd[0], &buffer, 1);  /* blocking read */

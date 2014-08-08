@@ -23,6 +23,7 @@
 #include "hash.h"
 #include "options.h"
 #include "pmc.h"
+#include "priv.h"
 #include "process.h"
 #include "screen.h"
 #include "spawn.h"
@@ -346,6 +347,10 @@ void new_processes(struct process_list* const list,
         ptr->txt = malloc(TXT_LEN * sizeof(char));
 
         fail = 0;
+
+        /* restore super powers, if any, for the time of the system
+           call */
+        restore_privilege();
         for(zz = 0; zz < ptr->num_events; zz++) {
           int fd;
           events.type = screen->counters[zz].type;  /* eg PERF_TYPE_HARDWARE */
@@ -374,6 +379,9 @@ void new_processes(struct process_list* const list,
           ptr->fd[zz] = fd;
           ptr->values[zz] = 0;
         }
+
+        /* drop super powers again */
+        drop_privilege();
 
 #if 0
         if (fail) {

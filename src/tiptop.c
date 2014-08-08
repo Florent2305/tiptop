@@ -2,7 +2,7 @@
  * This file is part of tiptop.
  *
  * Author: Erven ROHOU
- * Copyright (c) 2011, 2012, 2013 Inria
+ * Copyright (c) 2011, 2012, 2013, 2014 Inria
  *
  * License: GNU General Public License version 2.
  *
@@ -37,6 +37,7 @@
 #include "helpwin.h"
 #include "options.h"
 #include "pmc.h"
+#include "priv.h"
 #include "process.h"
 #include "requisite.h"
 #include "screen.h"
@@ -845,12 +846,19 @@ int main(int argc, char* argv[])
   int screen_num = 0;
   int q;
   int paranoia_level;
+  uid_t euid;
 
   /* Check OS to make sure we can run. */
   paranoia_level = check();
 
+  /* then, drop super powers, if any. */
+  euid = init_drop_privilege();
+
   init_options(&options);
   options.paranoia_level = paranoia_level;
+
+
+  options.euid = euid;
 
   path_to_config = get_path_to_config(argc, argv);
   path_to_errors = get_path_to_error(argc, argv);

@@ -2,7 +2,7 @@
  * This file is part of tiptop.
  *
  * Author: Erven ROHOU
- * Copyright (c) 2011, 2012, 2013 Inria
+ * Copyright (c) 2011, 2012, 2013, 2014 Inria
  *
  * License: GNU General Public License version 2.
  *
@@ -72,7 +72,6 @@ void init_options(struct option* opt)
   opt->cpu_threshold = 0.00001;
   opt->default_screen = 1;
   opt->delay = 2;
-  opt->euid = geteuid();
   opt->out = stdout;
   opt->watch_uid = -1;
   opt->error = 0;
@@ -280,20 +279,12 @@ void parse_command_line(int argc, char* argv[],
 
     if (strcmp(argv[i], "-o") == 0) {
       if (i+1 < argc) {
-        int euid = geteuid();
-        int res = seteuid(getuid());  /* temporarily drop privileges */
-        if (res != 0) {
-          /* do not proceed as root */
-          fprintf(stderr, "Could not create output file\n");
-          exit(EXIT_FAILURE);
-        }
         options->out = fopen(argv[i+1], "w");
         if (!options->out) {
           perror("fopen");
           fprintf(stderr, "Could not open '%s'\n", argv[i+1]);
           exit(EXIT_FAILURE);
         }
-        seteuid(euid);  /* restore privileges */
         i++;
         continue;
       }
