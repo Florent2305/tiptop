@@ -508,7 +508,7 @@ static screen_t* default_screen()
   /* add columns */
   add_column(s, " %CPU", "%5.1f", "Total CPU usage", "CPU_TOT");
   add_column(s, " %SYS", "%5.1f", "System CPU usage", "CPU_SYS");
-  add_column(s, "   P", "  %2.0f", "Processor where last seen", "PROC_ID");
+  add_column(s, "   P", " %3.0f", "Processor where last seen", "PROC_ID");
   add_column(s, "  Mcycle", "%8.2f", "Cycles (millions)",
              "delta(CYCLE) / 1e6");
   add_column(s, "  Minstr", "%8.2f", "Instructions (millions)",
