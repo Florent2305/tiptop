@@ -28,7 +28,7 @@
 
     <column header=" %CPU" format="%5.1f" desc="CPU usage" expr="CPU_TOT" />
     <column header=" %SYS" format="%5.1f" desc="system CPU usage" expr="CPU_SYS" />
-    <column header="   P" format="  %2.0f" desc="Processor where last seen"
+    <column header="   P" format=" %3.0f" desc="Processor where last seen"
             expr="PROC_ID" />
     <column header="  Mcycle" format="%8.1f" desc="Cycles (millions)"
             expr="delta(CYCLE) / 1000000" />
