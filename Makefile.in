@@ -93,6 +93,8 @@ $(distdir): FORCE
 	cp $(srcdir)/src/options.h $(distdir)/src
 	cp $(srcdir)/src/pmc.c $(distdir)/src
 	cp $(srcdir)/src/pmc.h $(distdir)/src
+	cp $(srcdir)/src/priv.c $(distdir)/src
+	cp $(srcdir)/src/priv.h $(distdir)/src
 	cp $(srcdir)/src/process.c $(distdir)/src
 	cp $(srcdir)/src/process.h $(distdir)/src
 	cp $(srcdir)/src/requisite.c $(distdir)/src
