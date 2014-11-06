@@ -179,7 +179,8 @@ static void build_rows(struct process_list* proc_list, screen_t* s, int width)
       continue;
 
     /* only some tasks are monitored, skip those that do not qualify */
-    if (((options.only_pid) && (p->tid != options.only_pid)) ||
+    if (((options.only_pid) &&
+         (p->tid != options.only_pid) && (p->pid != options.only_pid)) ||
         (options.only_name && options.show_cmdline &&
                                   !strstr(p->cmdline, options.only_name)) ||
         (options.only_name && !options.show_cmdline &&
