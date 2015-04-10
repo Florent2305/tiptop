@@ -278,7 +278,7 @@ void new_processes(struct process_list* const list,
 
       /* Iterate over all threads in the process */
       while ((thr_dirent = readdir(thr_dir))) {
-        int   zz, fail;
+        int   zz;
         struct process* ptr;
         struct passwd*  passwd;
 
@@ -346,10 +346,7 @@ void new_processes(struct process_list* const list,
 
         ptr->txt = malloc(TXT_LEN * sizeof(char));
 
-        fail = 0;
-
-        /* restore super powers, if any, for the time of the system
-           call */
+        /* restore super powers, if any, for the time of the system call */
         restore_privilege();
         for(zz = 0; zz < ptr->num_events; zz++) {
           int fd;
@@ -372,9 +369,7 @@ void new_processes(struct process_list* const list,
                          tid, ptr->name);
           }
 
-          if (fd == -1)
-            fail++;
-          else
+          if (fd != -1)
             num_files++;
           ptr->fd[zz] = fd;
           ptr->values[zz] = 0;
@@ -383,18 +378,6 @@ void new_processes(struct process_list* const list,
         /* drop super powers again */
         drop_privilege();
 
-#if 0
-        if (fail) {
-          /* at least one counter failed, mark it */
-          ptr->attention = 1;
-        }
-
-        if (fail != ptr->num_events) {
-          /* at least one counter succeeded, insert the thread in list */
-          list->num_tids++;
-          num_tids++;
-        }
-#endif
         list->num_tids++;  /* insert in any case */
         num_tids++;
       }
