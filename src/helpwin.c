@@ -2,7 +2,7 @@
  * This file is part of tiptop.
  *
  * Author: Erven ROHOU
- * Copyright (c) 2011, 2012 Inria
+ * Copyright (c) 2011, 2012, 2015 Inria
  *
  * License: GNU General Public License version 2.
  *
@@ -55,17 +55,13 @@ void show_help_win(WINDOW* win, screen_t* screen)
   target_dep_string(msg, sizeof(msg));
 
   if (has_colors())
-    wattron(win, COLOR_PAIR(1));
+    wattron(win, A_REVERSE);
   mvwprintw(win, 1, 1, "%s", msg);
   if (has_colors())
-    wattroff(win, COLOR_PAIR(1));
+    wattroff(win, A_REVERSE);
 
   /* screen description */
-  if (has_colors())
-    wattron(win, COLOR_PAIR(4));
   mvwprintw(win, 2, 1, screen->desc);
-  if (has_colors())
-    wattroff(win, COLOR_PAIR(4));
 
   /* max size of column headers */
   for(i = 0; i < n; i++) {

@@ -2,7 +2,7 @@
  * This file is part of tiptop.
  *
  * Author: Erven ROHOU
- * Copyright (c) 2011, 2012, 2013, 2014 Inria
+ * Copyright (c) 2011, 2012, 2013, 2014, 2015 Inria
  *
  * License: GNU General Public License version 2.
  *
@@ -619,12 +619,9 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
     /* initialize curses colors */
     with_colors = 1;
     start_color();
-    init_pair(1, COLOR_BLACK, COLOR_WHITE);
-    init_pair(2, COLOR_WHITE, COLOR_BLACK);
-    init_pair(3, COLOR_GREEN, COLOR_BLACK);
-    init_pair(4, COLOR_YELLOW, COLOR_BLACK);
-    init_pair(5, COLOR_RED, COLOR_BLACK);
-    attron(COLOR_PAIR(0));
+    use_default_colors();
+    init_pair(1, COLOR_GREEN, -1);      /* processes under watch */
+    init_pair(2, COLOR_RED, -1);     /* for dead processes */
   }
 
   tv.tv_sec = 0;
@@ -670,13 +667,13 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
 
     /* print main header */
     if (with_colors)
-      attron(COLOR_PAIR(1));
+      attron(A_REVERSE);
     mvprintw(3, 0, "%s", header);
     for(zz=strlen(header); zz < COLS-1; zz++)
       printw(" ");
     printw("\n");
     if (with_colors)
-      attroff(COLOR_PAIR(1));
+      attroff(A_REVERSE);
 
     /* update the list of processes/threads and accumulate info if needed */
     num_dead = update_proc_list(proc_list, screen, &options);
@@ -707,14 +704,14 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
       /* highlight watched process, if any */
       if (with_colors) {
         if (p[i]->dead) {
-          attron(COLOR_PAIR(5));
+          attron(COLOR_PAIR(2));
         }
         else if ((p[i]->tid == options.watch_pid) ||
                  (options.watch_name && options.show_cmdline &&
                                 strstr(p[i]->cmdline, options.watch_name)) ||
                  (options.watch_name && !options.show_cmdline &&
                                 strstr(p[i]->name, options.watch_name)))
-          attron(COLOR_PAIR(3));
+          attron(COLOR_PAIR(1));
       }
 
       if (options.show_threads || (p[i]->pid == p[i]->tid)) {
@@ -723,7 +720,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
       }
 
       if (with_colors)
-        attroff(COLOR_PAIR(3));
+        attroff(COLOR_PAIR(1));
 
       if (printed >= LINES - 5)  /* stop printing at bottom of window */
         break;
@@ -735,8 +732,6 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
       printw(", %3d dead", num_dead);
 
     /* print the screen name, make sure it fits, or truncate */
-    if (with_colors)
-      attron(COLOR_PAIR(4));
     if (35 + 20 + 11 + strlen(screen->name) < COLS) {
       mvprintw(1, COLS - 11 - strlen(screen->name),
                "screen %2d: %s\n", pos, screen->name);
@@ -747,16 +742,14 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
       screen_str[COLS - 35 - 20 - 11] = '\0';  /* truncate */
       mvprintw(1, 35+20, "screen %2d: %s", pos, screen_str);
     }
-    if (with_colors)
-      attroff(COLOR_PAIR(4));
 
     /* print message if any */
     if (message) {
       if (with_colors)
-        attron(COLOR_PAIR(1));
+        attron(A_REVERSE);
       mvprintw(2, 0, "%s", message);
       if (with_colors)
-        attroff(COLOR_PAIR(1));
+        attroff(A_REVERSE);
       message = NULL;  /* reset message */
     }
 
