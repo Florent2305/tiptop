@@ -27,6 +27,7 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/select.h>
+#include <sys/sysinfo.h>
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
@@ -284,27 +285,20 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
 
   /* Print various information about this run */
   fprintf(out, "tiptop - ");
-  fflush(out);
 
   { /* uptime */
-    FILE* f;
-    float val1, val5, val15, up;
-    int days, hours, minutes, n;
-    f = fopen("/proc/loadavg", "r");
-    n = fscanf(f, "%f %f %f", &val1, &val5, &val15);
-    if (n != 3)
-      val1 = val5 = val15 = 0.0;  /* something went wrong, no sure what */
-    fclose(f);
-    f = fopen("/proc/uptime", "r");
-    n = fscanf(f, "%f", &up);
-    if (n != 1)
-      up = 0.0;
-    fclose(f);
-    days = up / 86400;
-    hours = (up - days*86400) / 3600;
-    minutes = (up - days*86400 - hours*3600) / 60;
+    struct sysinfo sys;
+    int days, hours, minutes;
+    
+    sysinfo(&sys);
+    days = sys.uptime / 86400;
+    hours = (sys.uptime - days*86400) / 3600;
+    minutes = (sys.uptime - days*86400 - hours*3600) / 60;
     fprintf(out, "up %d days, %d:%02d, load average: %.2f, %.2f, %.2f\n",
-            days, hours, minutes, val1, val5, val15);
+            days, hours, minutes,
+            sys.loads[0] / (float)(1 << SI_LOAD_SHIFT),
+            sys.loads[1] / (float)(1 << SI_LOAD_SHIFT),
+            sys.loads[2] / (float)(1 << SI_LOAD_SHIFT));
   }
 
   { /* date */
@@ -775,7 +769,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
       if (c == 'q')
         break;
       if (c == '>') {
-        if (active_col < screen->num_columns )
+        if (active_col < screen->num_columns)
           active_col++;
         free(header);
         header = gen_header(screen, &options, COLS - 1, active_col);
