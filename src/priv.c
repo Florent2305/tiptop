@@ -2,7 +2,7 @@
  * This file is part of tiptop.
  *
  * Author: Erven ROHOU
- * Copyright (c) 2014 Inria
+ * Copyright (c) 2014, 2015 Inria
  *
  * License: GNU General Public License version 2.
  *
@@ -13,6 +13,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "error.h"
 #include "priv.h"
 
 /* Rationale: a user can attach performance counters only to processes
