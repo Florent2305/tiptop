@@ -156,7 +156,7 @@ static void build_rows(struct process_list* proc_list, screen_t* s, int width)
   /* select appropriate sorting function */
   if (active_col == s->num_columns)  /* proc name or command */
     sorting_fun = cmp_string;
-  else if ((active_col == -1))  /* PID */
+  else if (active_col == -1)  /* PID */
     sorting_fun = cmp_int;
   else
     sorting_fun = cmp_double;  /* (computed) expression */
