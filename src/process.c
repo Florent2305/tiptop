@@ -2,7 +2,7 @@
  * This file is part of tiptop.
  *
  * Author: Erven ROHOU
- * Copyright (c) 2011, 2012, 2014 Inria
+ * Copyright (c) 2011, 2012, 2014, 2015 Inria
  *
  * License: GNU General Public License version 2.
  *
@@ -156,20 +156,67 @@ static char* get_cmdline(int pid, char* result, int size)
 }
 
 
+
+void start_counters(struct process* ptr,
+                    const screen_t* const screen,
+                    struct STRUCT_NAME* events)
+{
+  const int cpu = -1;
+  const int grp = -1;
+  const int flags = 0;
+  int zz;
+
+  /* Get number of counters from screen */
+  ptr->num_events = screen->num_counters;
+
+  for(zz = 0; zz < ptr->num_events; zz++)
+    ptr->prev_values[zz] = 0;
+
+  /* restore super powers, if any, for the time of the system call */
+  restore_privilege();
+  for(zz = 0; zz < ptr->num_events; zz++) {
+    int fd;
+    events->type = screen->counters[zz].type;  /* eg PERF_TYPE_HARDWARE */
+    events->config = screen->counters[zz].config;
+
+    if (num_files < num_files_limit) {
+      fd = perf_event_open(events, ptr->tid, cpu, grp, flags);
+      if (fd == -1) {
+        error_printf("Could not attach counter '%s' to PID %d (%s): %s\n",
+                     screen->counters[zz].alias,
+                     ptr->tid,
+                     ptr->name,
+                     strerror(errno));
+      }
+    }
+    else {
+      fd = -1;
+      error_printf("Files limit reached for PID %d (%s)\n",
+                   ptr->tid, ptr->name);
+    }
+
+    if (fd != -1)
+      num_files++;
+    ptr->fd[zz] = fd;
+    ptr->values[zz] = 0;
+  }
+
+  /* drop super powers again */
+  drop_privilege();
+}
+
+
 void new_processes(struct process_list* const list,
                    const screen_t* const screen,
                    const struct option* const options)
 {
-  struct dirent* pid_dirent;
-  DIR*           pid_dir;
-  int            num_tids, val, n;
+  struct dirent*     pid_dirent;
+  DIR*               pid_dir;
+  int                num_tids, val, n, num_inactive, alloc_inact;
   struct STRUCT_NAME events = {0, };
-  FILE*          f;
-  uid_t          my_uid = -1;
-
-  const int cpu = -1;
-  const int grp = -1;
-  const int flags = 0;
+  FILE*              f;
+  uid_t              my_uid = -1;
+  struct process**   inactive;
 
   /* To avoid scanning the entire /proc directory, we first check if
      any process has been created since last time. /proc/loadavg
@@ -192,6 +239,10 @@ void new_processes(struct process_list* const list,
   /* events.exclude_idle = 1; ?? */
   if (options->show_kernel == 0)
     events.exclude_kernel = 1;
+
+  num_inactive = 0;
+  alloc_inact = 100;
+  inactive = malloc(alloc_inact * sizeof(struct process*));
 
   /* check all directories of /proc */
   pid_dir = opendir("/proc");
@@ -261,8 +312,8 @@ void new_processes(struct process_list* const list,
        root's processes because they are too many). */
     skip_by_user = 1;
     my_uid = options->euid;
-    if (((my_uid != 0) && (uid == my_uid)) ||  /* not root, monitor mine */
-        ((my_uid == 0) && (uid != 0)))         /* I am root, monitor all others */
+    if (((my_uid != 0) && (uid == my_uid)) || /* not root, monitor mine */
+        ((my_uid == 0) && (uid != 0)))        /* I am root, monitor all others*/
       skip_by_user = 0;
 
     if ((skip_by_user == 0) && (skip_by_pid == 0)) {
@@ -278,7 +329,6 @@ void new_processes(struct process_list* const list,
 
       /* Iterate over all threads in the process */
       while ((thr_dirent = readdir(thr_dir))) {
-        int   zz;
         struct process* ptr;
         struct passwd*  passwd;
 
@@ -289,7 +339,6 @@ void new_processes(struct process_list* const list,
         ptr = hash_get(tid);
         if (ptr)  /* already known */
           continue;
-
 
         /* We have a new thread. */
 
@@ -314,9 +363,6 @@ void new_processes(struct process_list* const list,
         ptr->pid = pid;
         ptr->proc_id = -1;
         ptr->dead = 0;
-#if 0
-        ptr->attention = 0;
-#endif
         ptr->u.d = 0.0;
 
         passwd = getpwuid(uid);
@@ -338,45 +384,44 @@ void new_processes(struct process_list* const list,
         ptr->cpu_percent_s = 0.0;
         ptr->cpu_percent_u = 0.0;
 
-        /* Get number of counters from screen */
-        ptr->num_events = screen->num_counters;
+        float uptime;
+        f = fopen("/proc/uptime", "r");
+        n = fscanf(f, "%f", &uptime);
+        fclose(f);
+        uptime *= clk_tck;
 
-        for(zz = 0; zz < ptr->num_events; zz++)
-          ptr->prev_values[zz] = 0;
+        /* read utime, stime and starttime (fields 14, 15, and 22) */
+        snprintf(name, sizeof(name) - 1, "/proc/%d/stat", tid);
+        f = fopen(name, "r");
+        if (!f)
+          continue;
+        long utime, stime;
+        long long starttime;
+        fscanf(f, "%*d (%*[^)]) %*c %*d %*d %*d %*d %*d %*u %*u "
+                  "%*u %*u %*u %lu %lu %*d %*d %*d %*d %*d %*d %llu",
+               &utime, &stime, &starttime);
+        fclose(f);
 
-        ptr->txt = malloc(TXT_LEN * sizeof(char));
-
-        /* restore super powers, if any, for the time of the system call */
-        restore_privilege();
-        for(zz = 0; zz < ptr->num_events; zz++) {
-          int fd;
-          events.type = screen->counters[zz].type;  /* eg PERF_TYPE_HARDWARE */
-          events.config = screen->counters[zz].config;
-
-          if (num_files < num_files_limit) {
-            fd = perf_event_open(&events, tid, cpu, grp, flags);
-            if (fd == -1) {
-              error_printf("Could not attach counter '%s' to PID %d (%s): %s\n",
-                           screen->counters[zz].alias,
-                           tid,
-                           ptr->name,
-                           strerror(errno));
-            }
+        /* Due to the limited number of files in a Linux process (each
+           counter corresponds to a file), we want to start counters
+           first for active process. Idle processes are
+           postponed. This increases the chances to display useful
+           information: a dash only for idle processes. */
+        if ((utime + stime)/(uptime - starttime) > 0.3) {
+          /* active process: %CPU > 30% */
+          start_counters(ptr, screen, &events);
+        }
+        else {
+          /* less active: postpone. Add to a list of inactive
+             processes, to be handled later. */
+          inactive[num_inactive++] = ptr;
+          if (num_inactive == alloc_inact) {
+            alloc_inact += 100;
+            inactive = realloc(inactive, alloc_inact * sizeof(struct process*));
           }
-          else {
-            fd = -1;
-            error_printf("Files limit reached for PID %d (%s)\n",
-                         tid, ptr->name);
-          }
-
-          if (fd != -1)
-            num_files++;
-          ptr->fd[zz] = fd;
-          ptr->values[zz] = 0;
         }
 
-        /* drop super powers again */
-        drop_privilege();
+        ptr->txt = malloc(TXT_LEN * sizeof(char));
 
         list->num_tids++;  /* insert in any case */
         num_tids++;
@@ -384,6 +429,15 @@ void new_processes(struct process_list* const list,
       closedir(thr_dir);
     }
   }
+
+  /* handle inactive processes */
+  int i;
+  fprintf(stderr, "There were %d inactive processes\n", num_inactive);
+  for(i=0; i < num_inactive; i++) {
+    start_counters(inactive[i], screen, &events);
+  }
+  free(inactive);
+
   closedir(pid_dir);
 }
 
