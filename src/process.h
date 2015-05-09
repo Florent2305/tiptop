@@ -2,7 +2,7 @@
  * This file is part of tiptop.
  *
  * Author: Erven ROHOU
- * Copyright (c) 2011 Inria
+ * Copyright (c) 2011, 2015 Inria
  *
  * License: GNU General Public License version 2.
  *
@@ -61,9 +61,7 @@ struct process {
 
   unsigned int dead : 1;  /* is the process dead? */
   unsigned int skip : 1;  /* do not display, for any reason (dead, idle...) */
-#if 0
-  unsigned int attention : 1;
-#endif
+
   struct process* next;
 };
 
