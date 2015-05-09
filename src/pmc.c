@@ -2,11 +2,14 @@
  * This file is part of tiptop.
  *
  * Author: Erven ROHOU
- * Copyright (c) 2011, 2012, 2014 Inria
+ * Copyright (c) 2011, 2012, 2014, 2015 Inria
  *
  * License: GNU General Public License version 2.
  *
  */
+
+#define _GNU_SOURCE  /* for syscall */
+#include <unistd.h>
 
 #include <asm/unistd.h>
 #include <errno.h>
