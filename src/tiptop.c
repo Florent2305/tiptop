@@ -218,9 +218,9 @@ static void build_rows(struct process_list* proc_list, screen_t* s, int width)
         p->u.d = 0.0;
 
       res = evaluate_column_expression(s->columns[col].expression,
-                                s->counters,
-                                s->num_counters,
-                                p, &error);
+                                       s->counters,
+                                       s->num_counters,
+                                       p, &error);
 
       if (error == 1)
         written = snprintf(row, remaining, "%s", s->columns[col].error_field);
@@ -289,7 +289,7 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
   { /* uptime */
     struct sysinfo sys;
     int days, hours, minutes;
-    
+
     sysinfo(&sys);
     days = sys.uptime / 86400;
     hours = (sys.uptime - days*86400) / 3600;
