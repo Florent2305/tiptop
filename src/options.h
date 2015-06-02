@@ -2,7 +2,7 @@
  * This file is part of tiptop.
  *
  * Author: Erven ROHOU
- * Copyright (c) 2011, 2012, 2013 Inria
+ * Copyright (c) 2011, 2012, 2013, 2015 Inria
  *
  * License: GNU General Public License version 2.
  *
@@ -39,6 +39,7 @@ struct option {
   unsigned int    help : 1;
   unsigned int    error : 2;
   unsigned int    idle : 1;
+  unsigned int    no_collect : 1;
   unsigned int    show_cmdline : 1;
   unsigned int    show_epoch : 1;
   unsigned int    show_kernel : 1;

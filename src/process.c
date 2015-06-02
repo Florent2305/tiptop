@@ -159,7 +159,8 @@ static char* get_cmdline(int pid, char* result, int size)
 
 void start_counters(struct process* ptr,
                     const screen_t* const screen,
-                    struct STRUCT_NAME* events)
+                    struct STRUCT_NAME* events,
+                    const struct option* const options)
 {
   const int cpu = -1;
   const int grp = -1;
@@ -169,6 +170,30 @@ void start_counters(struct process* ptr,
   /* Get number of counters from screen */
   ptr->num_events = screen->num_counters;
 
+  /* If we have reached the maximum number of open files, we try to
+     close the events attached to some idle processes (unless
+     forbidden to do so by command line flag). */
+  if ((num_files + ptr->num_events >= num_files_limit) &&
+      (!options->no_collect))
+  {
+    int num_collected = 0;
+    struct process* q = ptr->next;
+    while (q && (num_collected < ptr->num_events)) {
+      if (q->cpu_percent < options->cpu_threshold) {
+        for(zz = 0; zz < q->num_events; zz++) {
+          if (q->fd[zz] >= 0) {
+            close(q->fd[zz]);
+            q->fd[zz] = -1;
+            q->values[zz] = 0xffffffff;
+            num_collected++;
+          }
+        }
+      }
+      q = q->next;
+    }
+    num_files -= num_collected;
+  }
+  
   for(zz = 0; zz < ptr->num_events; zz++)
     ptr->prev_values[zz] = 0;
 
@@ -212,7 +237,7 @@ void new_processes(struct process_list* const list,
 {
   struct dirent*     pid_dirent;
   DIR*               pid_dir;
-  int                num_tids, val, n, num_inactive, alloc_inact;
+  int                num_tids, val, n, num_inactive, alloc_inact, i;
   struct STRUCT_NAME events = {0, };
   FILE*              f;
   uid_t              my_uid = -1;
@@ -346,6 +371,9 @@ void new_processes(struct process_list* const list,
         ptr = malloc(sizeof(struct process));
 
         /* insert into list of processes */
+        /* Insert at the front of the list. This will later let us
+           scan the rest of the list when looking for idle processes,
+           closing files. */
         ptr->next = list->processes;
         list->processes = ptr;
 
@@ -409,7 +437,7 @@ void new_processes(struct process_list* const list,
            information: a dash only for idle processes. */
         if ((utime + stime)/(uptime - starttime) > 0.3) {
           /* active process: %CPU > 30% */
-          start_counters(ptr, screen, &events);
+          start_counters(ptr, screen, &events, options);
         }
         else {
           /* less active: postpone. Add to a list of inactive
@@ -431,9 +459,8 @@ void new_processes(struct process_list* const list,
   }
 
   /* handle inactive processes */
-  int i;
   for(i=0; i < num_inactive; i++) {
-    start_counters(inactive[i], screen, &events);
+    start_counters(inactive[i], screen, &events, options);
   }
   free(inactive);
 

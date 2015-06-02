@@ -2,7 +2,7 @@
  * This file is part of tiptop.
  *
  * Author: Erven ROHOU
- * Copyright (c) 2011, 2012, 2013, 2014 Inria
+ * Copyright (c) 2011, 2012, 2013, 2014, 2015 Inria
  *
  * License: GNU General Public License version 2.
  *
@@ -45,6 +45,7 @@ static void usage(const char* name)
   fprintf(stderr, "\t-i             also display idle processes\n");
   fprintf(stderr, "\t--list-screens display list of available screens\n");
   fprintf(stderr, "\t-n num         max number of refreshes\n");
+  fprintf(stderr, "\t--no-collect   no attempt to collect idle processes when out of files\n");
   fprintf(stderr, "\t-o outfile     output file in batch mode\n");
   fprintf(stderr, "\t--only-conf    Disable default screen, only configuration\n");
   fprintf(stderr, "\t-p --pid pid|name  only display task with this PID/name\n");
@@ -275,6 +276,11 @@ void parse_command_line(int argc, char* argv[],
         fprintf(stderr, "Missing number of iterations after -n.\n");
         exit(EXIT_FAILURE);
       }
+    }
+
+    if (strcmp(argv[i], "--no-collect") == 0) {
+      options->no_collect = 1;
+      continue;
     }
 
     if (strcmp(argv[i], "-o") == 0) {

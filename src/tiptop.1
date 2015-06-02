@@ -74,7 +74,7 @@ display the command line of the task instead of its name. (toggle)
 .TP 4
 \-\-\fBcpu\-min\fR VALUE
 %CPU activity threshold. Below this value, a task is considered
- idle and is not reported (unless idle-mode is on).
+ idle and is not reported (unless idle-mode is on, see flag -i).
 
 .TP 4
 \-\fBd\fR VALUE
@@ -121,6 +121,14 @@ List available screens and exit.
 .TP 4
 \-\fBn\fR VALUE
 Automatically exit after VALUE iterations.
+
+.TP 4
+\-\-\fBno\-collect\fR
+By default, when the maximum number of open files is reached, and new
+processes appear, \*(Me searches for idle processes and closes the
+files in order to make room for the new ones. This flag disables this
+behavior: in case of file shortage, new processes will not get more
+chances than older ones.
 
 .TP 4
 \-\fBo\fR FILENAME
@@ -448,10 +456,13 @@ PROC_ID (processor where the process was last seen).
 \*(Me does not seem to work within a virtualized environment.
 
 Attaching counters to processes may fail for various reasons, such as
-asking for more than available in hardware (tiptop does not implement
+asking for more than available in hardware (\*(Me does not implement
 sampling), or reaching the maximum number of open files. In these
-cases, you may consider filtering the processes (see flags \-u, \-p,
-\-K).
+cases, you may consider filtering the processes (see flags \-u, \-p).
+
+To mitigate the limitation of the maximum number of open files, \*(Me
+tries to close the events attached to idle processes. If this is a
+problem, see the flag --no-collect.
 
 
 .SH BUGS
