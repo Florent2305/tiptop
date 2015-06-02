@@ -432,7 +432,6 @@ void new_processes(struct process_list* const list,
 
   /* handle inactive processes */
   int i;
-  fprintf(stderr, "There were %d inactive processes\n", num_inactive);
   for(i=0; i < num_inactive; i++) {
     start_counters(inactive[i], screen, &events);
   }
@@ -626,12 +625,12 @@ void accumulate_stats(const struct process_list* const list)
       /* accumulate in owner process */
       owner->cpu_percent += p->cpu_percent;
       for(zz = 0; zz < p->num_events; zz++) {
-        /* as soon as one thread has invalid value, skip entire process. */
-        if (p->values[zz] == 0xffffffff) {
+        /* as soon as one thread has an invalid value, mark the owner
+           as invalid as well (cannot compute a correct value) */
+        if (p->values[zz] == 0xffffffff)
           owner->values[zz] = 0xffffffff;
-          break;
-        }
-        owner->values[zz] += p->values[zz];
+        else
+          owner->values[zz] += p->values[zz];
       }
     }
   }
