@@ -2,7 +2,7 @@
  * This file is part of tiptop.
  *
  * Author: Erven ROHOU
- * Copyright (c) 2011, 2012, 2013, 2014 Inria
+ * Copyright (c) 2011, 2012, 2013, 2014, 2015 Inria
  *
  * License: GNU General Public License version 2.
  *
@@ -43,6 +43,6 @@ void print_version()
 void print_legal()
 {
   printf("tiptop %s.\n", tiptop_version);
-  printf("Copyright (C) 2011, 2012, 2013, 2014 Inria.\n");
+  printf("Copyright (C) 2011, 2012, 2013, 2014, 2015 Inria.\n");
   printf("This is free software. No warranty.\n");
 }
