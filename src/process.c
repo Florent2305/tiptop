@@ -425,9 +425,9 @@ void new_processes(struct process_list* const list,
           continue;
         long utime, stime;
         long long starttime;
-        fscanf(f, "%*d (%*[^)]) %*c %*d %*d %*d %*d %*d %*u %*u "
-                  "%*u %*u %*u %lu %lu %*d %*d %*d %*d %*d %*d %llu",
-               &utime, &stime, &starttime);
+        n = fscanf(f, "%*d (%*[^)]) %*c %*d %*d %*d %*d %*d %*u %*u "
+                   "%*u %*u %*u %lu %lu %*d %*d %*d %*d %*d %*d %llu",
+                   &utime, &stime, &starttime);
         fclose(f);
 
         /* Due to the limited number of files in a Linux process (each
