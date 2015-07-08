@@ -79,6 +79,14 @@ cycle) indicates that the hardware is not performing at its best; a
 high cache miss ratio can suggest several causes, such as conflicts
 between processes in a multicore environment.</p>
 
+<h2>Citing</h2>
+If you like tiptop and use it in your research, please reference the
+technical report Inria RR-7789: <a href="http://hal.inria.fr/hal-00639173">http://hal.inria.fr/hal-00639173</a>.
+<div style="margin:0.5cm">
+  Tiptop: Hardware Performance Counters for the Masses, Erven Rohou,<br>
+  Inria Research Report 7789, Nov 2011.
+</div>
+
 
 <div style="float:right; margin:10px;border:solid black 1px;clear:right;font-size:75%">
 <pre>
@@ -149,9 +157,12 @@ between processes in a multicore environment.</p>
 forge: <a href="https://gforge.inria.fr/projects/tiptop" title="Tiptop
 on Inria forge">https://gforge.inria.fr/projects/tiptop</a>.</p>
 <ul>
-<li>Latest release: <a href="releases/tiptop-2.0.tar.gz">tiptop-2.0.tar.gz</a></li>
+<li>Latest release: <a href="releases/tiptop-2.3.tar.gz">tiptop-2.3.tar.gz</a></li>
 <li>Previous releases:
 <ul>
+  <li><a href="releases/tiptop-2.2.tar.gz">tiptop-2.2.tar.gz</a></li>
+  <li><a href="releases/tiptop-2.1.tar.gz">tiptop-2.1.tar.gz</a></li>
+  <li><a href="releases/tiptop-2.0.tar.gz">tiptop-2.0.tar.gz</a></li>
   <li><a href="releases/tiptop-1.0.1.tar.gz">tiptop-1.0.1.tar.gz</a></li>
   <li><a href="releases/tiptop-1.0.tar.gz">tiptop-1.0.tar.gz</a></li>
 </ul>
