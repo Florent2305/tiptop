@@ -174,7 +174,8 @@ void show_error_win(WINDOW* win, int nb_proc)
 
   box(win, 0, 0);
   mvwprintw(win, 0, 5, " %d errors detected (e to close) ", nb_error);
-  mvwprintw(win, maxy-1, 5, " %d %% ", 100 * scroll_ / nb_error);
+  if (nb_error)
+    mvwprintw(win, maxy-1, 5, " %d %% ", 100 * scroll_ / nb_error);
 
   /* scrolling the file */
   for(i=0;
