@@ -2,7 +2,7 @@
  * This file is part of tiptop.
  *
  * Author: Erven ROHOU
- * Copyright (c) 2011, 2012, 2014, 2015 Inria
+ * Copyright (c) 2011, 2012, 2014, 2015, 2016, 2017 Inria
  *
  * License: GNU General Public License version 2.
  *
@@ -179,7 +179,9 @@ void start_counters(struct process* ptr,
     int num_collected = 0;
     struct process* q = ptr->next;
     while (q && (num_collected < ptr->num_events)) {
-      if (q->cpu_percent < options->cpu_threshold) {
+      if ((!q->inactive) &&  /* inactive are not initialized yet */
+          (q->cpu_percent < options->cpu_threshold))
+      {
         for(zz = 0; zz < q->num_events; zz++) {
           if (q->fd[zz] >= 0) {
             close(q->fd[zz]);
@@ -333,13 +335,11 @@ void new_processes(struct process_list* const list,
       }
     }
 
-    /* my process, or somebody else's process and I am root (skip
-       root's processes because they are too many). */
-    skip_by_user = 1;
+    /* All processes if I am root, only mine if I am not root. */
+    skip_by_user = 0;
     my_uid = options->euid;
-    if (((my_uid != 0) && (uid == my_uid)) || /* not root, monitor mine */
-        ((my_uid == 0) && (uid != 0)))        /* I am root, monitor all others*/
-      skip_by_user = 0;
+    if ((my_uid != 0) && (uid != my_uid)) /* not root, can monitor only mine */
+      skip_by_user = 1;
 
     if ((skip_by_user == 0) && (skip_by_pid == 0)) {
       DIR* thr_dir;
@@ -391,6 +391,7 @@ void new_processes(struct process_list* const list,
         ptr->pid = pid;
         ptr->proc_id = -1;
         ptr->dead = 0;
+        ptr->inactive = 0;
         ptr->u.d = 0.0;
 
         passwd = getpwuid(uid);
@@ -443,6 +444,10 @@ void new_processes(struct process_list* const list,
           /* less active: postpone. Add to a list of inactive
              processes, to be handled later. */
           inactive[num_inactive++] = ptr;
+          /* Mark so that the collection of quasi-idle processes phase
+             will skip. Most data structures are not initialized
+             yet. */
+          ptr->inactive = 1;
           if (num_inactive == alloc_inact) {
             alloc_inact += 100;
             inactive = realloc(inactive, alloc_inact * sizeof(struct process*));
@@ -461,6 +466,7 @@ void new_processes(struct process_list* const list,
   /* handle inactive processes */
   for(i=0; i < num_inactive; i++) {
     start_counters(inactive[i], screen, &events, options);
+    inactive[i]->inactive = 0;
   }
   free(inactive);
 
