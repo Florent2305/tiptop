@@ -47,7 +47,7 @@ static void usage(const char* name)
   fprintf(stderr, "\t-n num         max number of refreshes\n");
   fprintf(stderr, "\t--no-collect   no attempt to collect idle processes when out of files\n");
   fprintf(stderr, "\t-o outfile     output file in batch mode\n");
-  fprintf(stderr, "\t--only-conf    Disable default screen, only configuration\n");
+  fprintf(stderr, "\t--only-conf    disable default screen, only configuration\n");
   fprintf(stderr, "\t-p --pid pid|name  only display task with this PID/name\n");
   fprintf(stderr, "\t-S num         screen number to display\n");
   fprintf(stderr, "\t--sticky       keep final status of dead processes\n");
@@ -56,7 +56,7 @@ static void usage(const char* name)
   fprintf(stderr, "\t-U             show user name\n");
   fprintf(stderr, "\t-v             print version and exit\n");
   fprintf(stderr, "\t--version      print legalese and exit\n");
-  fprintf(stderr, "\t-W path        Used configuration file pointed by path\n");
+  fprintf(stderr, "\t-W path        use configuration file pointed by path\n");
   fprintf(stderr, "\t-w pid|name    watch this process (highlighted)\n");
   return;
 }
