@@ -2,7 +2,7 @@
  * This file is part of tiptop.
  *
  * Author: Erven ROHOU
- * Copyright (c) 2011, 2012 Inria
+ * Copyright (c) 2011, 2012, 2016 Inria
  *
  * License: GNU General Public License version 2.
  *
@@ -12,8 +12,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #include "config.h"
@@ -150,7 +150,6 @@ static char* const default_type  = "PERF_TYPE_HW";
 
 static int dump_counter(FILE* out, counter_t* c)
 {
-  int alloc_c=0, alloc_t=0;
   char* config = NULL;
   char* type = NULL;
 
@@ -158,36 +157,23 @@ static int dump_counter(FILE* out, counter_t* c)
   type = get_counter_type_name(c->type);
 
   if (config == NULL) {
-    /* Hexadecimal Convertion */
-    alloc_c++;
-    config = malloc(sizeof(char)*3);
+    /* Hexadecimal Conversion */
+    config = alloca(sizeof(char)*20);
     sprintf(config, "0x%"PRIx64, c->config);
   }
   if (type == NULL && c->type != -1) {
-    /* Hexadecimal Convertion */
-    alloc_t++;
-    type = malloc(sizeof(char)*3);
-    sprintf(type,"0x%x", c->type);
+    /* Hexadecimal Conversion */
+    type = alloca(sizeof(char)*20);
+    sprintf(type, "0x%x", c->type);
   }
   else if (type == NULL && c->type == -1)
     type = default_type;
 
   if (fprintf(out, "%s%s%s%s%s%s%s\n", cou_sta, c->alias, cou_mid1, config,
               cou_mid2, type, cou_clo) < 0)
-    goto end;
+    return -1;
 
-  if (alloc_c)
-    free(config);
-  if (alloc_t)
-    free(type);
   return 0;
-
- end:
-  if(alloc_c)
-    free(config);
-  if(alloc_t)
-    free(type);
-  return -1;
 }
 
 
