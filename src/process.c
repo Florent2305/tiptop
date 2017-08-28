@@ -424,8 +424,8 @@ void new_processes(struct process_list* const list,
         f = fopen(name, "r");
         if (!f)
           continue;
-        long utime, stime;
-        long long starttime;
+        unsigned long utime, stime;
+        unsigned long long starttime;
         n = fscanf(f, "%*d (%*[^)]) %*c %*d %*d %*d %*d %*d %*u %*u "
                    "%*u %*u %*u %lu %lu %*d %*d %*d %*d %*d %*d %llu",
                    &utime, &stime, &starttime);
@@ -525,30 +525,29 @@ int update_proc_list(struct process_list* const list,
     }
 
     zombie = 0;
-    if (fstat) {
-      int n;
-      char state;
-      n = fscanf(fstat,
+    assert(fstat);
+
+    int n;
+    char state;
+    n = fscanf(fstat,
            "%*d (%*[^)]) %c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu %lu",
            &state, &utime, &stime);
-      if (n != 3)
-        utime = stime = 0;
+    if (n != 3)
+      utime = stime = 0;
 
-      if (state == 'Z') {  /* zombie */
-        zombie = 1;
-      }
-
-      /* get processor ID */
-
-
-      n = fscanf(fstat,
-                 "%*d %*d %*d %*d %*d %*d %*d %*u %*d %*u %*u %*u %*u "
-                 "%*u %*u %*u %*u %*u %*u %*u %*u %*u %*d %d",
-                 &proc_id);
-      if (n != 1)
-        proc_id = -1;
-      fclose(fstat);
+    if (state == 'Z') {  /* zombie */
+      zombie = 1;
     }
+
+    /* get processor ID */
+    n = fscanf(fstat,
+               "%*d %*d %*d %*d %*d %*d %*d %*u %*d %*u %*u %*u %*u "
+               "%*u %*u %*u %*u %*u %*u %*u %*u %*u %*d %d",
+               &proc_id);
+    if (n != 1)
+      proc_id = -1;
+    fclose(fstat);
+
     if (!zombie) {
       /* do not update these values for a zombie, they have become invalid */
       gettimeofday(&now, NULL);
