@@ -157,9 +157,10 @@ technical report Inria RR-7789: <a href="http://hal.inria.fr/hal-00639173">http:
 forge: <a href="https://gforge.inria.fr/projects/tiptop" title="Tiptop
 on Inria forge">https://gforge.inria.fr/projects/tiptop</a>.</p>
 <ul>
-<li>Latest release: <a href="releases/tiptop-2.3.tar.gz">tiptop-2.3.tar.gz</a></li>
+<li>Latest release: <a href="releases/tiptop-2.3.1.tar.gz">tiptop-2.3.1.tar.gz</a></li>
 <li>Previous releases:
 <ul>
+  <li><a href="releases/tiptop-2.3.tar.gz">tiptop-2.3.tar.gz</a></li>
   <li><a href="releases/tiptop-2.2.tar.gz">tiptop-2.2.tar.gz</a></li>
   <li><a href="releases/tiptop-2.1.tar.gz">tiptop-2.1.tar.gz</a></li>
   <li><a href="releases/tiptop-2.0.tar.gz">tiptop-2.0.tar.gz</a></li>
@@ -176,17 +177,16 @@ Hardware Performance Counters for the Masses">RR-7789</a>.</p>
 <p>Be sure to check the README and the man page included in the distribution.</p>
 
 <p>Specific counters for Intel architectures can be found in the
-<a href="http://www.intel.com/content/www/us/en/processors/architectures-software-developer-manuals.html">Intel®
-64 and IA-32 Architectures Software Developer’s Manual</a>, Volume
+<a href="http://www.intel.com/content/www/us/en/processors/architectures-software-developer-manuals.html">Intel64 and IA-32 Architectures Software Developer's Manual</a>, Volume
 3B.</p>
 
 
 <h2>Credits and Legal</h2>
-<p>Tiptop is proposed by the <a href="http://www.irisa.fr/alf">ALF
+<p>Tiptop is proposed by the <a href="https://team.inria.fr/pacap/">PACAP
 project team</a>
 at <a href="http://www.inria.fr/en/centre/rennes">Inria Rennes
 Bretagne Atlantique</a>. The main developer
-is <a href="http://www.irisa.fr/alf/rohou">Erven Rohou</a>.</p>
+is <a href="https://team.inria.fr/pacap/members/rohou/">Erven Rohou</a>.</p>
 <p>Tiptop is copyright Inria and released under GPL v2.<br/> It is
 registered at the APP (Agence de Protection des Programmes) under
 number IDDN.FR.001.450006.000.S.P.2011.000.10800.</p>
