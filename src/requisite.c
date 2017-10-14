@@ -75,7 +75,7 @@ int check()
     }
     exit(EXIT_FAILURE);
   }
-  
+
   close(fd);
   return paranoia_level;
 }

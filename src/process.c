@@ -80,7 +80,7 @@ struct process_list* init_proc_list()
 static void done_proc(struct process* const p)
 {
   int val_idx;
-  
+
   if (p->cmdline)
     free(p->cmdline);
   free(p->name);
@@ -132,7 +132,7 @@ static char* get_cmdline(int pid, char* result, int size)
 
   snprintf(name, sizeof(name) - 1, "/proc/%d/cmdline", pid);
   f = fopen(name, "r");
-  if (f) {    
+  if (f) {
     res = fgets(result, size, f);
     if (res && res[0]) {
       int j;
@@ -195,7 +195,7 @@ void start_counters(struct process* ptr,
     }
     num_files -= num_collected;
   }
-  
+
   for(zz = 0; zz < ptr->num_events; zz++)
     ptr->prev_values[zz] = 0;
 
