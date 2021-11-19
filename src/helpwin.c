@@ -61,7 +61,7 @@ void show_help_win(WINDOW* win, screen_t* screen)
     wattroff(win, A_REVERSE);
 
   /* screen description */
-  mvwprintw(win, 2, 1, screen->desc);
+  mvwprintw(win, 2, 1, "%s", screen->desc);
 
   /* max size of column headers */
   for(i = 0; i < n; i++) {
