@@ -654,7 +654,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
       mvprintw(0, COLS-7, "[debug]");
 
     if (options.show_epoch && (COLS >= 18))
-      mvprintw(LINES-1, COLS-18, "Epoch: %u", time(NULL));
+      mvprintw(LINES-1, COLS-18, "Epoch: %ju", (uintmax_t)time(NULL));
 
     if (options.show_timestamp)
       mvprintw(LINES-1, 0, "Iteration: %u", num_iter);
