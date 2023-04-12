@@ -70,6 +70,11 @@ int check()
       fprintf(stderr, "Linux 2.6.31+ is required, OS reports '%s'.\n",
               os.release);
     }
+    else if (paranoia_level == 3) {
+      fprintf(stderr, "Your kernel is set with an event paranoia value of 3\n");
+      fprintf(stderr, "Either run this program as root, or set a lower\n");
+      fprintf(stderr, "paranoia value at '%s'.\n", PARANOID2);
+    }
     else {
       fprintf(stderr, "Don't know why...\n");
     }
