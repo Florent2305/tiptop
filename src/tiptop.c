@@ -61,6 +61,8 @@ static enum sorting_order {
 
 static int (*sorting_fun)(const void *, const void *);
 
+static int pid_width;
+
 
 /* Utility functions used by qsort to sort processes according to
    active column */
@@ -200,10 +202,10 @@ static void build_rows(struct process_list* proc_list, screen_t* s, int width)
     }
 
     if (options.show_user)
-      written = snprintf(row, remaining, "%5d%c %-10s ", p->tid, thr,
+      written = snprintf(row, remaining, "%*d%c %-10s ", pid_width, p->tid, thr,
                                                          p->username);
     else
-      written = snprintf(row, remaining, "%5d%c ", p->tid, thr);
+      written = snprintf(row, remaining, "%*d%c ", pid_width, p->tid, thr);
     row += written;
     remaining -= written;
 
@@ -865,6 +867,24 @@ int main(int argc, char* argv[])
   /* Parse command line arguments. */
   parse_command_line(argc, argv, &options, &list_scr, &screen_num);
 
+
+  /* initialize PID width */
+  pid_width = 5;  /* default */
+  FILE* f_pid_max = fopen("/proc/sys/kernel/pid_max", "r");
+  if (f_pid_max) {
+    unsigned long pid_max = 1;
+    int n = fscanf(f_pid_max, "%ul", &pid_max);
+    fprintf(stderr, "pid_max: %d\n", pid_max);
+    if (n == 1) {  /* succesfully read a value */
+      while (pid_max > 99999) {  /* largest int on 5 digits */
+        pid_max = pid_max / 10;
+        pid_width++;
+        fprintf(stderr, "pid_max: %lu   pid_width:%d\n", pid_max, pid_width);
+      }
+    }
+    fclose(f_pid_max);
+    fprintf(stderr, "pid_width = %d\n", pid_width);
+  }
 
   /* Add default screens */
   if (options.default_screen == 1)
