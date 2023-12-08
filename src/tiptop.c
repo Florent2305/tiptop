@@ -2,7 +2,7 @@
  * This file is part of tiptop.
  *
  * Author: Erven ROHOU
- * Copyright (c) 2011, 2012, 2013, 2014, 2015 Inria
+ * Copyright (c) 2011-2015, 2023 Inria
  *
  * License: GNU General Public License version 2.
  *
