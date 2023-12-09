@@ -874,16 +874,13 @@ int main(int argc, char* argv[])
   if (f_pid_max) {
     unsigned long pid_max = 1;
     int n = fscanf(f_pid_max, "%ul", &pid_max);
-    fprintf(stderr, "pid_max: %d\n", pid_max);
     if (n == 1) {  /* succesfully read a value */
       while (pid_max > 99999) {  /* largest int on 5 digits */
         pid_max = pid_max / 10;
         pid_width++;
-        fprintf(stderr, "pid_max: %lu   pid_width:%d\n", pid_max, pid_width);
       }
     }
     fclose(f_pid_max);
-    fprintf(stderr, "pid_width = %d\n", pid_width);
   }
 
   /* Add default screens */
