@@ -2,7 +2,7 @@
  * This file is part of tiptop.
  *
  * Author: Erven ROHOU
- * Copyright (c) 2011, 2012, 2014, 2015, 2016, 2017 Inria
+ * Copyright (c) 2011, 2012, 2014-2017, 2023 Inria
  *
  * License: GNU General Public License version 2.
  *
@@ -405,13 +405,16 @@ void new_processes(struct process_list* const list,
           get_cmdline(pid, cmdline, sizeof(cmdline));
         ptr->cmdline = strdup(cmdline);
         ptr->name = strdup(proc_name);
-        ptr->timestamp.tv_sec = 0;
-        ptr->timestamp.tv_usec = 0;
+        struct timeval now;
+        gettimeofday(&now, NULL);
+        ptr->timestamp = now;
         ptr->prev_cpu_time_s = 0;
         ptr->prev_cpu_time_u = 0;
-        ptr->cpu_percent = 0.0;
-        ptr->cpu_percent_s = 0.0;
-        ptr->cpu_percent_u = 0.0;
+
+        /* initialize at 100 to avoid immediate collection as inactive */
+        ptr->cpu_percent =   100.0;
+        ptr->cpu_percent_s =   0.0;
+        ptr->cpu_percent_u = 100.0;
 
         float uptime;
         f = fopen("/proc/uptime", "r");
