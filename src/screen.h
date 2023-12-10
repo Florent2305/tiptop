@@ -2,7 +2,7 @@
  * This file is part of tiptop.
  *
  * Author: Erven ROHOU
- * Copyright (c) 2011, 2012 Inria
+ * Copyright (c) 2011, 2012, 2023 Inria
  *
  * License: GNU General Public License version 2.
  *
@@ -71,7 +71,7 @@ int get_num_screens();
 void list_screens(void);
 
 char* gen_header(const screen_t* const s, const struct option* const,
-                 int width, int active_col);
+                 int width, int active_col, int pid_width);
 
 void delete_screen(screen_t* s);
 void delete_screens();

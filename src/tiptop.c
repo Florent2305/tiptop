@@ -333,7 +333,7 @@ static void batch_mode(struct process_list* proc_list, screen_t* screen)
     fprintf(out, "watching uid %d '%s'\n", options.watch_uid, passwd->pw_name);
   }
 
-  header = gen_header(screen, &options, TXT_LEN - 1, active_col);
+  header = gen_header(screen, &options, TXT_LEN - 1, active_col, pid_width);
 
   fprintf(out, "Screen %d: %s\n", pos, screen->name);
   fprintf(out, "\n%s\n", header);
@@ -623,7 +623,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
   tv.tv_sec = 0;
   tv.tv_usec = 200000; /* 200 ms for first iteration */
 
-  header = gen_header(screen, &options, COLS - 1, active_col);
+  header = gen_header(screen, &options, COLS - 1, active_col, pid_width);
 
   pos = screen_pos(screen);
 
@@ -774,13 +774,13 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
         if (active_col < screen->num_columns)
           active_col++;
         free(header);
-        header = gen_header(screen, &options, COLS - 1, active_col);
+        header = gen_header(screen, &options, COLS - 1, active_col, pid_width);
       }
       if (c == '<') {
         if (active_col > -1)
           active_col--;
         free(header);
-        header = gen_header(screen, &options, COLS - 1, active_col);
+        header = gen_header(screen, &options, COLS - 1, active_col, pid_width);
       }
       if (c == 'H') {
         if (options.show_threads) {
@@ -792,7 +792,7 @@ static int live_mode(struct process_list* proc_list, screen_t* screen)
       }
       if (c == 'U') {
         free(header);
-        header = gen_header(screen, &options, COLS - 1, active_col);
+        header = gen_header(screen, &options, COLS - 1, active_col, pid_width);
       }
       if ((c == '+') || (c == '-') || (c == KEY_LEFT) || (c == KEY_RIGHT))
         return c;

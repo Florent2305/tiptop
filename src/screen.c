@@ -2,7 +2,7 @@
  * This file is part of tiptop.
  *
  * Author: Erven ROHOU
- * Copyright (c) 2011, 2012 Inria
+ * Copyright (c) 2011, 2012, 2023 Inria
  *
  * License: GNU General Public License version 2.
  *
@@ -582,7 +582,7 @@ screen_t* get_screen_by_name(const char* name)
 
 
 char* gen_header(const screen_t* const s, const struct option* options,
-                 int width, int active_col)
+                 int width, int active_col, int pid_width)
 {
   char* hdr;
   char* ptr;
@@ -590,6 +590,8 @@ char* gen_header(const screen_t* const s, const struct option* options,
   const char sep = ' ';
   const char high_on = '[';
   const char high_off = ']';
+
+  assert(pid_width >= 5);
 
   hdr = malloc(width);
   ptr = hdr;
@@ -607,11 +609,13 @@ char* gen_header(const screen_t* const s, const struct option* options,
   }
 
   if (options->show_user)
-    written = snprintf(ptr, width, " %cPID%c user      ",
+    written = snprintf(ptr, width, "%*s%cPID%c user      ",
+                       pid_width-5+1, " ",
                        active_col == -1 ? high_on : sep,
                        active_col == -1 ? high_off : sep);
   else
-    written = snprintf(ptr, width, " %cPID%c",
+    written = snprintf(ptr, width, "%*s%cPID%c",
+                       pid_width-5+1, " ",
                        active_col == -1 ? high_on : sep,
                        active_col == -1 ? high_off : sep);
 
